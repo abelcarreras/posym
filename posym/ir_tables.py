@@ -3,6 +3,10 @@ import numpy as np
 
 
 class CharTable(pd.DataFrame):
+    """
+    Subclass of DataFrame to add some convenience
+
+    """
     def __init__(self, data, name, rotations, translations, multiplicities):
         super().__init__(data)
         self.name = name

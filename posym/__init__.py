@@ -1,10 +1,14 @@
-from posym.tools import unique_rep, get_reps
+from posym.tools import unique_rep, get_representation
 from posym.pointgroup import PointGroup
 import numpy as np
 import pandas as pd
 
 
 class SymmetryBase():
+    """
+    This class is supposed to be used as a base for more complex symmetry objects
+
+    """
     def __init__(self, group, rep, coefficients=None):
 
         self._pg = PointGroup(group)
@@ -35,13 +39,13 @@ class SymmetryBase():
             self._coeff = {}
             for k, ri in enumerate(rep):
 
-                for r in get_reps(ri, self._table):
+                for r in get_representation(ri, self._table):
                     if tuple(r) in self._coeff:
                         self._coeff[tuple(r)] += coefficients[tuple(ri)]
                     else:
                         self._coeff[tuple(r)] = coefficients[tuple(ri)]
 
-                self._rep += get_reps(ri, self._table)
+                self._rep += get_representation(ri, self._table)
                 continue
 
                 # just for test

@@ -3,6 +3,10 @@ from posym.ir_tables import ir_table_list
 
 
 class PointGroup():
+    """
+    Basic class to basically handle IR-table.
+
+    """
     def __init__(self, group):
         self._group = group
 
