@@ -28,15 +28,37 @@ class CharTable(pd.DataFrame):
 
     @property
     def rotations(self):
-        return self.attrs['rotations']
+        return [self[ir] for ir in self.attrs['rotations']]
 
     @property
     def translations(self):
-        return self.attrs['translations']
+        return [self[ir] for ir in self.attrs['translations']]
 
     @property
     def multiplicities(self):
         return self.attrs['multiplicities']
+
+    @property
+    def trans_matrix(self):
+        """
+        transforms IR to Op
+
+        Op  = Mat * IR
+
+        :return: the transformation matrix
+        """
+        return np.array([ v for v in self.T.values]).T
+
+    @property
+    def trans_matrix_inv(self):
+        """
+        transforms Op to IR
+
+        IR = Mat * Op
+
+        :return: the transformation matrix
+        """
+        return np.linalg.inv(self.trans_matrix)
 
 
 ir_table_list = [
@@ -71,3 +93,35 @@ ir_table_list = [
               translations=[],
               multiplicities=[1, 8, 3, 6, 6]),
 ]
+
+if __name__ == '__main__':
+
+    print(ir_table_list[-1].sort_index().index)
+    exit()
+
+    a = np.array([ v for v in ir_table_list[-1].T.values]).T
+    print('trans matrix')
+    print(a)
+
+    print('t1')
+    t1 = np.dot(a, [0, 0, 0, 1, 0])
+    print(t1)
+
+    a_i = np.linalg.inv(a)
+    print('inverse')
+    print(a_i)
+
+    print('t1(IR)')
+    print(np.dot(a_i, t1))
+
+    t1t1 = np.multiply(t1, t1)
+    print('t1*t1', t1t1)
+
+    e = np.dot(a, [0, 0, 1, 0, 0])
+    et1 = np.multiply(e, t1)
+
+    print('t1t1(IR)')
+    print(np.dot(a_i, t1t1))
+    print('et1')
+    print(np.dot(a_i, et1))
+

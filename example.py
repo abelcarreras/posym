@@ -1,6 +1,5 @@
 from posym import PointGroup, SymmetryBase
 
-
 pg = PointGroup(group='C2h')
 print('\nTest Point group table')
 print(pg)
@@ -10,14 +9,14 @@ bg = SymmetryBase('C2h', 'Bg')
 ag = SymmetryBase('C2h', 'Ag')
 
 print('\nTest symmetry object operation')
-print('bu * bg:', bu * bg)
+print('bu * bg:', 2 * bu * bg)
 
 print('(bu + bg) * (bu + bu + ag):', (bu + bg) * (bu + bu + ag))
 state1 = (bu + bg) * (bu + bu + ag)
 
 
 print('\nTest symmetry object representation')
-bu.print_representation()
+#print(bu.get_representation())
 
 pg = PointGroup(group='Td')
 print(pg)
@@ -28,5 +27,4 @@ a2 = SymmetryBase(group='Td', rep='A2')
 e = SymmetryBase(group='Td', rep='E')
 t1 = SymmetryBase(group='Td', rep='T1')
 
-
-print('e*e + a1:', e * (e + a1))
+print('e*e + a1:', e * e + 2 * a1)
