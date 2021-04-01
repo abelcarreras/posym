@@ -14,9 +14,7 @@ print('bu * bg:', 2 * bu * bg)
 print('(bu + bg) * (bu + bu + ag):', (bu + bg) * (bu + bu + ag))
 state1 = (bu + bg) * (bu + bu + ag)
 
-
 print('\nTest symmetry object representation')
-#print(bu.get_representation())
 
 pg = PointGroup(group='Td')
 print(pg)

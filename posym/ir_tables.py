@@ -38,28 +38,6 @@ class CharTable(pd.DataFrame):
     def multiplicities(self):
         return self.attrs['multiplicities']
 
-    @property
-    def trans_matrix(self):
-        """
-        transforms IR to Op
-
-        Op  = Mat * IR
-
-        :return: the transformation matrix
-        """
-        return np.array([ v for v in self.T.values]).T
-
-    @property
-    def trans_matrix_inv(self):
-        """
-        transforms Op to IR
-
-        IR = Mat * Op
-
-        :return: the transformation matrix
-        """
-        return np.linalg.inv(self.trans_matrix)
-
 
 ir_table_list = [
     CharTable({'Ag': pd.Series([+1, +1, +1, +1], index=['E', 'C2', 'i', 'sh']),
