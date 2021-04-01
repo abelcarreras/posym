@@ -56,8 +56,8 @@ ir_table_list = [
                'B2': pd.Series([+1, -1, -1, +1], index=['E', 'C2', 'sv_xz', 'sv_yz']),
                },
               name='C2v',
-              rotations=[],
-              translations=[],
+              rotations=['B2', 'B1', 'A2'],
+              translations=['B1', 'B2', 'A1'],
               multiplicities=[1, 1, 1, 1]),
 
     CharTable({'A1': pd.Series([+1, +1, +1, +1, +1], index=['E', 'C3', 'C2', 'S4', 'sd']),
@@ -67,8 +67,8 @@ ir_table_list = [
                'T2': pd.Series([+3,  0, -1, -1, +1], index=['E', 'C3', 'C2', 'S4', 'sd']),
                },
               name='Td',
-              rotations=[],
-              translations=[],
+              rotations=['T1', 'T1', 'T1'],
+              translations=['T2', 'T2', 'T2'],
               multiplicities=[1, 8, 3, 6, 6]),
 ]
 
