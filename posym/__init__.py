@@ -19,7 +19,7 @@ class SymmetryBase():
 
         if isinstance(rep, str):
             if rep not in ir_table:
-                raise Exception('Representation do not match with group\nAvailable: {}'.format(ir_table.index))
+                raise Exception('Representation do not match with group\nAvailable: {}'.format(ir_table.T.index))
             self._op_representation = ir_table[rep]
 
         elif isinstance(rep, pd.Series):

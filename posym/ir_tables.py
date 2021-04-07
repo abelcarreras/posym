@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 
 
+def real_radical(m, n):
+    return 2 * np.cos(2 * m * np.pi / n)
+
+
 class CharTable(pd.DataFrame):
     """
     Subclass of DataFrame to add some convenience
@@ -40,6 +44,46 @@ class CharTable(pd.DataFrame):
 
 
 ir_table_list = [
+    CharTable({'A': pd.Series([+1], index=['E']),
+               },
+              name='C1',
+              rotations=['A', 'A', 'A'],  # x, y, z
+              translations=['A', 'A', 'A'],  # Rx, Ry, Rz
+              multiplicities=[1]),
+
+    CharTable({"A'": pd.Series([+1, +1], index=['E', 'sh']),
+               "A''": pd.Series([+1, -1], index=['E', 'sh']),
+               },
+              name='Cs',
+              rotations=["A'", "A'", "A''"],  # x, y, z
+              translations=["A''", "A''", "A'"],  # Rx, Ry, Rz
+              multiplicities=[1, 1]),
+
+    CharTable({'Ag': pd.Series([+1, +1], index=['E', 'i']),
+               'Au': pd.Series([+1, -1], index=['E', 'i']),
+               },
+              name='Ci',
+              rotations=['Au', 'Au', 'Au'],  # x, y, z
+              translations=['Ag', 'Ag', 'Ag'],  # Rx, Ry, Rz
+              multiplicities=[1, 1]),
+
+    CharTable({'A': pd.Series([+1, +1], index=['E', 'C3']),
+               'E': pd.Series([+2, -1], index=['E', 'C3']),
+               },
+              name='C3',
+              rotations=['E', 'E', 'A'],  # x, y, z
+              translations=['E', 'E', 'A'],  # Rx, Ry, Rz
+              multiplicities=[1, 2]),
+
+    CharTable({'A' : pd.Series([+1, +1, +1], index=['E', 'C5', 'C5_2']),
+               'E1': pd.Series([+2, real_radical(2, 5), real_radical(4, 5)], index=['E', 'C5', 'C5_2']),
+               'E2': pd.Series([+2, real_radical(4, 5), real_radical(2, 5)], index=['E', 'C5', 'C5_2']),
+               },
+              name='C5',
+              rotations=['E1', 'E1', 'A'],  # x, y, z
+              translations=['E1', 'E1', 'A'],  # Rx, Ry, Rz
+              multiplicities=[1, 2, 2]),
+
     CharTable({'Ag': pd.Series([+1, +1, +1, +1], index=['E', 'C2', 'i', 'sh']),
                'Bg': pd.Series([+1, -1, +1, -1], index=['E', 'C2', 'i', 'sh']),
                'Au': pd.Series([+1, +1, -1, -1], index=['E', 'C2', 'i', 'sh']),
@@ -59,6 +103,15 @@ ir_table_list = [
               rotations=['B2', 'B1', 'A2'],
               translations=['B1', 'B2', 'A1'],
               multiplicities=[1, 1, 1, 1]),
+
+    CharTable({'A1': pd.Series([+1, +1, +1], index=['E', 'C3', 'sv']),
+               'A2': pd.Series([+1, +1, -1], index=['E', 'C3', 'sv']),
+               'E' : pd.Series([+2, -1,  0], index=['E', 'C3', 'sv']),
+               },
+              name='C3v',
+              rotations=['E', 'E', 'A2'],  # x, y, z
+              translations=['E', 'E', 'A1'],  # Rx, Ry, Rz
+              multiplicities=[1, 2, 3]),
 
     CharTable({'A1': pd.Series([+1, +1, +1, +1, +1], index=['E', 'C3', 'C2', 'S4', 'sd']),
                'A2': pd.Series([+1, +1, +1, -1, -1], index=['E', 'C3', 'C2', 'S4', 'sd']),

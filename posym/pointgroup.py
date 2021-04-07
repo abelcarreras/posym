@@ -14,7 +14,7 @@ class PointGroup():
         self._trans_matrix_inv = None
 
         for table in ir_table_list:
-            if group == table.name:
+            if group.upper() == table.name.upper():
                 self._table = table
                 return
 
@@ -63,3 +63,7 @@ class PointGroup():
             self._trans_matrix_inv = np.linalg.inv(self.trans_matrix)
 
         return self._trans_matrix_inv
+
+    @property
+    def order(self):
+        return np.sum(self._table.multiplicities)
