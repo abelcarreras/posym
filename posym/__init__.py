@@ -16,7 +16,6 @@ class SymmetryBase():
 
         ir_table = self._pg.ir_table
 
-
         if isinstance(rep, str):
             if rep not in ir_table:
                 raise Exception('Representation do not match with group\nAvailable: {}'.format(ir_table.T.index))
