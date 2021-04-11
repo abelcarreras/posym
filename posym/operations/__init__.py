@@ -3,8 +3,9 @@ from itertools import permutations
 
 
 class Operation:
-    def __init__(self, coordinates):
+    def __init__(self, coordinates, symbols):
         self._coordinates = coordinates
+        self._symbols = np.zeros(len(coordinates)) if symbols is None else np.array(symbols)
 
         self._measure_mode = []
         self._measure_coor = []
@@ -15,16 +16,19 @@ class Operation:
         coor_list = []
         permu_list = []
         for iter in permutations(enumerate(operated_coor), len(operated_coor)):
-            permu_coor = np.array([c[1] for c in iter])
+
             iter_num = [c[0] for c in iter]
+            if not (self._symbols[iter_num] == self._symbols).all():
+                continue
+
+            permu_list.append(iter_num)
+            permu_coor = np.array([c[1] for c in iter])
 
             coor_list.append(np.average(np.linalg.norm(np.subtract(self._coordinates, permu_coor), axis=0)))
-            permu_list.append(iter_num)
 
         return np.min(coor_list), permu_list[np.nanargmin(coor_list)]
 
     def get_measure(self):
-
         return np.array(self._measure_mode)
 
     def get_coor_measure(self):
@@ -54,54 +58,61 @@ if __name__ == '__main__':
                  [-1.43261539e+00, -1.75444785e-16, -9.61188362e-01],
                  [ 1.43261539e+00,  1.75444785e-16, -9.61188362e-01]]
 
+        symbols = ['O', 'H', 'H']
         molecule = Structure(coordinates=np.array(water) * 0.5,
-                             symbols=['O', 'H', 'H'],
+                             symbols=symbols,
                              charge=0,
                              multiplicity=1)
 
         qc_input = QchemInput(molecule,
                               jobtype='freq',
                               exchange='hf',
-                              basis='sto-3g',
-                              sym_ignore=True,
+                              basis='6-31G',
+                              # sym_ignore=True,
                               )
 
         parsed_data, ee = get_output_from_qchem(qc_input, parser=basic_frequencies, read_fchk=True)
 
         water = np.array(ee['structure'].get_coordinates())
 
-        print(' structure')
-        print('Final energy:', parsed_data['scf_energy'])
+        #print(' structure')
+        #print('Final energy:', parsed_data['scf_energy'])
 
         modes = [np.array(m['displacement']) for m in parsed_data['modes']]
+        freqs = [m['frequency'] for m in parsed_data['modes']]
 
-        c2 = Rotation(water, modes, [0, 0, 1], order=2)
-        r_yz = Reflection(water, modes, [1, 0, 0])
-        r_xz = Reflection(water, modes, [0, 1, 0])
+        c2 = Rotation(water, modes, [0, 0, 1], order=2, symbols=symbols)
+        r_yz = Reflection(water, modes, [1, 0, 0], symbols=symbols)
+        r_xz = Reflection(water, modes, [0, 1, 0], symbols=symbols)
+        if False:
 
-        print('Rotation (c2)')
-        print('measure mode: ', c2.get_measure())
-        print('measure coor', c2.get_coor_measure())
+            print('Rotation (c2)')
+            print('measure mode: ', c2.get_measure())
+            print('measure coor', c2.get_coor_measure())
 
-        print('Reflection (yz)')
-        print('measure mode: ', r_yz.get_measure())
-        print('measure coor', r_yz.get_coor_measure())
+            print('Reflection (yz)')
+            print('measure mode: ', r_yz.get_measure())
+            print('measure coor', r_yz.get_coor_measure())
 
-        print('Reflection (xz)')
-        print('measure mode: ', r_xz.get_measure())
-        print('measure coor', r_xz.get_coor_measure())
+            print('Reflection (xz)')
+            print('measure mode: ', r_xz.get_measure())
+            print('measure coor', r_xz.get_coor_measure())
 
-        from posym import PointGroup, SymmetryBase
+        from posym import PointGroup, SymmetryBase, SymmetryModes
         import pandas as pd
 
         pg = PointGroup(group='C2v')
 
-        m = 1  # mode number
+        m = 2  # mode number
         state = SymmetryBase(group='C2v',
                              rep=pd.Series([1, c2.get_measure()[m], r_yz.get_measure()[m], r_xz.get_measure()[m]],
                                            index=['E', 'C2', 'sv_xz', 'sv_yz']))
-        print('state: ', state.get_ir_representation().values)
-        m_measure.append(state.get_ir_representation().values)
+        #print('state: ', state.get_ir_representation().values)
+        #m_measure.append(state.get_ir_representation().values)
+
+        sm = SymmetryModes(group='C2v', coordinates=water, modes=modes, symbols=symbols)
+
+        m_measure.append(sm.get_state_mode(1).get_ir_representation().values)
 
 
     import matplotlib.pyplot as plt

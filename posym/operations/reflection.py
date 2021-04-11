@@ -37,13 +37,13 @@ def reflection(reflection_axis):
 
 
 class Reflection(Operation):
-    def __init__(self, coordinates, modes, axis):
-        super().__init__(coordinates)
+    def __init__(self, coordinates, modes, axis, symbols=None):
+        super().__init__(coordinates, symbols)
 
         self._axis = axis
 
-        self._measure_mode = []
-        self._measure_coor = []
+        #self._measure_mode = []
+        #self._measure_coor = []
 
         operation = reflection(self._axis)
         operated_coor = np.dot(operation, self._coordinates.T).T
@@ -60,8 +60,4 @@ class Reflection(Operation):
 
             self._measure_mode.append(np.average(np.divide(np.diag(np.dot(mode, permu_mode.T)), norm_1 * norm_2)))
             self._measure_coor.append(mesure_coor)
-
-
-def inversion():
-    return -np.identity(3)
 

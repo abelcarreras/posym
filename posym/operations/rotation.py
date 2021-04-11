@@ -16,8 +16,8 @@ def prepare_vector(positions, vector):
 
 
 class Rotation(Operation):
-    def __init__(self, coordinates, modes, axis, order):
-        super().__init__(coordinates)
+    def __init__(self, coordinates, modes, axis, order, symbols=None):
+        super().__init__(coordinates, symbols)
 
         self._axis = axis
         self._order = order

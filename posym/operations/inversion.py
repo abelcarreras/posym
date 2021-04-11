@@ -11,11 +11,11 @@ def inversion():
 
 
 class Inversion(Operation):
-    def __init__(self, coordinates, modes):
-        super().__init__(coordinates)
+    def __init__(self, coordinates, modes, symbols=None):
+        super().__init__(coordinates, symbols)
 
-        self._measure_mode = []
-        self._measure_coor = []
+        #self._measure_mode = []
+        #self._measure_coor = []
 
         operation = inversion()
         operated_coor = np.dot(operation, self._coordinates.T).T
@@ -25,7 +25,7 @@ class Inversion(Operation):
             operated_mode = np.dot(operation, prepare_vector(self._coordinates, mode).T).T - operated_coor
             norm_1 = np.linalg.norm(mode, axis=1)
 
-            mesure_coor, permu  = self.get_permutation(operation)
+            mesure_coor, permu = self.get_permutation(operation)
 
             permu_mode = np.array(operated_mode)[permu]
             norm_2 = np.linalg.norm(permu_mode, axis=1)

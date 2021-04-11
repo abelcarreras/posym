@@ -1,9 +1,93 @@
 import pandas as pd
 import numpy as np
+from posym.operations import Operation
+from posym.operations.identity import Identity
+from posym.operations.rotation import Rotation
+from posym.operations.reflection import Reflection
 
 
 def real_radical(m, n):
     return 2 * np.cos(2 * m * np.pi / n)
+
+
+class Op:
+    def __init__(self, label, type, axis=None, order=1):
+
+        if not issubclass(type, Operation):
+            raise Exception('Not an Operation')
+
+        self._type = type
+        self._axis = axis
+        self._order = order
+        self._label = label
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def axis(self):
+        return self._axis
+
+    @property
+    def order(self):
+        return self._order
+
+    @property
+    def label(self):
+        return self._label
+
+
+class ExCharTable(pd.DataFrame):
+    """
+    Subclass of DataFrame to add some convenience
+
+    """
+    def __init__(self, name, operations, ir, rotations, translations, multiplicities):
+
+        labels = [o.label for o in operations]
+
+        data = {}
+        for key, val in ir.items():
+            val.index = labels
+            data[key] = val
+
+        super().__init__(data)
+        self.name = name
+
+        if np.all([r in data for r in rotations]):
+            self.attrs['rotations'] = rotations
+        else:
+            raise Exception('Rotations representations not in table')
+
+        if np.all([r in data for r in translations]):
+            self.attrs['translations'] = translations
+        else:
+            raise Exception('Translations representations not in table')
+
+        if len(multiplicities) == len(self.index):
+            self.attrs['multiplicities'] = multiplicities
+        else:
+            raise Exception('Multiplicities do not match')
+
+        self.attrs['operations'] = operations
+
+    @property
+    def rotations(self):
+        return [self[ir] for ir in self.attrs['rotations']]
+
+    @property
+    def translations(self):
+        return [self[ir] for ir in self.attrs['translations']]
+
+    @property
+    def multiplicities(self):
+        return self.attrs['multiplicities']
+
+    @property
+    def operations(self):
+        return self.attrs['operations']
+
 
 
 class CharTable(pd.DataFrame):
@@ -11,7 +95,7 @@ class CharTable(pd.DataFrame):
     Subclass of DataFrame to add some convenience
 
     """
-    def __init__(self, data, name, rotations, translations, multiplicities):
+    def __init__(self, data, name, rotations, translations, multiplicities, operations=None):
         super().__init__(data)
         self.name = name
 
@@ -99,11 +183,22 @@ ir_table_list = [
                'B1': pd.Series([+1, -1, +1, -1], index=['E', 'C2', 'sv_xz', 'sv_yz']),
                'B2': pd.Series([+1, -1, -1, +1], index=['E', 'C2', 'sv_xz', 'sv_yz']),
                },
-              name='C2v',
+              name='C2v_i',
               rotations=['B2', 'B1', 'A2'],
               translations=['B1', 'B2', 'A1'],
               multiplicities=[1, 1, 1, 1]),
 
+    ExCharTable('C2v',
+                [Op('E', Identity), Op('C2', Rotation, [0, 0, 1], order=2),
+                 Op('sv_xz', Reflection, [1, 0, 0]), Op('sv_yz', Reflection, [0, 1, 0])],
+                {'A1': pd.Series([+1, +1, +1, +1]),
+                 'A2': pd.Series([+1, +1, -1, -1]),
+                 'B1': pd.Series([+1, -1, +1, -1]),
+                 'B2': pd.Series([+1, -1, -1, +1]),
+                 },
+                rotations=['B2', 'B1', 'A2'],
+                translations=['B1', 'B2', 'A1'],
+                multiplicities=[1, 1, 1, 1]),
     CharTable({'A1': pd.Series([+1, +1, +1], index=['E', 'C3', 'sv']),
                'A2': pd.Series([+1, +1, -1], index=['E', 'C3', 'sv']),
                'E' : pd.Series([+2, -1,  0], index=['E', 'C3', 'sv']),
