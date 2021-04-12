@@ -6,8 +6,6 @@ class Operation:
     def __init__(self, label):
 
         self._label = label
-        self._measure_mode = []
-        self._measure_coor = []
 
     def get_permutation(self, operation, coordinates, symbols):
         operated_coor = np.dot(operation, coordinates.T).T
@@ -28,8 +26,7 @@ class Operation:
 
         return np.min(coor_list), permu_list[np.nanargmin(coor_list)]
 
-    def get_coor_measure(self, coordinates):
-        #  normalization
+    def get_normalization(self, coordinates):
 
         if len(self._measure_coor) == 0:
             raise Exception('Measure coord not calculated')
@@ -41,7 +38,7 @@ class Operation:
                 sum_list.append(np.dot(subs, subs))
         d = np.average(sum_list)
 
-        return np.average(self._measure_coor) / d
+        return d
 
     @property
     def label(self):

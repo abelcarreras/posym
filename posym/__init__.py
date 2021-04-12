@@ -99,11 +99,11 @@ class SymmetryBase():
 
 
 class SymmetryModes(SymmetryBase):
-    def __init__(self, group, coordinates, modes, symbols):
+    def __init__(self, group, coordinates, modes, symbols, optimize=True):
 
         ir_table = PointGroup(group).ir_table
 
-        # set coordinates to geometrical center
+        # set coordinates at geometrical center
         self._coordinates = np.array([c - np.average(coordinates, axis=0) for c in coordinates])
 
         self._modes = modes
@@ -112,12 +112,18 @@ class SymmetryModes(SymmetryBase):
         self._coor_measures = []
         self._mode_measures = []
 
-        angles = self.get_orientation(ir_table.operations, self._coordinates)
+        if optimize:
+            angles = self.get_orientation(ir_table.operations)
+        else:
+            angles = [0, 0, 0]
+
         rotmol = R.from_euler('zyx', angles, degrees=True)
+        #rotmol = R.from_rotvec(angles)
 
         for operation in ir_table.operations:
-            self._mode_measures.append(operation.get_measure(self._coordinates, self._modes, self._symbols, rotmol))
-            self._coor_measures.append(operation.get_coor_measure(self._coordinates))
+            mode_m, coor_m = operation.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
+            self._mode_measures.append(mode_m)
+            self._coor_measures.append(coor_m)
 
         total_state = pd.Series(np.add.reduce(self._mode_measures, axis=1), index=ir_table.index)
 
@@ -127,7 +133,7 @@ class SymmetryModes(SymmetryBase):
         return SymmetryBase(group=self._group, rep=pd.Series(np.array(self._mode_measures).T[n],
                                                              index=self._pg.ir_table.index))
 
-    def get_orientation(self, operations, coordinates):
+    def get_orientation(self, operations):
 
         def optimization_function(angles):
 
@@ -135,12 +141,29 @@ class SymmetryModes(SymmetryBase):
 
             coor_measures = []
             for operation in operations:
-                coor_measures.append(operation.get_measure(self._coordinates, self._modes, self._symbols, rotmol))
+                mode_m, coor_m = operation.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
+                coor_measures.append(coor_m)
 
-            return np.product(coor_measures)
+            # definition group measure
+            return np.linalg.norm(coor_measures)
 
-        res = minimize(optimization_function, np.array([0, 0, 0]), method='SLSQP',
-                       bounds=((0, 180), (0, 360), (0, 360)), tol=1e-6)
+        # preliminar scan
+        list_m = []
+        list_a = []
+        for i in np.arange(0, 360, 12):
+            for j in np.arange(0, 360, 12):
+                for k in np.arange(0, 180, 12):
+                    list_m.append(optimization_function([i, j, k]))
+                    list_a.append([i, j, k])
 
+        initial = list_a[np.nanargmin(list_m)]
+        res = minimize(optimization_function, initial, method='trust-constr',
+                       #bounds=((0, 360), (0, 360), (0, 360)),
+                       tol=1e-8)
+
+        print('res', res.x)
         return res.x
 
+    @property
+    def get_measure_coor(self):
+        return np.add.reduce(self._coor_measures)
