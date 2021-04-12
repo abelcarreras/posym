@@ -28,8 +28,16 @@ class PointGroup():
         return self._table
 
     @property
+    def op_labels(self):
+        return self._table.index
+
+    @property
+    def ir_labels(self):
+        return self._table.T.index
+
+    @property
     def n_sym_elements(self):
-        return np.sum(self._table.multiplicities)
+        return np.add.reduce(self._table.multiplicities)
 
     @property
     def n_ir(self):
@@ -66,4 +74,4 @@ class PointGroup():
 
     @property
     def order(self):
-        return np.sum(self._table.multiplicities)
+        return np.add.reduce(self._table.multiplicities)

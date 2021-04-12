@@ -48,7 +48,7 @@ class SymmetryBase():
 
         str = ''
         for i, r in enumerate(ir_rep):
-            if np.sum(ir_rep[:i]) > 0 and r > 0:
+            if np.add.reduce(ir_rep[:i]) > 0 and r > 0:
                 str += ' + '
             if r == 1:
                 str += ir_labels[i]
@@ -65,7 +65,7 @@ class SymmetryBase():
 
         str = ''
         for i, r in enumerate(ir_rep):
-            if np.sum(ir_rep[:i]) > 0 and r > 0:
+            if np.add.reduce(ir_rep[:i]) > 0 and r > 0:
                 str += '+'
             if r == 1:
                 str += ir_labels[i]
@@ -115,22 +115,11 @@ class SymmetryModes(SymmetryBase):
         angles = self.get_orientation(ir_table.operations, self._coordinates)
         rotmol = R.from_euler('zyx', angles, degrees=True)
 
-        for op in ir_table.operations:
+        for operation in ir_table.operations:
+            self._mode_measures.append(operation.get_measure(self._coordinates, self._modes, self._symbols, rotmol))
+            self._coor_measures.append(operation.get_coor_measure(self._coordinates))
 
-            #print(op.type)
-            try:
-                #print('order:', op.order)
-                operation = op.type(self._coordinates, modes, rotmol.apply(op.axis), order=op.order, symbols=symbols)
-            except:
-                try:
-                    operation = op.type(self._coordinates, modes, rotmol.apply(op.axis), symbols=symbols)
-                except:
-                    operation = op.type(self._coordinates, modes, symbols=symbols)
-
-            self._mode_measures.append(operation.get_measure())
-            self._coor_measures.append(operation.get_coor_measure())
-
-        total_state = pd.Series(np.sum(self._mode_measures, axis=1), index=ir_table.index)
+        total_state = pd.Series(np.add.reduce(self._mode_measures, axis=1), index=ir_table.index)
 
         super().__init__(group, total_state)
 
@@ -145,32 +134,13 @@ class SymmetryModes(SymmetryBase):
             rotmol = R.from_euler('zyx', angles, degrees=True)
 
             coor_measures = []
-            for op in operations:
-
-                try:
-                    operation = op.type(coordinates, self._modes, rotmol.apply(op.axis), order=op.order, symbols=self._symbols)
-                except:
-                    try:
-                        operation = op.type(coordinates, self._modes, rotmol.apply(op.axis), symbols=self._symbols)
-                    except:
-                        operation = op.type(coordinates, self._modes, symbols=self._symbols)
-
-                coor_measures.append(operation.get_coor_measure())
+            for operation in operations:
+                coor_measures.append(operation.get_measure(self._coordinates, self._modes, self._symbols, rotmol))
 
             return np.product(coor_measures)
 
-        if False:
-            initial_guess = [optimization_function([0., 0., 0.]), [0., 0., 0.]]
-            for rx in np.arange(0, 180, 18):
-                for ry in np.arange(0, 360, 36):
-                    for rz in np.arange(0, 180, 18):
-                        val = optimization_function([rz, ry, rx])
-                        if val < initial_guess[0]:
-                            initial_guess = [val, [rz, ry, rx]]
-        else:
-            initial_guess = [0, [0, 0, 0]]
-        res = minimize(optimization_function, [0, 0, 0], method='SLSQP', bounds=((0, 360), (0, 360), (0, 360)), tol=1e-6)
-        #print(res.fun)
+        res = minimize(optimization_function, np.array([0, 0, 0]), method='SLSQP',
+                       bounds=((0, 180), (0, 360), (0, 360)), tol=1e-6)
 
         return res.x
 

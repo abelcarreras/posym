@@ -16,30 +16,39 @@ def prepare_vector(positions, vector):
 
 
 class Rotation(Operation):
-    def __init__(self, coordinates, modes, axis, order, symbols=None):
-        super().__init__(coordinates, symbols)
+    def __init__(self, label, axis, order=1):
+        super().__init__(label)
 
         self._axis = axis
         self._order = order
 
-        for angle in np.arange(2*np.pi/order, 2*np.pi, 2*np.pi/order):
-            operation = rotation(angle, self._axis)
-            operated_coor = np.dot(operation, self._coordinates.T).T
+    def get_measure(self, coordinates, modes, symbols, rotmol):
+
+        rotated_axis = rotmol.apply(self._axis)
+
+        self._measure_mode = []
+        self._measure_coor = []
+
+        for angle in np.arange(2*np.pi/self._order, 2*np.pi, 2*np.pi/self._order):
+            operation = rotation(angle, rotated_axis)
+            operated_coor = np.dot(operation, coordinates.T).T
 
             measure_mode_list = []
             measure_coor_list = []
 
             for mode in modes:
 
-                operated_mode = np.dot(operation, prepare_vector(self._coordinates, mode).T).T - operated_coor
+                operated_mode = np.dot(operation, prepare_vector(coordinates, mode).T).T - operated_coor
                 norm_1 = np.linalg.norm(mode, axis=1)
 
-                mesure_coor, permu  = self.get_permutation(operation)
+                mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
 
                 permu_mode = np.array(operated_mode)[permu]
                 norm_2 = np.linalg.norm(permu_mode, axis=1)
 
-                measure_mode_list.append(np.average(np.divide(np.diag(np.dot(mode, permu_mode.T)), norm_1 * norm_2)))
+                #print(np.divide(np.diag(np.dot(mode, permu_mode.T)), norm_1 * norm_2))
+
+                measure_mode_list.append(np.nanmean(np.divide(np.diag(np.dot(mode, permu_mode.T)), norm_1 * norm_2)))
                 measure_coor_list.append(mesure_coor)
 
             self._measure_mode.append(measure_mode_list)
@@ -47,3 +56,5 @@ class Rotation(Operation):
 
         self._measure_mode = np.average(self._measure_mode, axis=0)
         self._measure_coor = np.average(self._measure_coor, axis=0)
+
+        return np.array(self._measure_mode)
