@@ -30,7 +30,7 @@ for x_coor in np.arange(-1.0, 1.0, 0.02):
                                 charge=0,
                                 multiplicity=1)
 
-    qc_input = QchemInput(molecule_ch2cl2,
+    qc_input = QchemInput(molecule_water,
                           jobtype='freq',
                           exchange='hf',
                           basis='6-31G',
@@ -48,15 +48,15 @@ for x_coor in np.arange(-1.0, 1.0, 0.02):
     modes = [np.array(m['displacement']) for m in parsed_data['modes']]
     freqs = [m['frequency'] for m in parsed_data['modes']]
 
-    m = 3  # mode number
+    m = 2  # mode number
 
-    sm = SymmetryModes(group='C2h', coordinates=molecule_coor, modes=modes, symbols=molecule_symbols)
+    sm = SymmetryModes(group='C2v', coordinates=molecule_coor, modes=modes, symbols=molecule_symbols)
     m_measure.append(sm.get_state_mode(m).get_ir_representation().values)
     print('sm', sm)
     for i in range(len(modes)):
         print('m {}:'.format(i + 1), sm.get_state_mode(i))
 
-pg = PointGroup(group='C2h')
+pg = PointGroup(group='C2v')
 
 for m, l in zip(np.array(m_measure).T, pg.ir_labels):
     plt.plot(np.arange(-1.0, 1.0, 0.02), m, '-', label=l)

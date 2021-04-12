@@ -39,16 +39,18 @@ class Rotation(Operation):
             for mode in modes:
 
                 operated_mode = np.dot(operation, prepare_vector(coordinates, mode).T).T - operated_coor
-                norm_1 = np.linalg.norm(mode, axis=1)
+                #norm_1 = np.linalg.norm(mode, axis=1)
+                norm = np.linalg.norm(mode)
 
                 mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
 
                 permu_mode = np.array(operated_mode)[permu]
-                norm_2 = np.linalg.norm(permu_mode, axis=1)
+                #norm_2 = np.linalg.norm(permu_mode, axis=1)
 
-                #print(np.divide(np.diag(np.dot(mode, permu_mode.T)), norm_1 * norm_2))
 
-                measure_mode_list.append(np.nanmean(np.divide(np.diag(np.dot(mode, permu_mode.T)), norm_1 * norm_2)))
+                #measure_mode_list.append(np.nanmean(np.divide(np.diag(np.dot(mode, permu_mode.T)), norm_1 * norm_2)))
+                measure_mode_list.append(np.add.reduce(np.diag(np.dot(mode, permu_mode.T)))/norm)
+
                 measure_coor_list.append(mesure_coor)
 
             self._measure_mode.append(measure_mode_list)
