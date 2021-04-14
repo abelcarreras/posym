@@ -24,12 +24,10 @@ class Operation:
 
             coor_list.append(np.average(np.linalg.norm(np.subtract(coordinates, permu_coor), axis=0)))
 
-        return np.min(coor_list), permu_list[np.nanargmin(coor_list)]
+        # print(np.product(np.power(coor_list, 1/len(operated_coor))), np.product(coor_list))
+        return np.product(coor_list), permu_list[np.nanargmin(coor_list)]
 
     def get_normalization(self, coordinates):
-
-        if len(self._measure_coor) == 0:
-            raise Exception('Measure coord not calculated')
 
         sum_list = []
         for r1 in coordinates:

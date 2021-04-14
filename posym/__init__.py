@@ -48,12 +48,15 @@ class SymmetryBase():
 
         str = ''
         for i, r in enumerate(ir_rep):
-            if np.add.reduce(ir_rep[:i]) > 0 and r > 0:
-                str += ' + '
+            #print('>> ', np.add.reduce(np.square(ir_rep[:i])), 'r:', r)
+            if np.add.reduce(np.square(ir_rep[:i])) > 0 and r > 0:
+                    str += ' + '
+            elif r < 0:
+                    str += ' - '
             if r == 1:
                 str += ir_labels[i]
-            elif r > 0:
-                str += '{} {}'.format(r, ir_labels[i])
+            elif np.abs(r) > 0:
+                str += '{} {}'.format(abs(r), ir_labels[i])
 
         return str
 
@@ -65,7 +68,8 @@ class SymmetryBase():
 
         str = ''
         for i, r in enumerate(ir_rep):
-            if np.add.reduce(ir_rep[:i]) > 0 and r > 0:
+            #print('>> ', np.add.reduce(ir_rep[:i]**2), 'r:', r)
+            if np.add.reduce(np.square(ir_rep[:i])) > 0 and r > 0 and len(ir_rep[:i]) > 0:
                 str += '+'
             if r == 1:
                 str += ir_labels[i]
@@ -150,16 +154,16 @@ class SymmetryModes(SymmetryBase):
         # preliminar scan
         list_m = []
         list_a = []
-        for i in np.arange(0, 360, 12):
-            for j in np.arange(0, 360, 12):
-                for k in np.arange(0, 180, 12):
+        for i in np.arange(0, 360, 36):
+            for j in np.arange(0, 360, 36):
+                for k in np.arange(0, 180, 36):
                     list_m.append(optimization_function([i, j, k]))
                     list_a.append([i, j, k])
 
-        initial = list_a[np.nanargmin(list_m)]
-        res = minimize(optimization_function, initial, method='trust-constr',
+        initial = np.array(list_a[np.nanargmin(list_m)])
+        res = minimize(optimization_function, initial, method='CG',
                        #bounds=((0, 360), (0, 360), (0, 360)),
-                       tol=1e-8)
+                       tol=1e-20)
 
         print('res', res.x)
         return res.x
