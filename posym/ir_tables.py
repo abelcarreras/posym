@@ -11,6 +11,7 @@ def real_radical(m, n):
     return 2 * np.cos(2 * m * np.pi / n)
 
 
+# deprecated class
 class Op:
     def __init__(self, label, type, axis=None, order=1):
 
