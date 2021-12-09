@@ -12,35 +12,6 @@ def real_radical(m, n):
     return 2 * np.cos(2 * m * np.pi / n)
 
 
-# deprecated class
-class Op:
-    def __init__(self, label, type, axis=None, order=1):
-
-        if not issubclass(type, Operation):
-            raise Exception('Not an Operation')
-
-        self._type = type
-        self._axis = axis
-        self._order = order
-        self._label = label
-
-    @property
-    def type(self):
-        return self._type
-
-    @property
-    def axis(self):
-        return self._axis
-
-    @property
-    def order(self):
-        return self._order
-
-    @property
-    def label(self):
-        return self._label
-
-
 class CharTable(pd.DataFrame):
     """
     Subclass of DataFrame to add some convenience
@@ -127,67 +98,33 @@ class CharTable(pd.DataFrame):
         return self.attrs['operations']
 
 
-
-class OldCharTable(pd.DataFrame):
-    """
-    Subclass of DataFrame to add some convenience
-
-    """
-    def __init__(self, data, name, rotations, translations, multiplicities, operations=None):
-        super().__init__(data)
-        self.name = name
-
-        if np.all([r in data for r in rotations]):
-            self.attrs['rotations'] = rotations
-        else:
-            raise Exception('Rotations representations not in table')
-
-        if np.all([r in data for r in translations]):
-            self.attrs['translations'] = translations
-        else:
-            raise Exception('Translations representations not in table')
-
-        if len(multiplicities) == len(self.index):
-            self.attrs['multiplicities'] = multiplicities
-        else:
-            raise Exception('Multiplicities do not match')
-
-    @property
-    def rotations(self):
-        return [self[ir] for ir in self.attrs['rotations']]
-
-    @property
-    def translations(self):
-        return [self[ir] for ir in self.attrs['translations']]
-
-    @property
-    def multiplicities(self):
-        return self.attrs['multiplicities']
-
-
 ir_table_list = [
-    OldCharTable({'A': pd.Series([+1], index=['E']),
-                  },
-                 name='C1',
-                 rotations=['A', 'A', 'A'],  # x, y, z
-                 translations=['A', 'A', 'A'],  # Rx, Ry, Rz
-                 multiplicities=[1]),
 
-    OldCharTable({"A'": pd.Series([+1, +1], index=['E', 'sh']),
-                  "A''": pd.Series([+1, -1], index=['E', 'sh']),
-                  },
-                 name='Cs',
-                 rotations=["A'", "A'", "A''"],  # x, y, z
-                 translations=["A''", "A''", "A'"],  # Rx, Ry, Rz
-                 multiplicities=[1, 1]),
+    CharTable('C1',
+              [Identity(label='E')],
+              {'A': pd.Series([+1]),
+               },
+              rotations=['A', 'A', 'A'],  # x, y, z
+              translations=['A', 'A', 'A'],  # Rx, Ry, Rz
+              multiplicities=[1]),
 
-    OldCharTable({'Ag': pd.Series([+1, +1], index=['E', 'i']),
-                  'Au': pd.Series([+1, -1], index=['E', 'i']),
-                  },
-                 name='Ci',
-                 rotations=['Au', 'Au', 'Au'],  # x, y, z
-                 translations=['Ag', 'Ag', 'Ag'],  # Rx, Ry, Rz
-                 multiplicities=[1, 1]),
+    CharTable('Cs',
+              [Identity(label='E'), Reflection(label='sh', axis=[0, 0, 1])],
+              {"A'": pd.Series([+1, +1]),
+               "A''": pd.Series([+1, -1])
+               },
+              rotations=["A'", "A'", "A''"],  # x, y, z
+              translations=["A''", "A''", "A'"],  # Rx, Ry, Rz
+              multiplicities=[1, 1]),
+
+    CharTable('Ci',
+              [Identity(label='E'), Inversion(label='i')],
+              {'Ag': pd.Series([+1, +1]),
+               'Au': pd.Series([+1, -1])
+               },
+              rotations=['Au', 'Au', 'Au'],  # x, y, z
+              translations=['Ag', 'Ag', 'Ag'],  # Rx, Ry, Rz
+              multiplicities=[1, 1]),
 
     CharTable('C3',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3)],
@@ -220,6 +157,7 @@ ir_table_list = [
               rotations=['Bg', 'Bg', 'Ag'],  # x, y, z
               translations=['Bu', 'Bu', 'Au'],  # Rx, Ry, Rz
               multiplicities=[1, 1, 1, 1]),
+
     CharTable('C2v',
               [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
                Reflection(label='sv_xz', axis=[1, 0, 0]), Reflection(label='sv_yz', axis=[0, 1, 0])],
@@ -231,6 +169,7 @@ ir_table_list = [
               rotations=['B2', 'B1', 'A2'],
               translations=['B1', 'B2', 'A1'],
               multiplicities=[1, 1, 1, 1]),
+
     CharTable('C3v',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
                Reflection(label='sv', axis=[1, 0, 0])],
@@ -241,6 +180,7 @@ ir_table_list = [
               rotations=['E', 'E', 'A2'],
               translations=['E', 'E', 'A1'],
               multiplicities=[1, 2, 3]),
+
     CharTable('Td',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
                Rotation(label='C2', axis=[np.sqrt(2/9), 0, 1/3], order=2),
