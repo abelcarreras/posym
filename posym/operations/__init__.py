@@ -1,20 +1,21 @@
 import numpy as np
 
 
-def get_distance_table(coordinates, coordinates_2):
+def get_cross_distance_table(coordinates_1, coordinates_2):
 
-    coordinates = np.array(coordinates)
-    coordinates2 = np.array(coordinates_2)
+    coordinates_1 = np.array(coordinates_1)
+    coordinates_2 = np.array(coordinates_2)
 
-    distances = np.zeros((len(coordinates), len(coordinates2)))
+    distances = np.zeros((len(coordinates_1), len(coordinates_2)))
 
-    for i, c1 in enumerate(coordinates):
-        for j, c2 in enumerate(coordinates2):
+    for i, c1 in enumerate(coordinates_1):
+        for j, c2 in enumerate(coordinates_2):
+            # print(i, j, c1, c2, np.linalg.norm(c1 - c2))
             distances[i, j] = np.linalg.norm(c1 - c2)
     return distances
 
 
-def get_permutation_simple(distance_table):
+def get_permutation_simple(distance_table, symbols):
 
     def evaluation(i, j, row1, row2):
         from scipy.stats import norm
@@ -34,20 +35,28 @@ def get_permutation_simple(distance_table):
     control = True
     while control:
         control = False
-        for a in range(len(distance_table), 1, -1):
+        for a in range(len(distance_table)-1, 1, -1):
             for i in range(len(distance_table)):
                 j = i+a if i+a < len(distance_table) else i+a - len(distance_table)
 
                 row_1 = distance_table[i]
                 row_2 = distance_table[j]
 
-                if evaluation_fast(i, j, row_1, row_2) > evaluation_fast(j, i, row_1, row_2):
-                    distance_table[[i, j]] = distance_table[[j, i]]
-                    perm[[i, j]] = perm[[j, i]]
-                    control = True
+                if symbols[i] == symbols[j]:
+                    if evaluation_fast(i, j, row_1, row_2) > evaluation_fast(j, i, row_1, row_2):
+                        distance_table[[i, j]] = distance_table[[j, i]]
+                        perm[[i, j]] = perm[[j, i]]
+                        control = True
 
+                # print(i, j, evaluation_fast(i, j, row_1, row_2), evaluation_fast(j, i, row_1, row_2))
+                # print(distance_table)
+
+    def inverse_perm(perm):
+        return [list(perm).index(j) for j in range(len(perm))]
+
+    # print('-->\n', np.round(distance_table, decimals=3))
     # print(np.round(np.diag(distance_table), decimals=3))
-    return tuple(perm)
+    return inverse_perm(perm)
 
 
 class Operation:
@@ -58,8 +67,8 @@ class Operation:
     def get_permutation(self, operation, coordinates, symbols):
         operated_coor = np.dot(operation, coordinates.T).T
 
-        distance_table = get_distance_table(coordinates, operated_coor)
-        perm = get_permutation_simple(distance_table)
+        distance_table = get_cross_distance_table(coordinates, operated_coor)
+        perm = get_permutation_simple(distance_table, symbols)
         permu_coor = operated_coor[list(perm)]
 
         measure = np.average(np.linalg.norm(np.subtract(coordinates, permu_coor), axis=0))

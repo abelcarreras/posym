@@ -14,27 +14,44 @@ class Inversion(Operation):
     def __init__(self, label):
         super().__init__(label)
 
+    def __hash__(self):
+        return hash((self._label))
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+
+
     def get_measure(self, coordinates, modes, symbols, orientation=None):
 
         operation = inversion()
         operated_coor = np.dot(operation, coordinates.T).T
 
-        measure_mode = []
-        measure_coor = []
-
         mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
 
+        measure_mode = []
         for mode in modes:
             operated_mode = np.dot(operation, prepare_vector(coordinates, mode).T).T - operated_coor
-            #norm_1 = np.linalg.norm(mode, axis=1)
             norm = np.linalg.norm(mode)
-
-
             permu_mode = np.array(operated_mode)[permu]
-            # norm_2 = np.linalg.norm(permu_mode, axis=1)
 
-            #self._measure_mode.append(np.nanmean(np.divide(np.diag(np.dot(mode, permu_mode.T)), norm_1 * norm_2)))
-            measure_mode.append(np.add.reduce(np.diag(np.dot(mode, permu_mode.T)))/norm)
+            measure_mode.append(np.trace(np.dot(mode, permu_mode.T))/norm)
 
-        return np.array(measure_mode), mesure_coor
+        return np.array(measure_mode)
 
+    def get_measure_pos(self, coordinates, symbols, orientation=None):
+
+        operation = inversion()
+        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+
+        return mesure_coor
+
+    @property
+    def operation_matrix_list(self):
+        return [inversion()]
+
+    def __mul__(self, other):
+        if not other.__class__.__bases__[0] is Operation:
+            raise Exception('Product only defined between Operation subclasses')
+        else:
+            return [Inversion(self._label)]

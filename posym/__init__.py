@@ -117,17 +117,21 @@ class SymmetryModes(SymmetryBase):
         self._mode_measures = []
 
         if optimize:
-            angles = self.get_orientation(ir_table.operations)
+            self._angles = self.get_orientation(ir_table.operations)
         else:
-            angles = [0, 0, 0]
+            self._angles = [0, 0, 0]
 
-        rotmol = R.from_euler('zyx', angles, degrees=True)
-        #rotmol = R.from_rotvec(angles)
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
         for operation in ir_table.operations:
-            mode_m, coor_m = operation.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
-            self._mode_measures.append(mode_m)
-            self._coor_measures.append(coor_m)
+            operations_dic = ir_table.get_all_operations()
+            mode_measures = []
+            for op in operations_dic[operation.label]:
+                mode_m = op.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
+                mode_measures.append(mode_m)
+
+            mode_measures = np.average(mode_measures, axis=0)
+            self._mode_measures.append(mode_measures)
 
         total_state = pd.Series(np.add.reduce(self._mode_measures, axis=1), index=ir_table.index)
 
@@ -145,7 +149,7 @@ class SymmetryModes(SymmetryBase):
 
             coor_measures = []
             for operation in operations:
-                mode_m, coor_m = operation.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
+                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
                 coor_measures.append(coor_m)
 
             # definition group measure
@@ -154,20 +158,172 @@ class SymmetryModes(SymmetryBase):
         # preliminar scan
         list_m = []
         list_a = []
-        for i in np.arange(0, 360, 36):
-            for j in np.arange(0, 360, 36):
+        for i in np.arange(0, 180, 36):
+            for j in np.arange(0, 180, 36):
                 for k in np.arange(0, 180, 36):
                     list_m.append(optimization_function([i, j, k]))
                     list_a.append([i, j, k])
 
         initial = np.array(list_a[np.nanargmin(list_m)])
         res = minimize(optimization_function, initial, method='CG',
-                       #bounds=((0, 360), (0, 360), (0, 360)),
-                       tol=1e-20)
+                       # bounds=((0, 360), (0, 360), (0, 360)),
+                       # tol=1e-20
+                       )
 
-        print('res', res.x)
         return res.x
 
     @property
-    def get_measure_coor(self):
-        return np.add.reduce(self._coor_measures)
+    def get_measure_pos(self):
+        return np.product(self._coor_measures)
+
+    @property
+    def opt_coordinates(self):
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+        return rotmol.apply(self._coordinates)
+
+if __name__ == '__main__':
+
+    from pyqchem import get_output_from_qchem, Structure
+    from pyqchem.tools import get_geometry_from_pubchem
+
+    coordinates = [[ 0.000000000+00,  0.000000000+00,  2.40297090e-01],
+                   [-1.43261539e+00, -1.75444785e-16, -9.61188362e-01],
+                   [ 1.43261539e+00,  1.75444785e-16, -9.61188362e-01]]
+
+    symbols = ['O', 'H', 'H']
+
+    coordinates = [[0, 0, 0],
+                   [ np.sqrt(8/9), 0, -1/3],
+                   [-np.sqrt(2/9), np.sqrt(2/3), -1/3],
+                   [-np.sqrt(2/9), -np.sqrt(2/3), -1/3],
+                   [0, 0, 1]]
+
+    #coordinates = [[ 0.0000000000,    0.0000000000,    0.0000000000],
+    #               [ 0.5541000000,    0.7996000000,    0.4965000000],
+    #               [ 0.6833000000,   -0.8134000000,   -0.2536000000],
+    #               [-0.7782000000,   -0.3735000000,    0.6692000000],
+    #               [-0.4593000000,    0.3874000000,   -0.9121000000]]
+
+    coordinates = [[-3.11301739e-06,  1.12541091e-05, -7.97835696e-06],
+                   [-6.58614327e-02, -7.77865103e-01, -7.63860353e-01],
+                   [-3.64119514e-02,  9.82136003e-01, -4.76386979e-01],
+                   [-8.37587195e-01, -9.93456888e-02,  6.93899368e-01],
+                   [ 9.39879258e-01, -1.04992740e-01,  5.46395830e-01]]
+
+    symbols = ['C', 'H', 'H', 'H', 'H']
+
+
+    if False:
+        mol = get_geometry_from_pubchem('methane')
+        coordinates = mol.get_coordinates()
+        symbols = mol.get_symbols()
+
+    from posym.operations.rotation import Rotation, rotation
+    from posym.operations.reflection import Reflection, reflection
+    from posym.operations.irotation import ImproperRotation
+    from posym.operations import get_permutation_simple, get_cross_distance_table
+
+    import matplotlib.pyplot as plt
+
+    if True:
+        def optimization_function(angles):
+            rotmol = R.from_euler('zyx', angles, degrees=True)
+            operation = Rotation(label='C3', axis=[0, 0, 1], order=3)
+            # print(operation._axis, operation._order)
+            coor_m = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
+            operation = Reflection(label='s', axis=[0, 1, 0])
+            # print(operation._axis, operation._order)
+            coor_m2 = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
+            operation = Rotation(label='C2', axis=[np.sqrt(2/9), 0, 1/3], order=2)
+            coor_m3 = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
+            operation = ImproperRotation(label='S4', axis=[np.sqrt(2/9), 0, 1/3], order=4)
+            coor_m4 = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
+
+            #print(coor_m + coor_m2 + coor_m3 + coor_m4)
+            return coor_m + coor_m2 + coor_m3 + coor_m4
+            #return np.product([coor_m, coor_m2, coor_m3, coor_m4])
+
+
+        #exit()
+
+        list_m = []
+        list_a = []
+        for i in np.arange(0, 180, 36):
+            for j in np.arange(0, 180, 36):
+                for k in np.arange(0, 180, 36):
+                    list_m.append(optimization_function([i, j, k]))
+                    list_a.append([i, j, k])
+
+        initial = np.array(list_a[np.nanargmin(list_m)])
+        #initial = [143.63674808,  -4.31338625,  70.70307201]
+        # initial = [43.22189286,  43.86797247, 103.83908054]
+        res = minimize(optimization_function, initial, method='CG',
+                       #tol=1e20
+                       )
+
+        print('res', res.x)
+        print('test', optimization_function(res.x))
+
+        # res.x = [43.22189286,  43.86797247, 103.83908054]
+
+        rotmol = R.from_euler('zyx', res.x, degrees=True)
+
+    else:
+        angles = [43.22189286,  43.86797247, 103.83908054]
+        rotmol = R.from_euler('zyx', angles, degrees=True)
+
+
+        #print(optimization_function(res.x))
+        #rotmol = R.from_euler('zyx', res.x, degrees=True)
+
+
+    #operation = Rotation(label='C3', axis=[0, 0, 1], order=3)
+    #rotmol = R.from_euler('zyx', [0, 0, 0], degrees=True)
+    #mode_m, coor_m = operation.get_measure(np.array(coordinates), modes, symbols, orientation=rotmol)
+    #print('measure', coor_m)
+    #rotmol = R.from_euler('zyx', [360./3, 0, 0], degrees=True)
+    #print('---')
+
+    print(Structure(coordinates, symbols))
+
+    # rotations
+    #rotated_axis = rotmol.apply([0, 0, 1])
+    #operation = rotation(2*np.pi/3, rotated_axis)
+    #print('axis', rotated_axis)
+
+    # reflection
+    #rotated_axis_r = rotmol.apply([0, 1,  0])
+    #operation = reflection(rotated_axis_r)
+    #print('axis_r', rotated_axis_r)
+
+    # C2 rotation
+    # rotated_axis_i = rotmol.apply([(np.sqrt(8 / 9))/2, 0, (1-1 / 3)/2])
+
+    rotated_axis_i = rotmol.apply([np.sqrt(2 / 9), 0, 1 / 3])
+    operation1 = rotation(2*np.pi/4, rotated_axis_i)
+    operation2 = reflection(rotated_axis_i)
+    operation = np.dot(operation2, operation1)
+    print('axis_i', rotated_axis_i)
+
+    print('det:', np.linalg.det(operation))
+    permu_coor = np.dot(operation, np.array(coordinates).T).T
+
+    print(Structure(permu_coor, symbols))
+
+    #permu_coor = rotmol.apply(coordinates)
+    #print(Structure(permu_coor, symbols))
+
+    distance_table = get_cross_distance_table(coordinates, permu_coor)
+    perm = get_permutation_simple(distance_table)
+    #print(np.round(distance_table[perm], 3))
+    print(perm)
+
+
+    permu_coor = permu_coor[perm]
+
+    print(Structure(permu_coor, symbols))
+
+    print('****')
+    print(permu_coor)
+    a = np.average(np.linalg.norm(np.subtract(coordinates, permu_coor), axis=0))
+    print(a)
