@@ -97,6 +97,10 @@ class CharTable(pd.DataFrame):
     def operations(self):
         return self.attrs['operations']
 
+    @property
+    def ir_degeneracies(self):
+        return self.T['E'].values
+
 
 ir_table_list = [
 
@@ -198,6 +202,14 @@ ir_table_list = [
 ]
 
 if __name__ == '__main__':
+
+
+    ct = ir_table_list[-1]
+    print(ct.ir_degeneracy)
+
+    exit()
+
+
 
     print(ir_table_list[-1].sort_index().index)
     # exit()

@@ -2,7 +2,7 @@ from pyqchem import get_output_from_qchem, Structure, QchemInput
 from pyqchem.parsers.parser_frequencies import basic_frequencies
 from pyqchem.parsers.parser_optimization import basic_optimization
 
-from posym import PointGroup, SymmetryModes
+from posym import SymmetryModes
 from pyqchem.tools import get_geometry_from_pubchem
 import numpy as np
 

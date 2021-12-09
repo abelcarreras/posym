@@ -37,7 +37,7 @@ class PointGroup():
 
     @property
     def n_sym_elements(self):
-        return np.add.reduce(self._table.multiplicities)
+        return np.sum(self._table.multiplicities)
 
     @property
     def n_ir(self):
@@ -74,4 +74,8 @@ class PointGroup():
 
     @property
     def order(self):
-        return np.add.reduce(self._table.multiplicities)
+        return np.sum(self._table.multiplicities)
+
+    @property
+    def ir_degeneracies(self):
+        return self._table.ir_degeneracies
