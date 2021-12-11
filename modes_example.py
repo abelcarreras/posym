@@ -39,9 +39,11 @@ molecule_ch2cl2 = Structure(coordinates=dicloro,
 
 molecule_tetracene = get_geometry_from_pubchem('naphthalene')
 methane = get_geometry_from_pubchem('methane')
+ammonia = get_geometry_from_pubchem('ammonia')
+
 print(methane)
 
-for molecule, group in zip([molecule_water, molecule_ch2cl2, methane], ['c2v', 'c2h', 'Td']):
+for molecule, group in zip([molecule_water, molecule_ch2cl2, methane, ammonia], ['c2v', 'c2h', 'Td', 'C3v']):
 
     qc_input = QchemInput(molecule,
                           jobtype='opt',
@@ -82,7 +84,4 @@ for molecule, group in zip([molecule_water, molecule_ch2cl2, methane], ['c2v', '
     for i in range(len(modes)):
         print('m {:2}: {:8.3f} :'.format(i + 1, freqs[i]), sm.get_state_mode(i))
     print('Total: ', sm)
-
-    #print(sm.opt_coordinates)
-    # exit()
 

@@ -87,6 +87,27 @@ class Rotation(Operation):
 
         return measure_coor_total
 
+    def get_measure_op(self, coordinates, symbols, operator_matrix, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+
+        measure_op = []
+        for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
+            operation = rotation(angle, rotated_axis)
+
+            mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+
+            permu_matrix = np.array(operator_matrix).T[permu].T[permu]
+
+            measure = np.trace(np.dot(operator_matrix, permu_matrix.T))
+            normalization = np.trace(np.dot(operator_matrix, operator_matrix.T))
+
+            measure_op.append(measure/normalization)
+
+        measure_coor_total = np.average(measure_op)
+
+        return measure_coor_total
+
 
     @property
     def axis(self):

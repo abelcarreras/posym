@@ -1,9 +1,9 @@
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
-import numpy as np
-import pandas as pd
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
+import numpy as np
+import pandas as pd
 
 
 class SymmetryBase():
@@ -180,6 +180,7 @@ class SymmetryModes(SymmetryBase):
     def opt_coordinates(self):
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
         return rotmol.apply(self._coordinates)
+
 
 if __name__ == '__main__':
 

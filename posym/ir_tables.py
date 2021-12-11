@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from posym.operations import Operation
 from posym.operations.identity import Identity
 from posym.operations.rotation import Rotation
 from posym.operations.reflection import Reflection
@@ -173,6 +172,26 @@ ir_table_list = [
               rotations=['B2', 'B1', 'A2'],
               translations=['B1', 'B2', 'A1'],
               multiplicities=[1, 1, 1, 1]),
+
+    CharTable('D2h',
+              [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
+               Rotation(label="C2'", axis=[0, 1, 0], order=2),
+               Rotation(label="C2''", axis=[1, 0, 0], order=2),
+               Inversion(label='i'), Reflection(label='sh', axis=[0, 0, 1]),
+               Reflection(label='sv', axis=[1, 0, 0]),
+               Reflection(label='sd', axis=[0, 1, 0])],
+              {'Ag':  pd.Series([+1, +1, +1, +1, +1, +1, +1, +1]),
+               'B1g': pd.Series([+1, +1, -1, -1, +1, +1, -1, -1]),
+               'B2g': pd.Series([+1, -1, -1, +1, +1, -1, +1, -1]),
+               'B3g': pd.Series([+1, -1, +1, -1, +1, -1, -1, +1]),
+               'Au':  pd.Series([+1, +1, +1, +1, -1, -1, -1, -1]),
+               'B1u': pd.Series([+1, +1, -1, -1, -1, -1, +1, +1]),
+               'B2u': pd.Series([+1, -1, -1, +1, -1, +1, -1, +1]),
+               'B3u': pd.Series([+1, -1, +1, -1, -1, +1, +1, -1]),
+               },
+              rotations=['B3g', 'B2g', 'B1g'],  # x, y, z
+              translations=['B3u', 'B2u', 'B1u'],  # Rx, Ry, Rz
+              multiplicities=[1, 1, 1, 1, 1, 1, 1, 1]),
 
     CharTable('C3v',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),

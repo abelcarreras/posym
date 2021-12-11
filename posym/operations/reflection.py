@@ -26,7 +26,6 @@ class Reflection(Operation):
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-
     def get_measure(self, coordinates, modes, symbols, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
@@ -53,6 +52,24 @@ class Reflection(Operation):
         mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
 
         return mesure_coor
+
+    def get_measure_op(self, coordinates, symbols, operator_matrix, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+
+        operation = reflection(rotated_axis)
+
+        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+
+        permu_matrix = np.array(operator_matrix).T[permu].T[permu]
+
+        measure = np.trace(np.dot(operator_matrix, permu_matrix.T))
+        normalization = np.trace(np.dot(operator_matrix, operator_matrix.T))
+
+        measure_coor_total = measure/normalization
+
+        return measure_coor_total
+
 
     @property
     def axis(self):

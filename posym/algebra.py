@@ -15,8 +15,8 @@ def dot(state1, state2, normalize=False):
     n1 = np.sum(np.multiply(v1.values, pg.ir_degeneracies))
     n2 = np.sum(np.multiply(v2.values, pg.ir_degeneracies))
 
-    dot = np.dot(np.sqrt(np.multiply(v1.values, pg.ir_degeneracies)),
-                 np.sqrt(np.multiply(v2.values, pg.ir_degeneracies)))
+    dot = np.dot(np.sqrt(np.multiply(v1.values.clip(min=0), pg.ir_degeneracies)),
+                 np.sqrt(np.multiply(v2.values.clip(min=0), pg.ir_degeneracies)))
 
     if normalize:
         dot = dot / np.sqrt(n1 * n2)

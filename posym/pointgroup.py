@@ -20,6 +20,12 @@ class PointGroup():
 
         raise Exception('{} group not found'.format(group))
 
+    def __hash__(self):
+        return hash(self._group)
+
+    def __eq__(self, other):
+        return self.label == other.label
+
     def __str__(self):
         return '{}\n{}'.format(self._table.name, self._table.T)
 
@@ -79,3 +85,7 @@ class PointGroup():
     @property
     def ir_degeneracies(self):
         return self._table.ir_degeneracies
+
+    @property
+    def label(self):
+        return self._group
