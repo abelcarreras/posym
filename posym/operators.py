@@ -13,6 +13,7 @@ def get_atom_map(basis):
 
     return atom_map
 
+
 def get_simplified_matrx(matrix, atom_map):
 
     counts = np.unique(atom_map, return_counts=True)[1]
@@ -28,9 +29,9 @@ def get_simplified_matrx(matrix, atom_map):
 
 
 class SymmetryOperator(SymmetryBase):
-    def __init__(self, group, coordinates, symbols, operator_matrix, basis, optimize=True):
+    def __init__(self, group, coordinates, symbols, operator_matrix, basis, orientation_angles=None):
 
-        ir_table = PointGroup(group).ir_table
+        pg = PointGroup(group)
 
         # set coordinates at geometrical center
         self._coordinates = np.array([c - np.average(coordinates, axis=0) for c in coordinates])
@@ -46,15 +47,15 @@ class SymmetryOperator(SymmetryBase):
 
         simp_matrix = get_simplified_matrx(self._operator_matrix, atom_map)
 
-        if optimize:
-            self._angles = self.get_orientation(ir_table.operations)
+        if orientation_angles is None:
+            self._angles = self.get_orientation(pg.operations)
         else:
-            self._angles = [0, 0, 0]
+            self._angles = orientation_angles
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
-        for operation in ir_table.operations:
-            operations_dic = ir_table.get_all_operations()
+        for operation in pg.operations:
+            operations_dic = pg.get_all_operations()
             matrix_measures = []
             for op in operations_dic[operation.label]:
                 matrix_m = op.get_measure_op(self._coordinates, self._symbols, simp_matrix, orientation=rotmol)
@@ -63,8 +64,7 @@ class SymmetryOperator(SymmetryBase):
             matrix_measures = np.average(matrix_measures)
             self._operator_measures.append(matrix_measures)
 
-
-        total_state = pd.Series(self._operator_measures, index=ir_table.index)
+        total_state = pd.Series(self._operator_measures, index=pg.op_labels)
 
         super().__init__(group, total_state)
 
@@ -108,6 +108,11 @@ class SymmetryOperator(SymmetryBase):
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
         return rotmol.apply(self._coordinates)
 
+    @property
+    def orientation_angles(self):
+        return self._angles
+
+
 if __name__ == '__main__':
 
     from pyqchem import get_output_from_qchem, Structure, QchemInput
@@ -141,7 +146,7 @@ if __name__ == '__main__':
     symbols_ = ['C', 'H', 'H', 'H', 'H']
 
     molecule = Structure(coordinates, symbols)
-    molecule = get_geometry_from_pubchem('naphthalene')
+    molecule = get_geometry_from_pubchem('water')
 
     qc_input = QchemInput(molecule,
                           jobtype='opt',
@@ -162,6 +167,6 @@ if __name__ == '__main__':
     group = ee['structure'].get_point_symmetry()
     print('group:', group)
 
-    so = SymmetryOperator(group, molecule_coor, molecule_symbols, matrix, ee['basis'], optimize=True)
+    so = SymmetryOperator(group, molecule_coor, molecule_symbols, matrix, ee['basis'])
 
     print(so)

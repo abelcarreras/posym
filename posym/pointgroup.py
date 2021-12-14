@@ -29,6 +29,13 @@ class PointGroup():
     def __str__(self):
         return '{}\n{}'.format(self._table.name, self._table.T)
 
+    def get_all_operations(self):
+        return self._table.get_all_operations()
+
+    @property
+    def operations(self):
+        return self._table.operations
+
     @property
     def ir_table(self):
         return self._table

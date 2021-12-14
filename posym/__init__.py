@@ -16,16 +16,14 @@ class SymmetryBase():
         self._pg = PointGroup(group)
         self._group = group
 
-        ir_table = self._pg.ir_table
-
         if isinstance(rep, str):
-            if rep not in ir_table:
-                raise Exception('Representation do not match with group\nAvailable: {}'.format(ir_table.T.index))
-            self._op_representation = ir_table[rep]
+            if rep not in self._pg.ir_labels:
+                raise Exception('Representation do not match with group\nAvailable: {}'.format(self._pg.ir_labels))
+            self._op_representation = self._pg.ir_table[rep]
 
         elif isinstance(rep, pd.Series):
-            if np.all(ir_table.sort_index().index == rep.sort_index().index):
-                self._op_representation = rep.reindex(ir_table.index)
+            if np.all(self._pg.ir_table.sort_index().index == rep.sort_index().index):
+                self._op_representation = rep.reindex(self._pg.ir_table.index)
             else:
                 raise Exception('Representation not in group')
 
@@ -34,7 +32,7 @@ class SymmetryBase():
 
     def get_ir_representation(self):
         ir_rep = np.dot(self._pg.trans_matrix_inv, self._op_representation.values)
-        return pd.Series(ir_rep, index=self._pg.ir_table.T.index)
+        return pd.Series(ir_rep, index=self._pg.ir_labels)
 
     def get_point_group(self):
         return self._pg
@@ -103,9 +101,9 @@ class SymmetryBase():
 
 
 class SymmetryModes(SymmetryBase):
-    def __init__(self, group, coordinates, modes, symbols, optimize=True):
+    def __init__(self, group, coordinates, modes, symbols, orientation_angles=None):
 
-        ir_table = PointGroup(group).ir_table
+        pg = PointGroup(group)
 
         # set coordinates at geometrical center
         self._coordinates = np.array([c - np.average(coordinates, axis=0) for c in coordinates])
@@ -116,15 +114,15 @@ class SymmetryModes(SymmetryBase):
         self._coor_measures = []
         self._mode_measures = []
 
-        if optimize:
-            self._angles = self.get_orientation(ir_table.operations)
+        if orientation_angles is None:
+            self._angles = self.get_orientation(pg.operations)
         else:
-            self._angles = [0, 0, 0]
+            self._angles = orientation_angles
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
-        for operation in ir_table.operations:
-            operations_dic = ir_table.get_all_operations()
+        for operation in pg.operations:
+            operations_dic = pg.get_all_operations()
             mode_measures = []
             for op in operations_dic[operation.label]:
                 mode_m = op.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
@@ -133,13 +131,13 @@ class SymmetryModes(SymmetryBase):
             mode_measures = np.average(mode_measures, axis=0)
             self._mode_measures.append(mode_measures)
 
-        total_state = pd.Series(np.add.reduce(self._mode_measures, axis=1), index=ir_table.index)
+        total_state = pd.Series(np.add.reduce(self._mode_measures, axis=1), index=pg.op_labels)
 
         super().__init__(group, total_state)
 
     def get_state_mode(self, n):
         return SymmetryBase(group=self._group, rep=pd.Series(np.array(self._mode_measures).T[n],
-                                                             index=self._pg.ir_table.index))
+                                                             index=self._pg.op_labels))
 
     def get_orientation(self, operations):
 
@@ -181,6 +179,10 @@ class SymmetryModes(SymmetryBase):
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
         return rotmol.apply(self._coordinates)
 
+    @property
+    def orientation_angles(self):
+        return self._angles
+
 
 if __name__ == '__main__':
 
@@ -214,8 +216,13 @@ if __name__ == '__main__':
     symbols = ['C', 'H', 'H', 'H', 'H']
 
 
-    if False:
-        mol = get_geometry_from_pubchem('methane')
+    if True:
+        #mol = get_geometry_from_pubchem('methane')
+        from pyqchem.file_io import read_structure_from_xyz
+
+        # mol = get_geometry_from_pubchem('Buckminsterfullerene')
+        mol = read_structure_from_xyz('../c60.xyz')
+
         coordinates = mol.get_coordinates()
         symbols = mol.get_symbols()
 
@@ -229,7 +236,7 @@ if __name__ == '__main__':
     if True:
         def optimization_function(angles):
             rotmol = R.from_euler('zyx', angles, degrees=True)
-            operation = Rotation(label='C3', axis=[0, 0, 1], order=3)
+            operation = Rotation(label='C2', axis=[0, 0, 1], order=2)
             # print(operation._axis, operation._order)
             coor_m = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
             operation = Reflection(label='s', axis=[0, 1, 0])
@@ -240,8 +247,9 @@ if __name__ == '__main__':
             operation = ImproperRotation(label='S4', axis=[np.sqrt(2/9), 0, 1/3], order=4)
             coor_m4 = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
 
+            print(coor_m)
             #print(coor_m + coor_m2 + coor_m3 + coor_m4)
-            return coor_m + coor_m2 + coor_m3 + coor_m4
+            return coor_m # + coor_m2 + coor_m3 + coor_m4
             #return np.product([coor_m, coor_m2, coor_m3, coor_m4])
 
 
@@ -255,6 +263,7 @@ if __name__ == '__main__':
                     list_m.append(optimization_function([i, j, k]))
                     list_a.append([i, j, k])
 
+        print('------')
         initial = np.array(list_a[np.nanargmin(list_m)])
         #initial = [143.63674808,  -4.31338625,  70.70307201]
         # initial = [43.22189286,  43.86797247, 103.83908054]
@@ -288,9 +297,9 @@ if __name__ == '__main__':
     print(Structure(coordinates, symbols))
 
     # rotations
-    #rotated_axis = rotmol.apply([0, 0, 1])
-    #operation = rotation(2*np.pi/3, rotated_axis)
-    #print('axis', rotated_axis)
+    rotated_axis = rotmol.apply([0, 0, 1])
+    operation = rotation(2*np.pi/2, rotated_axis)
+    print('axis', rotated_axis)
 
     # reflection
     #rotated_axis_r = rotmol.apply([0, 1,  0])
@@ -300,25 +309,26 @@ if __name__ == '__main__':
     # C2 rotation
     # rotated_axis_i = rotmol.apply([(np.sqrt(8 / 9))/2, 0, (1-1 / 3)/2])
 
-    rotated_axis_i = rotmol.apply([np.sqrt(2 / 9), 0, 1 / 3])
-    operation1 = rotation(2*np.pi/4, rotated_axis_i)
-    operation2 = reflection(rotated_axis_i)
-    operation = np.dot(operation2, operation1)
-    print('axis_i', rotated_axis_i)
+    # S4 rotation
+    #rotated_axis_i = rotmol.apply([np.sqrt(2 / 9), 0, 1 / 3])
+    #operation1 = rotation(2*np.pi/4, rotated_axis_i)
+    #operation2 = reflection(rotated_axis_i)
+    #operation = np.dot(operation2, operation1)
+    #print('axis_i', rotated_axis_i)
+
+    #coordinates = rotmol.apply(coordinates)
+    #print(Structure(coordinates, symbols))
 
     print('det:', np.linalg.det(operation))
     permu_coor = np.dot(operation, np.array(coordinates).T).T
 
     print(Structure(permu_coor, symbols))
 
-    #permu_coor = rotmol.apply(coordinates)
-    #print(Structure(permu_coor, symbols))
 
     distance_table = get_cross_distance_table(coordinates, permu_coor)
-    perm = get_permutation_simple(distance_table)
+    perm = get_permutation_simple(distance_table, symbols)
     #print(np.round(distance_table[perm], 3))
     print(perm)
-
 
     permu_coor = permu_coor[perm]
 
