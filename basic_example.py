@@ -37,3 +37,10 @@ b1 = SymmetryBase('C2v', 'B1')
 a2 = SymmetryBase('C2v', 'A2')
 
 print(a1 * a2 + b1)
+
+from posym.algebra import dot
+
+print('dot: ', dot(a1, a1))
+print('dot: ', dot(e, e))
+print('dot: ', dot(t1, t1))
+

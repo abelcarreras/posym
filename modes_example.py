@@ -41,7 +41,7 @@ methane = get_geometry_from_pubchem('methane')
 ammonia = get_geometry_from_pubchem('ammonia')
 
 
-for molecule, group in zip([water_mol, dichloro_mol, methane, ammonia], ['c2v', 'c2h', 'Td', 'Td']):
+for molecule, group in zip([water_mol, dichloro_mol, methane, ammonia], ['c2v', 'c2h', 'Td', 'c3v']):
 
     qc_input = QchemInput(molecule,
                           jobtype='opt',

@@ -67,6 +67,7 @@ class PointGroup():
         """
         if self._trans_matrix is None:
             self._trans_matrix = np.array([v for v in self.ir_table.T.values]).T
+            self._trans_matrix = self._trans_matrix/self._trans_matrix[0, :]  # normalization
 
         return self._trans_matrix
 

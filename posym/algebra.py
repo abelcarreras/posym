@@ -12,12 +12,10 @@ def dot(state1, state2, normalize=False):
     v1 = state1.get_ir_representation()
     v2 = state2.get_ir_representation()
 
-    n1 = np.sum(np.multiply(v1.values, pg.ir_degeneracies))
-    n2 = np.sum(np.multiply(v2.values, pg.ir_degeneracies))
+    n1 = np.sum(v1.values)
+    n2 = np.sum(v2.values)
 
-    dot = np.dot(np.sqrt(np.multiply(v1.values.clip(min=0), pg.ir_degeneracies)),
-                 np.sqrt(np.multiply(v2.values.clip(min=0), pg.ir_degeneracies)))
-
+    dot = np.dot(np.sqrt(v1.values.clip(min=0)), np.sqrt(v2.values.clip(min=0)))
     if normalize:
         dot = dot / np.sqrt(n1 * n2)
 
