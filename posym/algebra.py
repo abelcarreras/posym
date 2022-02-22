@@ -7,7 +7,7 @@ def dot(state1, state2, normalize=False):
     if state1.get_point_group() != state2.get_point_group():
         raise ValueError("States must have same point group")
 
-    pg = state1.get_point_group()
+    # pg = state1.get_point_group()
 
     v1 = state1.get_ir_representation()
     v2 = state2.get_ir_representation()

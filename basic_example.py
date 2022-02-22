@@ -40,7 +40,10 @@ print(a1 * a2 + b1)
 
 from posym.algebra import dot
 
-print('dot: ', dot(a1, a1))
-print('dot: ', dot(e, e))
-print('dot: ', dot(t1, t1))
-
+print('\nTest dot product')
+print('A1 * A1: ', dot(a1, a1))
+print(' E * E : ', dot(e, e))
+print('T1 * T1: ', dot(t1, t1))
+print('T1 * E : ', dot(t1, e))
+print(' E * E : (normalized): ', dot(e, e, normalize=True))
+print('T1 * T1: (normalized): ', dot(t1, t1, normalize=True))

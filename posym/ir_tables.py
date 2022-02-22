@@ -45,6 +45,10 @@ class CharTable(pd.DataFrame):
 
         self.attrs['operations'] = operations
 
+    def __str__(self):
+        formated_data = {k: "{:,.4f}".format for k in self.T.columns}
+        return self.T.to_string(formatters=formated_data)
+
     def get_all_operations(self):
 
         if 'all_operations' in self.attrs:
@@ -163,7 +167,7 @@ ir_table_list = [
 
     CharTable('C2v',
               [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
-               Reflection(label='sv_xz', axis=[1, 0, 0]), Reflection(label='sv_yz', axis=[0, 1, 0])],
+               Reflection(label='sv_xz', axis=[0, 1, 0]), Reflection(label='sv_yz', axis=[1, 0, 0])],
               {'A1': pd.Series([+1, +1, +1, +1]),
                'A2': pd.Series([+1, +1, -1, -1]),
                'B1': pd.Series([+1, -1, +1, -1]),

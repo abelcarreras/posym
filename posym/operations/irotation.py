@@ -10,11 +10,12 @@ def prepare_vector(positions, vector):
 
 
 class ImproperRotation(Operation):
-    def __init__(self, label, axis, order=1):
+    def __init__(self, label, axis, order=1, exp=1):
         super().__init__(label)
 
         self._axis = standardize_vector(axis)
         self._order = order
+        self._exp = exp
 
     def __hash__(self):
         axis = np.round(self._axis, decimals=6)
@@ -33,7 +34,8 @@ class ImproperRotation(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         measure_mode = []
-        for angle in np.arange(2*np.pi/self._order, 2*np.pi, 2*np.pi/self._order)[::2]:
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+        # for angle in np.arange(2*np.pi/self._order, 2*np.pi, 2*np.pi/self._order)[::2]:
             operation1 = rotation(angle, rotated_axis)
             operation2 = reflection(rotated_axis)
             operation = np.dot(operation2, operation1)
@@ -62,7 +64,8 @@ class ImproperRotation(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         measure_coor = []
-        for angle in np.arange(2*np.pi/self._order, 2*np.pi, 2*np.pi/self._order)[::2]:
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+        # for angle in np.arange(2*np.pi/self._order, 2*np.pi, 2*np.pi/self._order)[::2]:
             operation1 = rotation(angle, rotated_axis)
             operation2 = reflection(rotated_axis)
             operation = np.dot(operation2, operation1)
@@ -80,7 +83,8 @@ class ImproperRotation(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         measure_op = []
-        for angle in np.arange(2*np.pi/self._order, 2*np.pi, 2*np.pi/self._order)[::2]:
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+        #for angle in np.arange(2*np.pi/self._order, 2*np.pi, 2*np.pi/self._order)[::2]:
             operation = rotation(angle, rotated_axis)
 
             mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)

@@ -27,7 +27,7 @@ class PointGroup():
         return self.label == other.label
 
     def __str__(self):
-        return '{}\n{}'.format(self._table.name, self._table.T)
+        return '{}\n{}'.format(self._table.name, self._table.T.to_string())
 
     def get_all_operations(self):
         return self._table.get_all_operations()

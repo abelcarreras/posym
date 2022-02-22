@@ -18,11 +18,12 @@ def prepare_vector(positions, vector):
 
 
 class Rotation(Operation):
-    def __init__(self, label, axis, order=1):
+    def __init__(self, label, axis, order=1, exp=1):
         super().__init__(label)
 
         self._axis = standardize_vector(axis)
         self._order = order
+        self._exp = exp
 
     def __hash__(self):
 
@@ -48,7 +49,9 @@ class Rotation(Operation):
         measure_mode = []
 
         # print('llñ', list(np.linspace(2*np.pi/self._order, 2*np.pi, self._order)))
-        for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
+        # for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+
             operation = rotation(angle, rotated_axis)
             # operated_coor = np.dot(operation, coordinates.T).T
 
@@ -77,7 +80,8 @@ class Rotation(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         measure_coor = []
-        for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
+        # for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
             operation = rotation(angle, rotated_axis)
 
             mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
@@ -92,7 +96,9 @@ class Rotation(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         measure_op = []
-        for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
+        #for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+
             operation = rotation(angle, rotated_axis)
 
             mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
