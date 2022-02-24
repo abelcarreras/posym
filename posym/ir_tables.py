@@ -86,11 +86,11 @@ class CharTable(pd.DataFrame):
 
     @property
     def rotations(self):
-        return [self[ir] for ir in self.attrs['rotations']]
+        return [ir for ir in self.attrs['rotations']]
 
     @property
     def translations(self):
-        return [self[ir] for ir in self.attrs['translations']]
+        return [ir for ir in self.attrs['translations']]
 
     @property
     def multiplicities(self):

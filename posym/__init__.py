@@ -19,7 +19,7 @@ class SymmetryBase():
         if isinstance(rep, str):
             if rep not in self._pg.ir_labels:
                 raise Exception('Representation do not match with group\nAvailable: {}'.format(self._pg.ir_labels))
-            self._op_representation = self._pg.ir_table[rep]
+            self._op_representation = self._pg.ir_table[rep]/self._pg.ir_table[rep]['E']
 
         elif isinstance(rep, pd.Series):
             if np.all(self._pg.ir_table.sort_index().index == rep.sort_index().index):

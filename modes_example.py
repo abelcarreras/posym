@@ -5,7 +5,7 @@ from pyqchem.parsers.parser_optimization import basic_optimization
 from posym import SymmetryModes
 from pyqchem.tools import get_geometry_from_pubchem
 import numpy as np
-
+import posym.algebra as al
 
 water_coor = [[0.00000000, 0.00000000e+00, 2.40297090e-01],
               [-1.43261539,  0.00000000e+00, -9.61188362e-01],
@@ -82,4 +82,5 @@ for molecule, group in zip([water_mol, dichloro_mol, methane, ammonia], ['c2v', 
     for i in range(len(modes)):
         print('m {:2}: {:8.3f} :'.format(i + 1, freqs[i]), sm.get_state_mode(i))
     print('Total: ', sm)
+    print('Dot: ', al.dot(sm, sm))
     print('angles: ', sm.orientation_angles)

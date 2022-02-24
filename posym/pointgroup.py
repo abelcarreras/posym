@@ -33,6 +33,10 @@ class PointGroup():
         return self._table.get_all_operations()
 
     @property
+    def group(self):
+        return self._group
+
+    @property
     def operations(self):
         return self._table.operations
 
