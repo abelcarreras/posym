@@ -38,22 +38,28 @@ wf_results = WfnSympy(coordinates=[[ 0.0000000000, 0.0000000000, -0.0428008531],
                       symbols=['O', 'H', 'H'],
                       basis=basis,
                       alpha_mo_coeff=mo_coefficients[:5],
-                      alpha_occupancy=[0, 1, 1, 0, 0],
-                      beta_occupancy=[1, 1, 1, 1, 1],
-                      group='c2v')
+                      alpha_occupancy=[1, 1, 1, 0, 0],
+                      beta_occupancy=[1, 1, 1, 0, 0],
+                      group='c3')
 
 wf_results.print_alpha_mo_IRD()
 wf_results.print_overlap_mo_alpha()
 wf_results.print_overlap_wf()
 wf_results.print_wf_mo_IRD()
+wf_results.print_dens_CSM()
+print(wf_results.csm_dens_coef)
 
 
 def get_orbital_state(orbital_soev):
-    state_orb = SymmetryBase(group='c2v',
-                             rep=pd.Series(orbital_soev, index=["E", "C2", "sv_xz", "sv_yz"])
+    state_orb = SymmetryBase(group='c3',
+                             rep=pd.Series(orbital_soev,
+                                           index=["E", "C3"]
+                                          # index=["E", "C2", "sv_xz", "sv_yz"]
+                                           )
                              )
     return state_orb
 
+print(get_orbital_state(wf_results.csm_dens_coef))
 
 o1 = get_orbital_state(wf_results.mo_SOEVs_a[0])
 o2 = get_orbital_state(wf_results.mo_SOEVs_a[1])
@@ -62,6 +68,21 @@ o4 = get_orbital_state(wf_results.mo_SOEVs_a[3])
 o5 = get_orbital_state(wf_results.mo_SOEVs_a[4])
 
 # print(o1.get_ir_representation())
-print('total alpha', o2*o3)
-print('total beta', o1*o2*o3*o4*o5)
-print('Total WF', o2*o3*o1*o2*o3*o4*o5)
+print('total alpha', o1*o2*o3)
+print('total beta', o1*o2*o3)
+print('Total WF', (o1*o2*o3*o1*o2*o3).get_ir_representation())
+
+print(o2 + (-1)*o4)
+from posym.algebra import dot
+print(dot(o2*o3*o1*o2, o2), o2*o3*o1, '->',
+      dot(o2*o3*o1, o2*o3*o1),
+      dot(o2*o3*o1, SymmetryBase('c3', 'A'))**2 + dot(o2*o3*o1, SymmetryBase('c3', 'E'))**2,
+      )
+
+a1 = SymmetryBase('c3', 'A')
+e = SymmetryBase('c3', 'E')
+
+total = 3 * a1 + e
+
+print('dot', dot(total, total))
+print()
