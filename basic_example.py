@@ -38,7 +38,7 @@ a2 = SymmetryBase('C2v', 'A2')
 
 print(a1 * a2 + b1)
 
-from posym.algebra import dot
+from posym.algebra import dot, norm
 
 print('\nTest dot product')
 print('A1 * A1: ', dot(a1, a1))
@@ -47,6 +47,7 @@ print('T1 * E : ', dot(t1, e))
 print('T1 * (T1 + E): ', dot(t1, t1 + e))
 print('T1 * (T1 + E) [normalized]: ', dot(t1, t1 + e, normalize=True))
 print('(T1 + E) * (T1 + E): ', dot(t1 + e, t1 + e))
+print('norm((T1 + E)): ', norm(t1 + e))
 print('(T1 + E) * (T1 + E) [normalized]: ', dot(t1 + e, t1 + e, normalize=True))
-print('(0.6T1 + E) * T1  [projection]: ', dot(0.6*t1 + e, t1, projection=True))
-print('(0.5T1 + E) * T1  [projection, normalized]: ', dot(0.5*t1 + e, t1, projection=True, normalize=True))
+print('(0.6T1 + E) * T1 : ', dot(0.6*t1 + e, t1))
+print('(0.5T1 + E) * T1  [normalized]: ', dot(0.5*t1 + e, t1, normalize=True))

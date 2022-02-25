@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def dot(state1, state2, normalize=False, projection=False):
+def dot(state1, state2, normalize=False):
 
     if state1.get_point_group() != state2.get_point_group():
         raise ValueError("States must have same point group")
@@ -21,7 +21,15 @@ def dot(state1, state2, normalize=False, projection=False):
     if normalize:
         dot = dot / np.sqrt(n1 * n2)
 
-    if projection:
-        dot = np.square(dot)
+    dot = np.square(dot)
+
+    return dot
+
+
+def norm(state1):
+
+    v1 = state1.get_ir_representation()
+
+    dot = np.sum([np.sqrt(a**2) for a in v1.values])
 
     return dot
