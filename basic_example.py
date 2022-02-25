@@ -42,9 +42,12 @@ from posym.algebra import dot
 
 print('\nTest dot product')
 print('A1 * A1: ', dot(a1, a1))
-print(' E * E : ', dot(e, e))
+print('E * E : ', dot(e, e))
 print('T1 * E : ', dot(t1, e))
 print('T1 * (T1 + E): ', dot(t1, t1 + e))
 print('T1 * (T1 + E) [normalized]: ', dot(t1, t1 + e, normalize=True))
 print('(T1 + E) * (T1 + E): ', dot(t1 + e, t1 + e))
 print('(T1 + E) * (T1 + E) [normalized]: ', dot(t1 + e, t1 + e, normalize=True))
+print('(T1 + E) * (T1 + E) [normalized]: ', dot(t1 + e, t1 + e, normalize=True))
+print('(0.6T1 + E) * T1  [projection]: ', dot(0.6*t1 + e, t1, projection=True))
+print('(T1 + E) * T1  [projection, normalized]: ', dot(t1 + e, t1, projection=True, normalize=True))
