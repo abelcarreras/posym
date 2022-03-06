@@ -2,12 +2,14 @@ import numpy as np
 from copy import deepcopy
 import math
 
-__N_LIM__ = 8
+
 def binomial_transformation(l, x):
 
-    vector_x = np.zeros((__N_LIM__, __N_LIM__, __N_LIM__))
-    vector_y = np.zeros((__N_LIM__, __N_LIM__, __N_LIM__))
-    vector_z = np.zeros((__N_LIM__, __N_LIM__, __N_LIM__))
+    max_lim = np.max(l)+1
+
+    vector_x = np.zeros((max_lim, max_lim, max_lim))
+    vector_y = np.zeros((max_lim, max_lim, max_lim))
+    vector_z = np.zeros((max_lim, max_lim, max_lim))
 
     for k in range(l[0]+1):
         vector_x[k, 0, 0] += math.comb(l[0], k) * x[0]**(l[0]-k)
@@ -20,18 +22,18 @@ def binomial_transformation(l, x):
     return vector
 
 def product_l_coeff(l_coeff, l_coeff2):
-    l_coeff_prod = np.zeros_like(l_coeff)
-    for i in range(__N_LIM__):
-        for j in range(__N_LIM__):
-            for k in range(__N_LIM__):
-                for i2 in range(__N_LIM__):
-                    for j2 in range(__N_LIM__):
-                        for k2 in range(__N_LIM__):
+    max_lim_1 = len(l_coeff)
+    max_lim_2 = len(l_coeff2)
+    max_lim_prod = max_lim_1 + max_lim_2
+    l_coeff_prod = np.zeros((max_lim_prod, max_lim_prod, max_lim_prod))
+    for i in range(max_lim_1):
+        for j in range(max_lim_1):
+            for k in range(max_lim_1):
+                for i2 in range(max_lim_2):
+                    for j2 in range(max_lim_2):
+                        for k2 in range(max_lim_2):
                             if abs(l_coeff[i, j, k] * l_coeff2[i2, j2, k2]) > 1e-15:
-                                if __N_LIM__ > i+i2 and __N_LIM__ > j+j2 and __N_LIM__ > k+k2:
-                                    l_coeff_prod[i+i2, j+j2, k+k2] += l_coeff[i, j, k] * l_coeff2[i2, j2, k2]
-                                else:
-                                    raise Exception('Limit of f_coeff matrix too low for this product')
+                                l_coeff_prod[i+i2, j+j2, k+k2] += l_coeff[i, j, k] * l_coeff2[i2, j2, k2]
     return l_coeff_prod
 
 def gaussian_product(g_1, g_2):
@@ -114,11 +116,12 @@ class PrimitiveGaussian:
 
     @property
     def integrate(self):
+        max_lim = len(self.l_coeff)
         integrate = 0.0
         pre_exponential = np.exp(-self.alpha * np.dot(self.coordinates, self.coordinates))
-        for i in range(__N_LIM__):
-            for j in range(__N_LIM__):
-                for k in range(__N_LIM__):
+        for i in range(max_lim):
+            for j in range(max_lim):
+                for k in range(max_lim):
                     #integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha) for l in [i, j, k]])
                     integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential_2(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
@@ -127,11 +130,12 @@ class PrimitiveGaussian:
     def _get_norm(self):
         l_coeff_sq = product_l_coeff(self.l_coeff, self.l_coeff)
         pre_exponential = np.exp(-2*self.alpha * np.dot(self.coordinates, self.coordinates))
+        max_lim = len(l_coeff_sq)
 
         integrate = 0.0
-        for i in range(__N_LIM__):
-            for j in range(__N_LIM__):
-                for k in range(__N_LIM__):
+        for i in range(max_lim):
+            for j in range(max_lim):
+                for k in range(max_lim):
                     # integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha) for l in [i, j, k]])
                     integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential_2(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
@@ -139,6 +143,7 @@ class PrimitiveGaussian:
 
     def __call__(self, value):
         value = np.array(value)
+        max_lim = len(self.l_coeff)
 
         #angular = 0.0
         #for i in range(4):
@@ -147,7 +152,7 @@ class PrimitiveGaussian:
         #            if self.l_coeff[i, j, k]:
         #                angular += self.l_coeff[i, j, k] * np.prod([(value[m])**l for m, l in enumerate([i, j, k])])
 
-        coef_matrix = np.fromfunction(lambda i, j, k: value[0]**i*value[1]**j*value[2]**k, (__N_LIM__, __N_LIM__, __N_LIM__))
+        coef_matrix = np.fromfunction(lambda i, j, k: value[0]**i*value[1]**j*value[2]**k, (max_lim, max_lim, max_lim))
         angular = np.sum(self.l_coeff * coef_matrix)
 
         return self.prefactor * angular * np.exp(-self.alpha * np.linalg.norm(value - self.coordinates)**2)
@@ -162,6 +167,7 @@ class BasisFunction:
         if coordinates is not None:
             for primitive in primitive_gaussians:
                 primitive.coordinates = np.array(coordinates)
+                raise Exception("Not fully implemented yet")
 
         self.primitive_gaussians = primitive_gaussians
         self.coefficients = coefficients
@@ -224,6 +230,7 @@ if __name__ == '__main__':
     ****
     """
 
+    center = [1.0, 0.0, 0.0]
     sa = PrimitiveGaussian(alpha=16.11957475, l=[0, 0, 0], coordinates=(0.0, 0.0, 0.0), normalize=True)
     sb = PrimitiveGaussian(alpha=2.936200663, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     sc = PrimitiveGaussian(alpha=0.794650487, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
