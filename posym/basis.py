@@ -20,23 +20,23 @@ def binomial_transformation(l, x, max_lim=None):
     for k in range(l[2] + 1):
         vector_z[0, 0, k] += math.comb(l[2], k) * x[2]**(l[2]-k)
 
-    vector = product_l_coeff(product_l_coeff(vector_x, vector_y), vector_z, max_lim)
+    vector = product_poly_coeff(product_poly_coeff(vector_x, vector_y), vector_z, max_lim)
     return vector
 
-def product_l_coeff(l_coeff, l_coeff2, max_lim=None):
-    max_lim_1 = len(l_coeff)
-    max_lim_2 = len(l_coeff2)
+def product_poly_coeff(poly_coeff, poly_coeff2, max_lim=None):
+    max_lim_1 = len(poly_coeff)
+    max_lim_2 = len(poly_coeff2)
     max_lim_prod = max_lim_1 + max_lim_2
-    l_coeff_prod = np.zeros((max_lim_prod, max_lim_prod, max_lim_prod))
+    poly_coeff_prod = np.zeros((max_lim_prod, max_lim_prod, max_lim_prod))
 
     for i, j, k in itertools.product(range(max_lim_1), repeat=3):
         for i2, j2, k2 in itertools.product(range(max_lim_2), repeat=3):
-            l_coeff_prod[i + i2, j + j2, k + k2] += l_coeff[i, j, k] * l_coeff2[i2, j2, k2]
+            poly_coeff_prod[i + i2, j + j2, k + k2] += poly_coeff[i, j, k] * poly_coeff2[i2, j2, k2]
 
     if max_lim is not None:
-        l_coeff_prod = l_coeff_prod[:max_lim, :max_lim, :max_lim]
+        poly_coeff_prod = poly_coeff_prod[:max_lim, :max_lim, :max_lim]
 
-    return l_coeff_prod
+    return poly_coeff_prod
 
 def gaussian_product(g_1, g_2):
     """
@@ -50,9 +50,9 @@ def gaussian_product(g_1, g_2):
     coordinates = (g_1.coordinates * g_1.alpha + g_2.coordinates * g_2.alpha) / alpha
     K = np.exp(-p/alpha * np.dot(PG, PG))
 
-    l_coeff = product_l_coeff(g_1.l_coeff, g_2.l_coeff)
+    poly_coeff = product_poly_coeff(g_1.poly_coeff, g_2.poly_coeff)
 
-    return PrimitiveGaussian(alpha, K*prefactor, coordinates, normalize=False, l_coeff=l_coeff)
+    return PrimitiveGaussian(alpha, K * prefactor, coordinates, normalize=False, poly_coeff=poly_coeff)
 
 
 def integrate_exponential_simple(n, a):
@@ -67,7 +67,6 @@ def integrate_exponential_simple(n, a):
         return 2*np.math.factorial(np.math.factorial(2*k-1))/(2**(k+1)*a**k)*np.sqrt(np.pi/a)
     else:
         return 0.0
-        #return np.math.factorial(k)/(a**(k+1))
 
 
 def integrate_exponential(n, a, b):
@@ -87,16 +86,16 @@ def integrate_exponential(n, a, b):
         # return factor*np.sqrt(np.pi/a)*np.exp(b**2/(4*a))*math.factorial(n)**2*(1/(2*np.sqrt(a)))**n
 
 class PrimitiveGaussian:
-    def __init__(self, alpha, prefactor=1.0, coordinates=(0, 0, 0), l=(0, 0, 0), normalize=True, l_coeff=None):
+    def __init__(self, alpha, prefactor=1.0, coordinates=(0, 0, 0), l=(0, 0, 0), normalize=True, poly_coeff=None):
         self._n_dim = len(coordinates)
         self.alpha = alpha
         self.prefactor = prefactor
         self.coordinates = np.array(coordinates)
         self.l = l
-        if l_coeff is None:
-            self.l_coeff = binomial_transformation(l, -self.coordinates)
+        if poly_coeff is None:
+            self.poly_coeff = binomial_transformation(l, -self.coordinates)
         else:
-            self.l_coeff = l_coeff
+            self.poly_coeff = poly_coeff
 
         # normalize primitive such that <prim|prim> = 1
         if normalize:
@@ -109,40 +108,40 @@ class PrimitiveGaussian:
 
     @property
     def integrate(self):
-        max_lim = len(self.l_coeff)
+        max_lim = len(self.poly_coeff)
         integrate = 0.0
         pre_exponential = np.exp(-self.alpha * np.dot(self.coordinates, self.coordinates))
         for i, j, k in itertools.product(range(max_lim), repeat=3):
-            # integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential_simple(l, self.alpha) for l in [i, j, k]])
-            integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
+            # integrate += self.poly_coeff[i, j, k] * np.prod([integrate_exponential_simple(l, self.alpha) for l in [i, j, k]])
+            integrate += self.poly_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
         return integrate * self.prefactor * pre_exponential
 
     def _get_norm(self):
-        l_coeff_sq = product_l_coeff(self.l_coeff, self.l_coeff)
+        poly_coeff_sq = product_poly_coeff(self.poly_coeff, self.poly_coeff)
         pre_exponential = np.exp(-2*self.alpha * np.dot(self.coordinates, self.coordinates))
-        max_lim = len(l_coeff_sq)
+        max_lim = len(poly_coeff_sq)
 
         integrate = 0.0
         for i, j, k in itertools.product(range(max_lim), repeat=3):
-            # integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential_simple(l, 2*self.alpha) for l in [i, j, k]])
-            integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
+            # integrate += poly_coeff_sq[i, j, k] * np.prod([integrate_exponential_simple(l, 2*self.alpha) for l in [i, j, k]])
+            integrate += poly_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
         return integrate * self.prefactor * pre_exponential
 
     def __call__(self, value):
         value = np.array(value)
-        max_lim = len(self.l_coeff)
+        max_lim = len(self.poly_coeff)
 
         #angular = 0.0
         #for i in range(4):
         #    for j in range(4):
         #        for k in range(4):
-        #            if self.l_coeff[i, j, k]:
-        #                angular += self.l_coeff[i, j, k] * np.prod([(value[m])**l for m, l in enumerate([i, j, k])])
+        #            if self.poly_coeff[i, j, k]:
+        #                angular += self.poly_coeff[i, j, k] * np.prod([(value[m])**l for m, l in enumerate([i, j, k])])
 
         coef_matrix = np.fromfunction(lambda i, j, k: value[0]**i*value[1]**j*value[2]**k, (max_lim, max_lim, max_lim))
-        angular = np.sum(self.l_coeff * coef_matrix)
+        angular = np.sum(self.poly_coeff * coef_matrix)
 
         return self.prefactor * angular * np.exp(-self.alpha * np.linalg.norm(value - self.coordinates)**2)
 
@@ -151,14 +150,14 @@ class PrimitiveGaussian:
 
     def apply_translation(self, translation):
         translation = np.array(translation)
-        max_lim = len(self.l_coeff)
-        l_coeff_trans = np.zeros_like(self.l_coeff)
+        max_lim = len(self.poly_coeff)
+        poly_coeff_trans = np.zeros_like(self.poly_coeff)
 
         for i, j, k in itertools.product(range(max_lim), repeat=3):
-            l_coeff_trans += self.l_coeff[i, j, k] * binomial_transformation([i, j, k], -translation, max_lim=max_lim)
+            poly_coeff_trans += self.poly_coeff[i, j, k] * binomial_transformation([i, j, k], -translation, max_lim=max_lim)
         self.coordinates += translation
 
-        self.l_coeff = l_coeff_trans
+        self.poly_coeff = poly_coeff_trans
 
 
 class BasisFunction:
@@ -229,6 +228,11 @@ if __name__ == '__main__':
           0.1478600533D+00       0.3995128261D+00       0.6076837186D+00
           0.4808867840D-01       0.7001154689D+00       0.3919573931D+00
     ****
+3   d
+      0.2145684671D+02       0.2197679508D+00
+      0.6545022156D+01       0.6555473627D+00
+      0.2525273021D+01       0.2865732590D+00
+*
     """
 
     center = [1.0, 0.0, 0.0]
@@ -270,6 +274,12 @@ if __name__ == '__main__':
     pz = BasisFunction([pza, pzb, pzc], [0.1559162750, 0.6076837186, 0.3919573931])
     print('pz:', (pz*pz).integrate)
 
+    d1a = PrimitiveGaussian(alpha=21.45684671, l=[2, 0, 0], coordinates=[2.0, 0.0, 0.0], normalize=True)
+    d1b = PrimitiveGaussian(alpha=6.545022156, l=[2, 0, 0], coordinates=[2.0, 0.0, 0.0], normalize=True)
+    d1c = PrimitiveGaussian(alpha=2.525273021, l=[2, 0, 0], coordinates=[2.0, 0.0, 0.0], normalize=True)
+    d1 = BasisFunction([d1a, d1b, d1c], [0.2197679508, 0.6555473627, 0.2865732590])
+    print('d1:', (d1*d1).integrate)
+
     px2 = px * px
     # from scipy import integrate
     # f = lambda x, y, z: px2([x, y, z])
@@ -277,12 +287,13 @@ if __name__ == '__main__':
     # print('num_integral px*px', num_integral)
 
     import matplotlib.pyplot as plt
-    x = np.linspace(-8, 8, 100)
+    x = np.linspace(-5, 5, 500)
 
     plt.plot(x, [o1([x_, 0.1, 0]) for x_ in x])
 
     plt.plot(x, [o2([x_, 0.1, 0]) for x_ in x])
     plt.plot(x, [px([x_, 0, 0])*py([x_, 0, 0])for x_ in x])
     plt.plot(x, [px2([x_, 0.1, 0]) for x_ in x], '--')
+    plt.plot(x, [d1([x_, 0.0, 0]) for x_ in x], '-')
 
     plt.show()
