@@ -3,9 +3,10 @@ from copy import deepcopy
 import math
 
 
-def binomial_transformation(l, x):
+def binomial_transformation(l, x, max_lim=None):
 
-    max_lim = np.max(l)+1
+    if max_lim is None:
+        max_lim = np.max(l)+1
 
     vector_x = np.zeros((max_lim, max_lim, max_lim))
     vector_y = np.zeros((max_lim, max_lim, max_lim))
@@ -18,10 +19,10 @@ def binomial_transformation(l, x):
     for k in range(l[2] + 1):
         vector_z[0, 0, k] += math.comb(l[2], k) * x[2]**(l[2]-k)
 
-    vector = product_l_coeff(product_l_coeff(vector_x, vector_y), vector_z)
+    vector = product_l_coeff(product_l_coeff(vector_x, vector_y), vector_z, max_lim)
     return vector
 
-def product_l_coeff(l_coeff, l_coeff2):
+def product_l_coeff(l_coeff, l_coeff2, max_lim=None):
     max_lim_1 = len(l_coeff)
     max_lim_2 = len(l_coeff2)
     max_lim_prod = max_lim_1 + max_lim_2
@@ -34,6 +35,9 @@ def product_l_coeff(l_coeff, l_coeff2):
                         for k2 in range(max_lim_2):
                             if abs(l_coeff[i, j, k] * l_coeff2[i2, j2, k2]) > 1e-15:
                                 l_coeff_prod[i+i2, j+j2, k+k2] += l_coeff[i, j, k] * l_coeff2[i2, j2, k2]
+    if max_lim is not None:
+        l_coeff_prod = l_coeff_prod[:max_lim, :max_lim, :max_lim]
+
     return l_coeff_prod
 
 def gaussian_product(g_1, g_2):
@@ -62,7 +66,7 @@ def gaussian_product(g_1, g_2):
     return PrimitiveGaussian(alpha, K*prefactor, coordinates, normalize=False, l_coeff=l_coeff)
 
 
-def integrate_exponential(n, a):
+def integrate_exponential_simple(n, a):
     """
     integrals type   x^n exp(-ax^2)
 
@@ -77,9 +81,9 @@ def integrate_exponential(n, a):
         #return np.math.factorial(k)/(a**(k+1))
 
 
-def integrate_exponential_2(n, a, b):
+def integrate_exponential(n, a, b):
     """
-    integrals type   x^n exp(-(ax^2+bx))
+    integrals type  x^n exp(-(ax^2+bx))
 
     """
     if n == 0:
@@ -87,11 +91,11 @@ def integrate_exponential_2(n, a, b):
     elif n == 1:
         return np.sqrt(np.pi)/(2*a**(3/2))*b*np.exp(b**2/(4*a))
     else:
-        z = 2**n
-        k = (n*2+1)
-        l = math.factorial(n)
-        return np.sqrt(np.pi)/(z*a**(k/2))*(l*a*b**(n-2)+b**n)*np.exp(b**2/(4*a))
-
+        factor = np.sum([math.comb(n, 2*k)*(b/(2*a))**(n-2*k)*math.factorial(2*k)/(2**(2*k)*math.factorial(k)*a**k)
+                          for k in range(n//2+1)])
+        return factor * np.sqrt(np.pi/a)*np.exp(b**2/(4*a))
+        # factor = np.sum([(b/np.sqrt(a))**(n-2*k)/(math.factorial(n)*math.factorial(n-2*k)) for k in range(n//2+1)])
+        # return factor*np.sqrt(np.pi/a)*np.exp(b**2/(4*a))*math.factorial(n)**2*(1/(2*np.sqrt(a)))**n
 
 class PrimitiveGaussian:
     def __init__(self, alpha, prefactor=1.0, coordinates=(0, 0, 0), l=(0, 0, 0), normalize=True, l_coeff=None):
@@ -122,8 +126,8 @@ class PrimitiveGaussian:
         for i in range(max_lim):
             for j in range(max_lim):
                 for k in range(max_lim):
-                    #integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha) for l in [i, j, k]])
-                    integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential_2(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
+                    #integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential_simple(l, self.alpha) for l in [i, j, k]])
+                    integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
         return integrate * self.prefactor * pre_exponential
 
@@ -136,8 +140,8 @@ class PrimitiveGaussian:
         for i in range(max_lim):
             for j in range(max_lim):
                 for k in range(max_lim):
-                    # integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha) for l in [i, j, k]])
-                    integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential_2(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
+                    # integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential_simple(l, 2*self.alpha) for l in [i, j, k]])
+                    integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
         return integrate * self.prefactor * pre_exponential
 
@@ -160,14 +164,29 @@ class PrimitiveGaussian:
     def __mul__(self, other):
         return gaussian_product(self, other)
 
+    def apply_translation(self, translation):
+        translation = np.array(translation)
+        max_lim = len(self.l_coeff)
+        l_coeff_trans = np.zeros_like(self.l_coeff)
+
+        for i in range(max_lim):
+            for j in range(max_lim):
+                for k in range(max_lim):
+                    l_coeff_trans += self.l_coeff[i, j, k] * binomial_transformation([i, j, k], -translation, max_lim=max_lim)
+        self.coordinates += translation
+
+        #raise Exception('Not ready yet!')
+        self.l_coeff = l_coeff_trans
+
 
 class BasisFunction:
     def __init__(self, primitive_gaussians, coefficients, coordinates=None):
         primitive_gaussians = deepcopy(primitive_gaussians)
         if coordinates is not None:
             for primitive in primitive_gaussians:
-                primitive.coordinates = np.array(coordinates)
-                raise Exception("Not fully implemented yet")
+                primitive.apply_translation(coordinates - primitive.coordinates)
+                # primitive.coordinates = np.array(coordinates)
+                # raise Exception("Not fully implemented yet")
 
         self.primitive_gaussians = primitive_gaussians
         self.coefficients = coefficients
@@ -246,7 +265,9 @@ if __name__ == '__main__':
     pxa = PrimitiveGaussian(alpha=0.6362897469, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     pxb = PrimitiveGaussian(alpha=0.1478600533, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     pxc = PrimitiveGaussian(alpha=0.04808867840, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    px = BasisFunction([pxa, pxb, pxc], [0.1559162750, 0.6076837186, 0.3919573931])
+    px = BasisFunction([pxa, pxb, pxc], [0.1559162750, 0.6076837186, 0.3919573931],
+                       coordinates=[1.0, 0.0, 0.0]
+                       )
     print('px:', (px*px).integrate)
 
     o1 = -0.992527759 * s1 -0.0293095626 * s2
@@ -267,19 +288,19 @@ if __name__ == '__main__':
     pz = BasisFunction([pza, pzb, pzc], [0.1559162750, 0.6076837186, 0.3919573931])
     print('pz:', (pz*pz).integrate)
 
-    from scipy import integrate
     px2 = px * px
-    #f = lambda x, y, z: px2([x, y, z])
-    #num_integral = integrate.tplquad(f, -5, 5, lambda x: -5, lambda x: 5, lambda x, y: -5, lambda x, y: 5)
-    #print('num_integral px*px', num_integral)
+    # from scipy import integrate
+    # f = lambda x, y, z: px2([x, y, z])
+    # num_integral = integrate.tplquad(f, -5, 5, lambda x: -5, lambda x: 5, lambda x, y: -5, lambda x, y: 5)
+    # print('num_integral px*px', num_integral)
 
     import matplotlib.pyplot as plt
-    x = np.linspace(-5, 5, 100)
+    x = np.linspace(-8, 8, 100)
 
     plt.plot(x, [o1([x_, 0.1, 0]) for x_ in x])
 
     plt.plot(x, [o2([x_, 0.1, 0]) for x_ in x])
-    plt.plot(x, [px([x_, 0.1, 0])*py([x_, 0.1, 0])for x_ in x])
+    plt.plot(x, [px([x_, 0, 0])*py([x_, 0, 0])for x_ in x])
     plt.plot(x, [px2([x_, 0.1, 0]) for x_ in x], '--')
 
     plt.show()
