@@ -1,6 +1,7 @@
 import numpy as np
 from copy import deepcopy
 import math
+import itertools
 
 
 def binomial_transformation(l, x, max_lim=None):
@@ -27,14 +28,11 @@ def product_l_coeff(l_coeff, l_coeff2, max_lim=None):
     max_lim_2 = len(l_coeff2)
     max_lim_prod = max_lim_1 + max_lim_2
     l_coeff_prod = np.zeros((max_lim_prod, max_lim_prod, max_lim_prod))
-    for i in range(max_lim_1):
-        for j in range(max_lim_1):
-            for k in range(max_lim_1):
-                for i2 in range(max_lim_2):
-                    for j2 in range(max_lim_2):
-                        for k2 in range(max_lim_2):
-                            if abs(l_coeff[i, j, k] * l_coeff2[i2, j2, k2]) > 1e-15:
-                                l_coeff_prod[i+i2, j+j2, k+k2] += l_coeff[i, j, k] * l_coeff2[i2, j2, k2]
+
+    for i, j, k in itertools.product(range(max_lim_1), repeat=3):
+        for i2, j2, k2 in itertools.product(range(max_lim_2), repeat=3):
+            l_coeff_prod[i + i2, j + j2, k + k2] += l_coeff[i, j, k] * l_coeff2[i2, j2, k2]
+
     if max_lim is not None:
         l_coeff_prod = l_coeff_prod[:max_lim, :max_lim, :max_lim]
 
@@ -53,15 +51,6 @@ def gaussian_product(g_1, g_2):
     K = np.exp(-p/alpha * np.dot(PG, PG))
 
     l_coeff = product_l_coeff(g_1.l_coeff, g_2.l_coeff)
-    #l_coeff = np.zeros_like(g_1.l_coeff)
-    #for i in range(4):
-    #    for j in range(4):
-    #        for k in range(4):
-    #            for i2 in range(4):
-    #                for j2 in range(4):
-    #                    for k2 in range(4):
-    #                        if 4 > i+i2 and 4 > j+j2 and 4 > k+k2:
-    #                            l_coeff[i+i2, j+j2, k+k2] += g_1.l_coeff[i, j, k] * g_2.l_coeff[i2, j2, k2]
 
     return PrimitiveGaussian(alpha, K*prefactor, coordinates, normalize=False, l_coeff=l_coeff)
 
@@ -123,11 +112,9 @@ class PrimitiveGaussian:
         max_lim = len(self.l_coeff)
         integrate = 0.0
         pre_exponential = np.exp(-self.alpha * np.dot(self.coordinates, self.coordinates))
-        for i in range(max_lim):
-            for j in range(max_lim):
-                for k in range(max_lim):
-                    #integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential_simple(l, self.alpha) for l in [i, j, k]])
-                    integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
+        for i, j, k in itertools.product(range(max_lim), repeat=3):
+            # integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential_simple(l, self.alpha) for l in [i, j, k]])
+            integrate += self.l_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
         return integrate * self.prefactor * pre_exponential
 
@@ -137,11 +124,9 @@ class PrimitiveGaussian:
         max_lim = len(l_coeff_sq)
 
         integrate = 0.0
-        for i in range(max_lim):
-            for j in range(max_lim):
-                for k in range(max_lim):
-                    # integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential_simple(l, 2*self.alpha) for l in [i, j, k]])
-                    integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
+        for i, j, k in itertools.product(range(max_lim), repeat=3):
+            # integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential_simple(l, 2*self.alpha) for l in [i, j, k]])
+            integrate += l_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
         return integrate * self.prefactor * pre_exponential
 
@@ -169,13 +154,10 @@ class PrimitiveGaussian:
         max_lim = len(self.l_coeff)
         l_coeff_trans = np.zeros_like(self.l_coeff)
 
-        for i in range(max_lim):
-            for j in range(max_lim):
-                for k in range(max_lim):
-                    l_coeff_trans += self.l_coeff[i, j, k] * binomial_transformation([i, j, k], -translation, max_lim=max_lim)
+        for i, j, k in itertools.product(range(max_lim), repeat=3):
+            l_coeff_trans += self.l_coeff[i, j, k] * binomial_transformation([i, j, k], -translation, max_lim=max_lim)
         self.coordinates += translation
 
-        #raise Exception('Not ready yet!')
         self.l_coeff = l_coeff_trans
 
 
