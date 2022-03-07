@@ -38,6 +38,27 @@ def product_poly_coeff(poly_coeff, poly_coeff2, max_lim=None):
 
     return poly_coeff_prod
 
+def exp_poly_coeff(poly_coeff, k, max_lim=None):
+
+    max_lim_x = len(poly_coeff)
+    max_lim_exp = max_lim_x * k if k > 0 else max_lim_x
+    poly_coeff_exp = np.zeros((max_lim_exp, max_lim_exp, max_lim_exp))
+
+    if k == 0:
+        poly_coeff_exp[0, 0, 0] = 1.0
+
+        if max_lim is not None:
+            poly_coeff_exp = poly_coeff_exp[:max_lim, :max_lim, :max_lim]
+
+        return poly_coeff_exp
+
+    poly_coeff_exp = poly_coeff
+    for _ in range(k-1):
+        poly_coeff_exp = product_poly_coeff(poly_coeff_exp, poly_coeff_exp, max_lim=max_lim_exp)
+
+    return poly_coeff_exp
+
+
 def gaussian_product(g_1, g_2):
     """
     Calculate the product of two Gaussian primitives. (s functions only)
@@ -159,6 +180,39 @@ class PrimitiveGaussian:
 
         self.poly_coeff = poly_coeff_trans
 
+    def apply_rotation(self, angle, axis):
+
+        from posym.operations.rotation import rotation
+
+        rot_matrix = rotation(angle, axis)
+
+        max_lim = len(self.poly_coeff)
+        poly_coeff_rot = np.zeros_like(self.poly_coeff)
+
+        for i, j, k in itertools.product(range(max_lim), repeat=3):
+            poly_temp = np.zeros((max_lim, max_lim, max_lim))
+            poly_temp[1, 0, 0] = rot_matrix[0, 0]
+            poly_temp[0, 1, 0] = rot_matrix[1, 0]
+            poly_temp[0, 0, 1] = rot_matrix[2, 0]
+            poly_tempx = exp_poly_coeff(poly_temp, i, max_lim)
+
+            poly_temp = np.zeros((max_lim, max_lim, max_lim))
+            poly_temp[1, 0, 0] += rot_matrix[0, 1]
+            poly_temp[0, 1, 0] += rot_matrix[1, 1]
+            poly_temp[0, 0, 1] += rot_matrix[2, 1]
+            poly_tempy = exp_poly_coeff(poly_temp, j, max_lim)
+
+            poly_temp = np.zeros((max_lim, max_lim, max_lim))
+            poly_temp[1, 0, 0] += rot_matrix[0, 2]
+            poly_temp[0, 1, 0] += rot_matrix[1, 2]
+            poly_temp[0, 0, 1] += rot_matrix[2, 2]
+            poly_tempz = exp_poly_coeff(poly_temp, k, max_lim)
+
+            poly_coeff_rot += self.poly_coeff[i, j, k] * product_poly_coeff(product_poly_coeff(poly_tempx, poly_tempy, max_lim), poly_tempz, max_lim)
+
+        self.poly_coeff = poly_coeff_rot
+        self.coordinates += np.dot(rot_matrix, self.coordinates)
+
 
 class BasisFunction:
     def __init__(self, primitive_gaussians, coefficients, coordinates=None):
@@ -255,6 +309,10 @@ if __name__ == '__main__':
                        coordinates=[1.0, 0.0, 0.0]
                        )
     print('px:', (px*px).integrate)
+    print('pxa:', (pxa*pxa).integrate)
+    pxa.apply_rotation(2*np.pi/2, [0.0, 0.0, 1.0])
+    print('pxa:', (pxa*pxa).integrate)
+
 
     o1 = -0.992527759 * s1 -0.0293095626 * s2
     print('o1:', (o1*o1).integrate)
@@ -289,11 +347,12 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     x = np.linspace(-5, 5, 500)
 
-    plt.plot(x, [o1([x_, 0.1, 0]) for x_ in x])
+    #plt.plot(x, [o1([x_, 0.1, 0]) for x_ in x])
 
-    plt.plot(x, [o2([x_, 0.1, 0]) for x_ in x])
-    plt.plot(x, [px([x_, 0, 0])*py([x_, 0, 0])for x_ in x])
-    plt.plot(x, [px2([x_, 0.1, 0]) for x_ in x], '--')
-    plt.plot(x, [d1([x_, 0.0, 0]) for x_ in x], '-')
+    #plt.plot(x, [o2([x_, 0.1, 0]) for x_ in x])
+    #plt.plot(x, [px([x_, 0, 0])*py([x_, 0, 0])for x_ in x])
+    #plt.plot(x, [px2([x_, 0.1, 0]) for x_ in x], '--')
+    #plt.plot(x, [d1([x_, 0.0, 0]) for x_ in x], '-')
+    plt.plot(x, [pxa([x_, 0.0, 0]) for x_ in x], '-')
 
     plt.show()
