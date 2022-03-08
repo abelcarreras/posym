@@ -23,7 +23,17 @@ def binomial_transformation(l, x, max_lim=None):
     vector = product_poly_coeff(product_poly_coeff(vector_x, vector_y), vector_z, max_lim)
     return vector
 
+
 def product_poly_coeff(poly_coeff, poly_coeff2, max_lim=None):
+    """
+    Product of two polynomial coefficients matrices
+
+    :param poly_coeff: matrix of polynomial coefficients 1
+    :param poly_coeff2: matrix of polynomial coefficients 2
+    :param max_lim:
+    :return:
+    """
+
     max_lim_1 = len(poly_coeff)
     max_lim_2 = len(poly_coeff2)
     max_lim_prod = max_lim_1 + max_lim_2
@@ -38,7 +48,16 @@ def product_poly_coeff(poly_coeff, poly_coeff2, max_lim=None):
 
     return poly_coeff_prod
 
+
 def exp_poly_coeff(poly_coeff, k, max_lim=None):
+    """
+    Calculate the exponential of a polynomial coefficient matrix
+
+    :param poly_coeff: polynomial coefficient matrix
+    :param k: exponent
+    :param max_lim:
+    :return:
+    """
 
     max_lim_x = len(poly_coeff)
     max_lim_exp = max_lim_x * k if k > 0 else max_lim_x
@@ -105,6 +124,7 @@ def integrate_exponential(n, a, b):
         return factor * np.sqrt(np.pi/a)*np.exp(b**2/(4*a))
         # factor = np.sum([(b/np.sqrt(a))**(n-2*k)/(math.factorial(n)*math.factorial(n-2*k)) for k in range(n//2+1)])
         # return factor*np.sqrt(np.pi/a)*np.exp(b**2/(4*a))*math.factorial(n)**2*(1/(2*np.sqrt(a)))**n
+
 
 class PrimitiveGaussian:
     def __init__(self, alpha, prefactor=1.0, coordinates=(0, 0, 0), l=(0, 0, 0), normalize=True, poly_coeff=None):
@@ -187,31 +207,24 @@ class PrimitiveGaussian:
         rot_matrix = rotation(angle, axis)
 
         max_lim = len(self.poly_coeff)
-        poly_coeff_rot = np.zeros_like(self.poly_coeff)
+        poly_coeff_rot = np.zeros((max_lim, max_lim, max_lim))
 
         for i, j, k in itertools.product(range(max_lim), repeat=3):
-            poly_temp = np.zeros((max_lim, max_lim, max_lim))
-            poly_temp[1, 0, 0] = rot_matrix[0, 0]
-            poly_temp[0, 1, 0] = rot_matrix[1, 0]
-            poly_temp[0, 0, 1] = rot_matrix[2, 0]
-            poly_tempx = exp_poly_coeff(poly_temp, i, max_lim)
+            poly_temp_xyz = np.zeros((max_lim, max_lim, max_lim))
+            poly_temp_xyz[0, 0, 0] = 1.0
+            for l, alpha in enumerate([i, j, k]):
+                poly_temp = np.zeros((max_lim, max_lim, max_lim))
+                poly_temp[1, 0, 0] = rot_matrix[0, l]
+                poly_temp[0, 1, 0] = rot_matrix[1, l]
+                poly_temp[0, 0, 1] = rot_matrix[2, l]
+                poly_temp = exp_poly_coeff(poly_temp, alpha, max_lim)
 
-            poly_temp = np.zeros((max_lim, max_lim, max_lim))
-            poly_temp[1, 0, 0] += rot_matrix[0, 1]
-            poly_temp[0, 1, 0] += rot_matrix[1, 1]
-            poly_temp[0, 0, 1] += rot_matrix[2, 1]
-            poly_tempy = exp_poly_coeff(poly_temp, j, max_lim)
+                poly_temp_xyz = product_poly_coeff(poly_temp_xyz, poly_temp, max_lim)
 
-            poly_temp = np.zeros((max_lim, max_lim, max_lim))
-            poly_temp[1, 0, 0] += rot_matrix[0, 2]
-            poly_temp[0, 1, 0] += rot_matrix[1, 2]
-            poly_temp[0, 0, 1] += rot_matrix[2, 2]
-            poly_tempz = exp_poly_coeff(poly_temp, k, max_lim)
-
-            poly_coeff_rot += self.poly_coeff[i, j, k] * product_poly_coeff(product_poly_coeff(poly_tempx, poly_tempy, max_lim), poly_tempz, max_lim)
+            poly_coeff_rot += self.poly_coeff[i, j, k] * poly_temp_xyz
 
         self.poly_coeff = poly_coeff_rot
-        self.coordinates += np.dot(rot_matrix, self.coordinates)
+        self.coordinates = np.dot(rot_matrix, self.coordinates)
 
 
 class BasisFunction:
@@ -220,8 +233,6 @@ class BasisFunction:
         if coordinates is not None:
             for primitive in primitive_gaussians:
                 primitive.apply_translation(coordinates - primitive.coordinates)
-                # primitive.coordinates = np.array(coordinates)
-                # raise Exception("Not fully implemented yet")
 
         self.primitive_gaussians = primitive_gaussians
         self.coefficients = coefficients
@@ -232,6 +243,20 @@ class BasisFunction:
     def set_coordinates(self, coordinates):
         for primitive in self.primitive_gaussians:
             primitive.coordinates = np.array(coordinates)
+
+    def apply_translation(self, translation):
+        primitive_gaussians = deepcopy(self.primitive_gaussians)
+        for primitive in primitive_gaussians:
+            primitive.apply_translation(translation)
+
+        self.primitive_gaussians = primitive_gaussians
+
+    def apply_rotation(self, angle, axis):
+        primitive_gaussians = deepcopy(self.primitive_gaussians)
+        for primitive in primitive_gaussians:
+            primitive.apply_rotation(angle, axis)
+
+        self.primitive_gaussians = primitive_gaussians
 
     @property
     def integrate(self):
@@ -267,6 +292,7 @@ class BasisFunction:
         negative_coefficients = list(-np.array(other.coefficients))
         return BasisFunction(self.primitive_gaussians + other.primitive_gaussians,
                              self.coefficients + negative_coefficients)
+
 
 if __name__ == '__main__':
 
@@ -306,9 +332,12 @@ if __name__ == '__main__':
     pxb = PrimitiveGaussian(alpha=0.1478600533, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     pxc = PrimitiveGaussian(alpha=0.04808867840, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     px = BasisFunction([pxa, pxb, pxc], [0.1559162750, 0.6076837186, 0.3919573931],
-                       coordinates=[1.0, 0.0, 0.0]
+                       coordinates=[1.0, 0.2, 0.0]
                        )
     print('px:', (px*px).integrate)
+    px.apply_rotation(0.33*2*np.pi/2, [0.2, 5.0, 1.0])
+    print('px rot:', (px*px).integrate)
+
     print('pxa:', (pxa*pxa).integrate)
     pxa.apply_rotation(2*np.pi/2, [0.0, 0.0, 1.0])
     print('pxa:', (pxa*pxa).integrate)
