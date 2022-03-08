@@ -2,6 +2,7 @@ import numpy as np
 from copy import deepcopy
 import math
 import itertools
+from posym.integrals import integrate_exponential_simple, integrate_exponential
 
 
 def binomial_transformation(l, x, max_lim=None):
@@ -59,21 +60,12 @@ def exp_poly_coeff(poly_coeff, k, max_lim=None):
     :return:
     """
 
-    max_lim_x = len(poly_coeff)
-    max_lim_exp = max_lim_x * k if k > 0 else max_lim_x
-    poly_coeff_exp = np.zeros((max_lim_exp, max_lim_exp, max_lim_exp))
+    max_lim_x = len(poly_coeff) * max(k, 1)
 
-    if k == 0:
-        poly_coeff_exp[0, 0, 0] = 1.0
-
-        if max_lim is not None:
-            poly_coeff_exp = poly_coeff_exp[:max_lim, :max_lim, :max_lim]
-
-        return poly_coeff_exp
-
-    poly_coeff_exp = poly_coeff
-    for _ in range(k-1):
-        poly_coeff_exp = product_poly_coeff(poly_coeff_exp, poly_coeff_exp, max_lim=max_lim_exp)
+    poly_coeff_exp = np.zeros((max_lim_x, max_lim_x, max_lim_x))
+    poly_coeff_exp[0, 0, 0] = 1
+    for _ in range(k):
+        poly_coeff_exp = product_poly_coeff(poly_coeff_exp, poly_coeff, max_lim=max_lim)
 
     return poly_coeff_exp
 
@@ -95,7 +87,7 @@ def gaussian_product(g_1, g_2):
     return PrimitiveGaussian(alpha, K * prefactor, coordinates, normalize=False, poly_coeff=poly_coeff)
 
 
-def integrate_exponential_simple(n, a):
+def integrate_exponential_simple_py(n, a):
     """
     integrals type   x^n exp(-ax^2)
 
@@ -109,7 +101,7 @@ def integrate_exponential_simple(n, a):
         return 0.0
 
 
-def integrate_exponential(n, a, b):
+def integrate_exponential_py(n, a, b):
     """
     integrals type  x^n exp(-(ax^2+bx))
 
@@ -182,8 +174,7 @@ class PrimitiveGaussian:
 
         for i, j, k in itertools.product(range(max_lim), repeat=3):
             poly_coeff_trans += self.poly_coeff[i, j, k] * binomial_transformation([i, j, k], -translation, max_lim=max_lim)
-        self.coordinates += translation
-
+        self.coordinates = self.coordinates + translation
         self.poly_coeff = poly_coeff_trans
 
     def apply_rotation(self, angle, axis):
@@ -217,6 +208,7 @@ class BasisFunction:
     def __init__(self, primitive_gaussians, coefficients, coordinates=None):
         primitive_gaussians = deepcopy(primitive_gaussians)
         if coordinates is not None:
+            coordinates = np.array(coordinates)
             for primitive in primitive_gaussians:
                 primitive.apply_translation(coordinates - primitive.coordinates)
 
@@ -301,7 +293,6 @@ if __name__ == '__main__':
 *
     """
 
-    center = [1.0, 0.0, 0.0]
     sa = PrimitiveGaussian(alpha=16.11957475, l=[0, 0, 0], coordinates=(0.0, 0.0, 0.0), normalize=True)
     sb = PrimitiveGaussian(alpha=2.936200663, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     sc = PrimitiveGaussian(alpha=0.794650487, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
@@ -371,3 +362,121 @@ if __name__ == '__main__':
     plt.plot(x, [pxa([x_, 0.0, 0]) for x_ in x], '-')
 
     plt.show()
+
+
+    basis = {'name': 'STO-3G',
+             'primitive_type': 'gaussian',
+             'atoms': [{'symbol': 'O',
+                        'shells': [{'shell_type': 's',
+                                    'p_exponents': [130.70932, 23.808861, 6.4436083],
+                                    'con_coefficients': [0.154328969, 0.535328136, 0.444634536],
+                                    'p_con_coefficients': [0.0, 0.0, 0.0]},
+                                   {'shell_type': 'sp',
+                                    'p_exponents': [5.0331513, 1.1695961, 0.380389],
+                                    'con_coefficients': [-0.0999672287, 0.399512825, 0.700115461],
+                                    'p_con_coefficients': [0.155916268, 0.607683714, 0.391957386]}]},
+                       {'symbol': 'H',
+                        'shells': [{'shell_type': 's',
+                                    'p_exponents': [3.42525091, 0.62391373, 0.1688554],
+                                    'con_coefficients': [0.154328971, 0.535328142, 0.444634542],
+                                    'p_con_coefficients': [0.0, 0.0, 0.0]}]},
+                       {'symbol': 'H',
+                        'shells': [{'shell_type': 's',
+                                    'p_exponents': [3.42525091, 0.62391373, 0.1688554],
+                                    'con_coefficients': [0.154328971, 0.535328142, 0.444634542],
+                                    'p_con_coefficients': [0.0, 0.0, 0.0]}]}]}
+
+    mo_coefficients = [[ 0.994216442, 0.025846814, 0.000000000, 0.000000000,-0.004164076,-0.005583712, -0.005583712],
+                       [ 0.233766661,-0.844456594, 0.000000000, 0.000000000, 0.122829781,-0.155593214, -0.155593214],
+                       [ 0.000000000, 0.000000000, 0.612692349, 0.000000000, 0.000000000,-0.449221684,  0.449221684],
+                       [-0.104033343, 0.538153649, 0.000000000, 0.000000000, 0.755880259,-0.295107107, -0.295107107],
+                       [ 0.000000000, 0.000000000, 0.000000000,-1.000000000, 0.000000000, 0.000000000,  0.000000000],
+                       [-0.125818566, 0.820120983, 0.000000000, 0.000000000,-0.763538862,-0.769155124, -0.769155124],
+                       [ 0.000000000, 0.000000000, 0.959800163, 0.000000000, 0.000000000, 0.814629717, -0.814629717]]
+
+    coordinates=[[ 0.0000000000, 0.000000000, -0.0428008531],
+                 [-0.7581074140, 0.000000000, -0.6785995734],
+                 [ 0.7581074140, 0.000000000, -0.6785995734]]
+
+    # Oxigen atom
+    sa = PrimitiveGaussian(alpha=130.70932)
+    sb = PrimitiveGaussian(alpha=23.808861)
+    sc = PrimitiveGaussian(alpha=6.4436083)
+    s_O = BasisFunction([sa, sb, sc], [0.154328969, 0.535328136, 0.444634536],
+                        coordinates=[0.0000000000, 0.000000000, -0.0808819]) # Bohr
+
+    sa = PrimitiveGaussian(alpha=5.03315132)
+    sb = PrimitiveGaussian(alpha=1.1695961)
+    sc = PrimitiveGaussian(alpha=0.3803890)
+    s2_O = BasisFunction([sa, sb, sc], [-0.099967228, 0.399512825, 0.700115461],
+                         coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+
+    pxa = PrimitiveGaussian(alpha=5.0331513, l=[1, 0, 0])
+    pxb = PrimitiveGaussian(alpha=1.1695961, l=[1, 0, 0])
+    pxc = PrimitiveGaussian(alpha=0.3803890, l=[1, 0, 0])
+
+    pya = PrimitiveGaussian(alpha=5.0331513, l=[0, 1, 0])
+    pyb = PrimitiveGaussian(alpha=1.1695961, l=[0, 1, 0])
+    pyc = PrimitiveGaussian(alpha=0.3803890, l=[0, 1, 0])
+
+    pza = PrimitiveGaussian(alpha=5.0331513, l=[0, 0, 1])
+    pzb = PrimitiveGaussian(alpha=1.1695961, l=[0, 0, 1])
+    pzc = PrimitiveGaussian(alpha=0.3803890, l=[0, 0, 1])
+
+    px_O = BasisFunction([pxa, pxb, pxc], [0.155916268, 0.6076837186, 0.3919573931], coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+    py_O = BasisFunction([pya, pyb, pyc], [0.155916268, 0.6076837186, 0.3919573931], coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+    pz_O = BasisFunction([pza, pzb, pzc], [0.155916268, 0.6076837186, 0.3919573931], coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+
+    # Hydrogen atoms
+    sa = PrimitiveGaussian(alpha=3.42525091)
+    sb = PrimitiveGaussian(alpha=0.62391373)
+    sc = PrimitiveGaussian(alpha=0.1688554)
+    s_H = BasisFunction([sa, sb, sc], [0.154328971, 0.535328142, 0.444634542], coordinates=[-1.43262, 0.000000000, -1.28237])
+
+    s2_H = BasisFunction([sa, sb, sc], [0.154328971, 0.535328142, 0.444634542], coordinates=[1.43262, 0.000000000, -1.28237])
+
+    o1 = s_O * 0.994216442 + s2_O * 0.025846814 + px_O * 0.000000000 + py_O * 0.000000000 + \
+         pz_O * -0.004164076 + s_H * -0.005583712 + s2_H * -0.005583712
+
+    o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * -0.44922168 + s2_H * 0.449221684
+
+    print('dot', (o2*o2).integrate)
+
+    density_matrix = np.outer(mo_coefficients[0], mo_coefficients[0]) + \
+                     np.outer(mo_coefficients[1], mo_coefficients[1]) + \
+                     np.outer(mo_coefficients[2], mo_coefficients[2]) + \
+                     np.outer(mo_coefficients[3], mo_coefficients[3]) + \
+                     np.outer(mo_coefficients[4], mo_coefficients[4]) + \
+                     np.outer(mo_coefficients[5], mo_coefficients[5]) + \
+                     np.outer(mo_coefficients[6], mo_coefficients[6])
+
+    print('density matrix\n', density_matrix[:4, :4])
+
+    basis_functions = [s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H]
+    total_electrons = 0
+    for i, bf1 in enumerate(basis_functions):
+        for j, bf2 in enumerate(basis_functions):
+            total_electrons += (bf1*bf2).integrate * density_matrix[i, j]
+
+
+    print('total electrons', total_electrons)
+
+
+    def get_overlap_matrix_density(basis_set_1, basis_set_2, density_matrix):
+        n = len(basis_set_1)
+        s = np.zeros((n, n, n, n))
+
+        for i, basis1 in enumerate(basis_set_1):
+            for j, basis2 in enumerate(basis_set_1):
+                print('i, j', i, j)
+                for k, basis3 in enumerate(basis_set_2):
+                    for l, basis4 in enumerate(basis_set_2):
+                        dens_prod = density_matrix[i, j] * density_matrix[k, l]
+                        basis_prod = basis1 * basis2 * basis3 * basis4
+                        s[i, j, k, l] = basis_prod.integrate * dens_prod
+
+        return np.sum(s)
+
+
+    self_similarity = get_overlap_matrix_density(basis_functions, basis_functions, density_matrix)
+    print('self_similarity', self_similarity)
