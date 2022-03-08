@@ -2,10 +2,10 @@ import numpy as np
 from copy import deepcopy
 import math
 import itertools
-from posym.integrals import integrate_exponential_simple, integrate_exponential
+from posym.integrals import integrate_exponential_simple, integrate_exponential, product_poly_coeff
 
 
-def binomial_transformation(l, x, max_lim=None):
+def binomial_expansion(l, x, max_lim=None):
 
     if max_lim is None:
         max_lim = np.max(l)+1
@@ -25,7 +25,7 @@ def binomial_transformation(l, x, max_lim=None):
     return vector
 
 
-def product_poly_coeff(poly_coeff, poly_coeff2, max_lim=None):
+def product_poly_coeff_py(poly_coeff, poly_coeff2, max_lim=None):
     """
     Product of two polynomial coefficients matrices
 
@@ -34,6 +34,8 @@ def product_poly_coeff(poly_coeff, poly_coeff2, max_lim=None):
     :param max_lim:
     :return:
     """
+    # max_lim = 0 if max_lim is None else max_lim
+    # return product_poly_coeff_c(poly_coeff, poly_coeff2, max_lim)
 
     max_lim_1 = len(poly_coeff)
     max_lim_2 = len(poly_coeff2)
@@ -124,7 +126,7 @@ class PrimitiveGaussian:
         self.coordinates = np.array(coordinates)
         self.l = l
         if poly_coeff is None:
-            self.poly_coeff = binomial_transformation(l, -self.coordinates)
+            self.poly_coeff = binomial_expansion(l, -self.coordinates)
         else:
             self.poly_coeff = poly_coeff
 
@@ -173,7 +175,7 @@ class PrimitiveGaussian:
         poly_coeff_trans = np.zeros_like(self.poly_coeff)
 
         for i, j, k in itertools.product(range(max_lim), repeat=3):
-            poly_coeff_trans += self.poly_coeff[i, j, k] * binomial_transformation([i, j, k], -translation, max_lim=max_lim)
+            poly_coeff_trans += self.poly_coeff[i, j, k] * binomial_expansion([i, j, k], -translation, max_lim=max_lim)
         self.coordinates = self.coordinates + translation
         self.poly_coeff = poly_coeff_trans
 
@@ -402,13 +404,15 @@ if __name__ == '__main__':
     sa = PrimitiveGaussian(alpha=130.70932)
     sb = PrimitiveGaussian(alpha=23.808861)
     sc = PrimitiveGaussian(alpha=6.4436083)
-    s_O = BasisFunction([sa, sb, sc], [0.154328969, 0.535328136, 0.444634536],
+    s_O = BasisFunction([sa, sb, sc],
+                        [0.154328969, 0.535328136, 0.444634536],
                         coordinates=[0.0000000000, 0.000000000, -0.0808819]) # Bohr
 
     sa = PrimitiveGaussian(alpha=5.03315132)
     sb = PrimitiveGaussian(alpha=1.1695961)
     sc = PrimitiveGaussian(alpha=0.3803890)
-    s2_O = BasisFunction([sa, sb, sc], [-0.099967228, 0.399512825, 0.700115461],
+    s2_O = BasisFunction([sa, sb, sc],
+                         [-0.099967228, 0.399512825, 0.700115461],
                          coordinates=[0.0000000000, 0.000000000,  -0.0808819])
 
     pxa = PrimitiveGaussian(alpha=5.0331513, l=[1, 0, 0])
@@ -423,32 +427,43 @@ if __name__ == '__main__':
     pzb = PrimitiveGaussian(alpha=1.1695961, l=[0, 0, 1])
     pzc = PrimitiveGaussian(alpha=0.3803890, l=[0, 0, 1])
 
-    px_O = BasisFunction([pxa, pxb, pxc], [0.155916268, 0.6076837186, 0.3919573931], coordinates=[0.0000000000, 0.000000000,  -0.0808819])
-    py_O = BasisFunction([pya, pyb, pyc], [0.155916268, 0.6076837186, 0.3919573931], coordinates=[0.0000000000, 0.000000000,  -0.0808819])
-    pz_O = BasisFunction([pza, pzb, pzc], [0.155916268, 0.6076837186, 0.3919573931], coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+    px_O = BasisFunction([pxa, pxb, pxc],
+                         [0.155916268, 0.6076837186, 0.3919573931],
+                         coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+    py_O = BasisFunction([pya, pyb, pyc],
+                         [0.155916268, 0.6076837186, 0.3919573931],
+                         coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+    pz_O = BasisFunction([pza, pzb, pzc],
+                         [0.155916268, 0.6076837186, 0.3919573931],
+                         coordinates=[0.0000000000, 0.000000000,  -0.0808819])
 
     # Hydrogen atoms
     sa = PrimitiveGaussian(alpha=3.42525091)
     sb = PrimitiveGaussian(alpha=0.62391373)
     sc = PrimitiveGaussian(alpha=0.1688554)
-    s_H = BasisFunction([sa, sb, sc], [0.154328971, 0.535328142, 0.444634542], coordinates=[-1.43262, 0.000000000, -1.28237])
+    s_H = BasisFunction([sa, sb, sc],
+                        [0.154328971, 0.535328142, 0.444634542],
+                        coordinates=[-1.43262, 0.000000000, -1.28237])
 
-    s2_H = BasisFunction([sa, sb, sc], [0.154328971, 0.535328142, 0.444634542], coordinates=[1.43262, 0.000000000, -1.28237])
+    s2_H = BasisFunction([sa, sb, sc],
+                         [0.154328971, 0.535328142, 0.444634542],
+                         coordinates=[1.43262, 0.000000000, -1.28237])
 
-    o1 = s_O * 0.994216442 + s2_O * 0.025846814 + px_O * 0.000000000 + py_O * 0.000000000 + \
-         pz_O * -0.004164076 + s_H * -0.005583712 + s2_H * -0.005583712
+    o1 = s_O * 0.994216442 + s2_O * 0.025846814 + px_O * 0.0 + py_O * 0.0 + pz_O * \
+         -0.004164076 + s_H * -0.005583712 + s2_H * -0.005583712
 
-    o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * -0.44922168 + s2_H * 0.449221684
+    o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * \
+         -0.44922168 + s2_H * 0.449221684
 
     print('dot', (o2*o2).integrate)
 
-    density_matrix = np.outer(mo_coefficients[0], mo_coefficients[0]) + \
-                     np.outer(mo_coefficients[1], mo_coefficients[1]) + \
-                     np.outer(mo_coefficients[2], mo_coefficients[2]) + \
-                     np.outer(mo_coefficients[3], mo_coefficients[3]) + \
-                     np.outer(mo_coefficients[4], mo_coefficients[4]) + \
-                     np.outer(mo_coefficients[5], mo_coefficients[5]) + \
-                     np.outer(mo_coefficients[6], mo_coefficients[6])
+    density_matrix = 2 * np.outer(mo_coefficients[0], mo_coefficients[0]) + \
+                     2 * np.outer(mo_coefficients[1], mo_coefficients[1]) + \
+                     2 * np.outer(mo_coefficients[2], mo_coefficients[2]) + \
+                     2 * np.outer(mo_coefficients[3], mo_coefficients[3]) + \
+                     2 * np.outer(mo_coefficients[4], mo_coefficients[4]) + \
+                     2 * np.outer(mo_coefficients[5], mo_coefficients[5]) + \
+                     2 * np.outer(mo_coefficients[6], mo_coefficients[6])
 
     print('density matrix\n', density_matrix[:4, :4])
 
@@ -461,14 +476,12 @@ if __name__ == '__main__':
 
     print('total electrons', total_electrons)
 
-
-    def get_overlap_matrix_density(basis_set_1, basis_set_2, density_matrix):
+    def get_overlap_density_naive(basis_set_1, basis_set_2, density_matrix):
         n = len(basis_set_1)
         s = np.zeros((n, n, n, n))
 
         for i, basis1 in enumerate(basis_set_1):
             for j, basis2 in enumerate(basis_set_1):
-                print('i, j', i, j)
                 for k, basis3 in enumerate(basis_set_2):
                     for l, basis4 in enumerate(basis_set_2):
                         dens_prod = density_matrix[i, j] * density_matrix[k, l]
@@ -477,6 +490,42 @@ if __name__ == '__main__':
 
         return np.sum(s)
 
+    from sympy.utilities.iterables import multiset_permutations
+    def get_overlap_density(basis_set_1, basis_set_2, density_matrix):
+        n = len(basis_set_1)
+        s = np.zeros((n, n, n, n))
 
-    self_similarity = get_overlap_matrix_density(basis_functions, basis_functions, density_matrix)
+        for i in range(n):
+            for j in range(i+1):
+                print(i, j)
+                for k in range(n):
+                    for l in range(k+1):
+                        dens_prod = density_matrix[i, j] * density_matrix[k, l]
+                        integral = (basis_set_1[i] * basis_set_1[j] * basis_set_2[k] * basis_set_2[l]).integrate
+                        for perm in multiset_permutations([i, j]):
+                            for perm2 in multiset_permutations([k, l]):
+                                s[perm[0], perm[1], perm2[0], perm2[1]] = integral * dens_prod
+
+        return np.sum(s)
+
+    def get_self_similarity(basis_set_1, density_matrix):
+        n = len(basis_set_1)
+        s = np.zeros((n, n, n, n))
+
+        for i in range(n):
+            for j in range(i+1):
+                for k in range(j+1):
+                    for l in range(k+1):
+                        integral = (basis_set_1[i] * basis_set_1[j] * basis_set_1[k] * basis_set_1[l]).integrate
+                        for perm in multiset_permutations([i, j, k, l]):
+                            dens_prod = density_matrix[perm[0], perm[1]] * density_matrix[perm[2], perm[3]]
+                            s[perm[0], perm[1], perm[2], perm[3]] = integral * dens_prod
+
+        return np.sum(s)
+
+    self_similarity = get_overlap_density(basis_functions, basis_functions, density_matrix)
+    print('self_similarity', self_similarity)
+
+    self_similarity = get_self_similarity(basis_functions, density_matrix)
+
     print('self_similarity', self_similarity)
