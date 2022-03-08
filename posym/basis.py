@@ -122,8 +122,6 @@ def integrate_exponential(n, a, b):
         factor = np.sum([math.comb(n, 2*k)*(b/(2*a))**(n-2*k)*math.factorial(2*k)/(2**(2*k)*math.factorial(k)*a**k)
                           for k in range(n//2+1)])
         return factor * np.sqrt(np.pi/a)*np.exp(b**2/(4*a))
-        # factor = np.sum([(b/np.sqrt(a))**(n-2*k)/(math.factorial(n)*math.factorial(n-2*k)) for k in range(n//2+1)])
-        # return factor*np.sqrt(np.pi/a)*np.exp(b**2/(4*a))*math.factorial(n)**2*(1/(2*np.sqrt(a)))**n
 
 
 class PrimitiveGaussian:
@@ -140,12 +138,9 @@ class PrimitiveGaussian:
 
         # normalize primitive such that <prim|prim> = 1
         if normalize:
-            # norm = prefactor * (np.pi/(2*self.alpha))**(self._n_dim/2)
             norm = self._get_norm()
 
             self.prefactor = prefactor / np.sqrt(norm)
-
-        # self.integrate_old = self.prefactor * (np.pi / self.alpha)**(self._n_dim/2)
 
     @property
     def integrate(self):
@@ -153,7 +148,6 @@ class PrimitiveGaussian:
         integrate = 0.0
         pre_exponential = np.exp(-self.alpha * np.dot(self.coordinates, self.coordinates))
         for i, j, k in itertools.product(range(max_lim), repeat=3):
-            # integrate += self.poly_coeff[i, j, k] * np.prod([integrate_exponential_simple(l, self.alpha) for l in [i, j, k]])
             integrate += self.poly_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
         return integrate * self.prefactor * pre_exponential
@@ -165,7 +159,6 @@ class PrimitiveGaussian:
 
         integrate = 0.0
         for i, j, k in itertools.product(range(max_lim), repeat=3):
-            # integrate += poly_coeff_sq[i, j, k] * np.prod([integrate_exponential_simple(l, 2*self.alpha) for l in [i, j, k]])
             integrate += poly_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
 
         return integrate * self.prefactor * pre_exponential
@@ -173,13 +166,6 @@ class PrimitiveGaussian:
     def __call__(self, value):
         value = np.array(value)
         max_lim = len(self.poly_coeff)
-
-        #angular = 0.0
-        #for i in range(4):
-        #    for j in range(4):
-        #        for k in range(4):
-        #            if self.poly_coeff[i, j, k]:
-        #                angular += self.poly_coeff[i, j, k] * np.prod([(value[m])**l for m, l in enumerate([i, j, k])])
 
         coef_matrix = np.fromfunction(lambda i, j, k: value[0]**i*value[1]**j*value[2]**k, (max_lim, max_lim, max_lim))
         angular = np.sum(self.poly_coeff * coef_matrix)
@@ -324,13 +310,13 @@ if __name__ == '__main__':
 
     s2a = PrimitiveGaussian(alpha=0.6362897469, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     s2b = PrimitiveGaussian(alpha=0.1478600533, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    s2c = PrimitiveGaussian(alpha=0.04808867840, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    s2c = PrimitiveGaussian(alpha=0.0480886784, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     s2 = BasisFunction([s2a, s2b, s2c], [-0.09996722919, 0.3995128261, 0.7001154689])
     print('s2:', (s2*s2).integrate)
 
     pxa = PrimitiveGaussian(alpha=0.6362897469, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     pxb = PrimitiveGaussian(alpha=0.1478600533, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pxc = PrimitiveGaussian(alpha=0.04808867840, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    pxc = PrimitiveGaussian(alpha=0.0480886784, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     px = BasisFunction([pxa, pxb, pxc], [0.1559162750, 0.6076837186, 0.3919573931],
                        coordinates=[1.0, 0.2, 0.0]
                        )
@@ -351,13 +337,13 @@ if __name__ == '__main__':
 
     pya = PrimitiveGaussian(alpha=0.6362897469, l=[0, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     pyb = PrimitiveGaussian(alpha=0.1478600533, l=[0, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pyc = PrimitiveGaussian(alpha=0.04808867840, l=[0, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    pyc = PrimitiveGaussian(alpha=0.0480886784, l=[0, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     py = BasisFunction([pya, pyb, pyc], [0.1559162750, 0.6076837186, 0.3919573931])
     print('py:', (py*py).integrate)
 
     pza = PrimitiveGaussian(alpha=0.6362897469, l=[0, 0, 1], coordinates=[0.0, 0.0, 0.0], normalize=True)
     pzb = PrimitiveGaussian(alpha=0.1478600533, l=[0, 0, 1], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pzc = PrimitiveGaussian(alpha=0.04808867840, l=[0, 0, 1], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    pzc = PrimitiveGaussian(alpha=0.0480886784, l=[0, 0, 1], coordinates=[0.0, 0.0, 0.0], normalize=True)
     pz = BasisFunction([pza, pzb, pzc], [0.1559162750, 0.6076837186, 0.3919573931])
     print('pz:', (pz*pz).integrate)
 
@@ -376,12 +362,12 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     x = np.linspace(-5, 5, 500)
 
-    #plt.plot(x, [o1([x_, 0.1, 0]) for x_ in x])
+    plt.plot(x, [o1([x_, 0.1, 0]) for x_ in x])
 
-    #plt.plot(x, [o2([x_, 0.1, 0]) for x_ in x])
-    #plt.plot(x, [px([x_, 0, 0])*py([x_, 0, 0])for x_ in x])
-    #plt.plot(x, [px2([x_, 0.1, 0]) for x_ in x], '--')
-    #plt.plot(x, [d1([x_, 0.0, 0]) for x_ in x], '-')
+    plt.plot(x, [o2([x_, 0.1, 0]) for x_ in x])
+    plt.plot(x, [px([x_, 0, 0])*py([x_, 0, 0])for x_ in x])
+    plt.plot(x, [px2([x_, 0.1, 0]) for x_ in x], '--')
+    plt.plot(x, [d1([x_, 0.0, 0]) for x_ in x], '-')
     plt.plot(x, [pxa([x_, 0.0, 0]) for x_ in x], '-')
 
     plt.show()
