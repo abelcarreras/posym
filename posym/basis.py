@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 import math
 import itertools
-from posym.integrals import integrate_exponential_simple, integrate_exponential, product_poly_coeff, gaussian_integral
+from posym.integrals import product_poly_coeff, gaussian_integral
 
 
 def binomial_expansion(l, x, max_lim=None):
@@ -124,7 +124,7 @@ def gaussian_integral_py(alpha, center, poly_coeff):
 
     integrate = 0.0
     for i, j, k in itertools.product(range(max_lim), repeat=3):
-        integrate += poly_coeff[i, j, k] * np.prod([integrate_exponential(l, alpha, 2 * alpha * c) for c, l in zip(center, [i, j, k])])
+        integrate += poly_coeff[i, j, k] * np.prod([integrate_exponential_py(l, alpha, 2 * alpha * c) for c, l in zip(center, [i, j, k])])
 
     return pre_exponential * integrate
 
@@ -184,23 +184,26 @@ class PrimitiveGaussian:
         rot_matrix = rotation(angle, axis)
 
         max_lim = len(self.poly_coeff)
-        poly_coeff_rot = np.zeros((max_lim, max_lim, max_lim))
 
-        for i, j, k in itertools.product(range(max_lim), repeat=3):
-            poly_temp_xyz = np.zeros((max_lim, max_lim, max_lim))
-            poly_temp_xyz[0, 0, 0] = 1.0
-            for l, alpha in enumerate([i, j, k]):
-                poly_temp = np.zeros((max_lim, max_lim, max_lim))
-                poly_temp[1, 0, 0] = rot_matrix[0, l]
-                poly_temp[0, 1, 0] = rot_matrix[1, l]
-                poly_temp[0, 0, 1] = rot_matrix[2, l]
-                poly_temp = exp_poly_coeff(poly_temp, alpha, max_lim)
+        if max_lim > 1:
 
-                poly_temp_xyz = product_poly_coeff(poly_temp_xyz, poly_temp, max_lim)
+            poly_coeff_rot = np.zeros((max_lim, max_lim, max_lim))
 
-            poly_coeff_rot += self.poly_coeff[i, j, k] * poly_temp_xyz
+            for i, j, k in itertools.product(range(max_lim), repeat=3):
+                poly_temp_xyz = np.zeros((max_lim, max_lim, max_lim))
+                poly_temp_xyz[0, 0, 0] = 1.0
+                for l, alpha in enumerate([i, j, k]):
+                    poly_temp = np.zeros((max_lim, max_lim, max_lim))
+                    poly_temp[1, 0, 0] = rot_matrix[0, l]
+                    poly_temp[0, 1, 0] = rot_matrix[1, l]
+                    poly_temp[0, 0, 1] = rot_matrix[2, l]
+                    poly_temp = exp_poly_coeff(poly_temp, alpha, max_lim)
 
-        self.poly_coeff = poly_coeff_rot
+                    poly_temp_xyz = product_poly_coeff(poly_temp_xyz, poly_temp, max_lim)
+
+                poly_coeff_rot += self.poly_coeff[i, j, k] * poly_temp_xyz
+
+            self.poly_coeff = poly_coeff_rot
         self.coordinates = np.dot(rot_matrix, self.coordinates)
 
 
@@ -298,6 +301,7 @@ if __name__ == '__main__':
     sc = PrimitiveGaussian(alpha=0.794650487, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     s1 = BasisFunction([sa, sb, sc], [0.1543289673, 0.5353281423, 0.4446345422])
     print('s:', (s1*s1).integrate)
+    s1.apply_rotation(0.33*2*np.pi/2, [0.2, 5.0, 1.0])
 
     s2a = PrimitiveGaussian(alpha=0.6362897469, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     s2b = PrimitiveGaussian(alpha=0.1478600533, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
@@ -459,9 +463,9 @@ if __name__ == '__main__':
                      2 * np.outer(mo_coefficients[1], mo_coefficients[1]) + \
                      2 * np.outer(mo_coefficients[2], mo_coefficients[2]) + \
                      2 * np.outer(mo_coefficients[3], mo_coefficients[3]) + \
-                     2 * np.outer(mo_coefficients[4], mo_coefficients[4]) + \
-                     2 * np.outer(mo_coefficients[5], mo_coefficients[5]) + \
-                     2 * np.outer(mo_coefficients[6], mo_coefficients[6])
+                     0 * np.outer(mo_coefficients[4], mo_coefficients[4]) + \
+                     0 * np.outer(mo_coefficients[5], mo_coefficients[5]) + \
+                     0 * np.outer(mo_coefficients[6], mo_coefficients[6])
 
     print('density matrix\n', density_matrix[:4, :4])
 
@@ -526,3 +530,33 @@ if __name__ == '__main__':
     self_similarity = get_self_similarity(basis_functions, density_matrix)
 
     print('self_similarity', self_similarity)
+
+    def rotate_basis_set(basis_set, angle, axis):
+        import copy
+        new_basis_set = copy.deepcopy(basis_set)
+        for bf in new_basis_set:
+            bf.apply_rotation(angle, axis)
+        return new_basis_set
+
+    def translate_basis_set(basis_set, translation):
+        import copy
+        new_basis_set = copy.deepcopy(basis_set)
+        for bf in new_basis_set:
+            bf.apply_translation(translation)
+        return new_basis_set
+
+
+    basis_functions_r = rotate_basis_set(basis_functions, np.pi/2, [0, 0, 1])
+    basis_functions_t = translate_basis_set(basis_functions, [0, 0, 0.001])
+
+    s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H = basis_functions_r
+    s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H = basis_functions_t
+
+    o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * \
+         -0.44922168 + s2_H * 0.449221684
+
+    print('dot(rot)', (o2*o2).integrate)
+
+
+    print('measure:', get_overlap_density(basis_functions, basis_functions_t, density_matrix)/self_similarity)
+
