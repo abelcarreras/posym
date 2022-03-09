@@ -457,7 +457,9 @@ if __name__ == '__main__':
     o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * \
          -0.44922168 + s2_H * 0.449221684
 
-    print('dot', (o2*o2).integrate)
+    print('dot o1o1', (o1*o1).integrate)
+    print('dot o2o2', (o2*o2).integrate)
+    print('dot o1o2', (o2*o1).integrate)
 
     density_matrix = 2 * np.outer(mo_coefficients[0], mo_coefficients[0]) + \
                      2 * np.outer(mo_coefficients[1], mo_coefficients[1]) + \
@@ -528,7 +530,6 @@ if __name__ == '__main__':
     print('self_similarity', self_similarity)
 
     self_similarity = get_self_similarity(basis_functions, density_matrix)
-
     print('self_similarity', self_similarity)
 
     def rotate_basis_set(basis_set, angle, axis):
@@ -552,11 +553,9 @@ if __name__ == '__main__':
     s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H = basis_functions_r
     s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H = basis_functions_t
 
-    o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * \
-         -0.44922168 + s2_H * 0.449221684
+    o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * -0.44922168 + s2_H * 0.449221684
 
     print('dot(rot)', (o2*o2).integrate)
-
 
     print('measure:', get_overlap_density(basis_functions, basis_functions_t, density_matrix)/self_similarity)
 
