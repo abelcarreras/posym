@@ -357,14 +357,14 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     x = np.linspace(-5, 5, 500)
 
-    plt.plot(x, [o1([x_, 0.1, 0]) for x_ in x])
+    plt.plot(x, [o1([x_,  0.0, 0.0]) for x_ in x], label='O1')
+    plt.plot(x, [o2([x_,  0.0, 0.0]) for x_ in x], label='O2')
+    plt.plot(x, [px([x_,  0.0, 0.0])*py([x_, 0, 0])for x_ in x], label='px*py')
+    plt.plot(x, [px2([x_, 0.0, 0.0]) for x_ in x], '--', label='px2')
+    plt.plot(x, [d1([x_,  0.0, 0.0]) for x_ in x], '-', label='d1')
+    plt.plot(x, [pxa([x_, 0.0, 0.0]) for x_ in x], '-', label='pxa')
 
-    plt.plot(x, [o2([x_, 0.1, 0]) for x_ in x])
-    plt.plot(x, [px([x_, 0, 0])*py([x_, 0, 0])for x_ in x])
-    plt.plot(x, [px2([x_, 0.1, 0]) for x_ in x], '--')
-    plt.plot(x, [d1([x_, 0.0, 0]) for x_ in x], '-')
-    plt.plot(x, [pxa([x_, 0.0, 0]) for x_ in x], '-')
-
+    plt.legend()
     plt.show()
 
 
@@ -547,15 +547,28 @@ if __name__ == '__main__':
         return new_basis_set
 
 
-    basis_functions_r = rotate_basis_set(basis_functions, np.pi/2, [0, 0, 1])
-    basis_functions_t = translate_basis_set(basis_functions, [0, 0, 0.001])
+    basis_functions_r = rotate_basis_set(basis_functions, np.pi, [1, 0, 0])
+    basis_functions_t = translate_basis_set(basis_functions, [1, 0, 0])
 
     s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H = basis_functions_r
-    s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H = basis_functions_t
-
     o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * -0.44922168 + s2_H * 0.449221684
-
     print('dot(rot)', (o2*o2).integrate)
 
-    print('measure:', get_overlap_density(basis_functions, basis_functions_t, density_matrix)/self_similarity)
+    s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H = basis_functions_t
+    o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * -0.44922168 + s2_H * 0.449221684
+    print('dot(trans)', (o2*o2).integrate)
 
+    print('measure dens:', get_overlap_density(basis_functions, basis_functions_r, density_matrix)/self_similarity)
+
+
+    # Fock matrix
+    fock_matrix = np.array([[-20.24290797856165, -5.163857371773464, 0.0, 0.0, 0.028693754710997377, -1.1083321876539016, -1.1083321876539016],
+                   [-5.163857371773464, -2.4396904148844447, 0.0, 0.0, 0.11807009938463243, -0.9717587486764925, -0.9717587486764925],
+                   [ 0.0, 0.0, -0.2938600995387204, 0.0, 0.0, 0.37840779313794853, -0.37840779313794853],
+                   [ 0.0, 0.0, 0.0, -0.392614627464097, 0.0, -2.4402816249492116e-17, 2.4402816249492126e-17],
+                   [ 0.028693754710997377, 0.11807009938463243, 0.0, 0.0, -0.33633212331400564, 0.37348029921997167, 0.3734802992199712],
+                   [-1.1083321876539016, -0.9717587486764925, 0.37840779313794853, -2.4402816249492116e-17, 0.37348029921997167, -0.5411484908071187, -0.3753070759124842],
+                   [-1.1083321876539016, -0.9717587486764925, -0.37840779313794853, 2.4402816249492126e-17, 0.3734802992199712, -0.3753070759124842, -0.5411484908071187]])
+
+    self_similarity = get_self_similarity(basis_functions, fock_matrix)
+    print('measure fock:', get_overlap_density(basis_functions, basis_functions_r, fock_matrix)/self_similarity)
