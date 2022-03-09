@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 import math
 import itertools
-from posym.integrals import integrate_exponential_simple, integrate_exponential, product_poly_coeff
+from posym.integrals import integrate_exponential_simple, integrate_exponential, product_poly_coeff, gaussian_integral
 
 
 def binomial_expansion(l, x, max_lim=None):
@@ -118,6 +118,17 @@ def integrate_exponential_py(n, a, b):
         return factor * np.sqrt(np.pi/a)*np.exp(b**2/(4*a))
 
 
+def gaussian_integral_py(alpha, center, poly_coeff):
+    max_lim = len(poly_coeff)
+    pre_exponential = np.exp(-alpha * np.dot(center, center))
+
+    integrate = 0.0
+    for i, j, k in itertools.product(range(max_lim), repeat=3):
+        integrate += poly_coeff[i, j, k] * np.prod([integrate_exponential(l, alpha, 2 * alpha * c) for c, l in zip(center, [i, j, k])])
+
+    return pre_exponential * integrate
+
+
 class PrimitiveGaussian:
     def __init__(self, alpha, prefactor=1.0, coordinates=(0, 0, 0), l=(0, 0, 0), normalize=True, poly_coeff=None):
         self._n_dim = len(coordinates)
@@ -138,24 +149,11 @@ class PrimitiveGaussian:
 
     @property
     def integrate(self):
-        max_lim = len(self.poly_coeff)
-        integrate = 0.0
-        pre_exponential = np.exp(-self.alpha * np.dot(self.coordinates, self.coordinates))
-        for i, j, k in itertools.product(range(max_lim), repeat=3):
-            integrate += self.poly_coeff[i, j, k] * np.prod([integrate_exponential(l, self.alpha, 2 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
-
-        return integrate * self.prefactor * pre_exponential
+        return self.prefactor * gaussian_integral(self.alpha, self.coordinates, self.poly_coeff)
 
     def _get_norm(self):
         poly_coeff_sq = product_poly_coeff(self.poly_coeff, self.poly_coeff)
-        pre_exponential = np.exp(-2*self.alpha * np.dot(self.coordinates, self.coordinates))
-        max_lim = len(poly_coeff_sq)
-
-        integrate = 0.0
-        for i, j, k in itertools.product(range(max_lim), repeat=3):
-            integrate += poly_coeff_sq[i, j, k] * np.prod([integrate_exponential(l, 2*self.alpha, 4 * self.alpha * c) for c, l in zip(self.coordinates, [i, j, k])])
-
-        return integrate * self.prefactor * pre_exponential
+        return self.prefactor * gaussian_integral(2*self.alpha, self.coordinates, poly_coeff_sq)
 
     def __call__(self, value):
         value = np.array(value)
@@ -497,7 +495,6 @@ if __name__ == '__main__':
 
         for i in range(n):
             for j in range(i+1):
-                print(i, j)
                 for k in range(n):
                     for l in range(k+1):
                         dens_prod = density_matrix[i, j] * density_matrix[k, l]

@@ -9,12 +9,15 @@
 #endif
 
 
+// Support functions
 int dim3to1(int n1, int n2, int n3, int dim);
+double ExpIntegralC(int n, double a, double b);
 
 //static double FrequencyEvaluation(double Delta, double  Coefficients[], int m, double xms);
 static PyObject* ExpIntegralSimple(PyObject* self, PyObject *arg, PyObject *keywords);
 static PyObject* ExpIntegral(PyObject* self, PyObject *arg, PyObject *keywords);
 static PyObject* PolyProduct(PyObject* self, PyObject *arg, PyObject *keywords);
+static PyObject* GaussianIntegral(PyObject* self, PyObject *arg, PyObject *keywords);
 
 
 //  Python Interface
@@ -24,12 +27,15 @@ static char function_docstring_2[] =
     "integrate_exponential(n, a, b)\n\n Solve integrals type: x^n exp(-(ax^2+bx))";
 static char function_docstring_3[] =
     "product_poly_coeff(poly_coeff, poly_coeff2, max_lim=None)\n\n Do product of two polynomials";
+static char function_docstring_4[] =
+    "gaussian_integral(poly_coeff, )\n\n Solve gaussian integral x^n y^m z^l exp(-a(r-R)^2)";
 
 
 static PyMethodDef extension_funcs[] = {
     {"integrate_exponential_simple",  (PyCFunction)ExpIntegralSimple, METH_VARARGS|METH_KEYWORDS, function_docstring_1},
     {"integrate_exponential",  (PyCFunction)ExpIntegral, METH_VARARGS|METH_KEYWORDS, function_docstring_2},
     {"product_poly_coeff",  (PyCFunction)PolyProduct, METH_VARARGS|METH_KEYWORDS, function_docstring_3},
+    {"gaussian_integral",  (PyCFunction)GaussianIntegral, METH_VARARGS|METH_KEYWORDS, function_docstring_4},
     {NULL, NULL, 0, NULL}
 };
 
@@ -123,14 +129,40 @@ static PyObject* ExpIntegralSimple(PyObject* self, PyObject *arg, PyObject *keyw
         factor += nCr(n, 2*k)*pow(b/(2.0*a), n-2*k) * fact(2*k)/(pow(2, 2*k)*fact(k)*pow(a,k));
     }
 
-    //double factor = np.sum([math.comb(n, 2*k)*(b/(2*a))**(n-2*k)*math.factorial(2*k)/(2**(2*k)*math.factorial(k)*a**k)
-    //                      for k in range(n//2+1)])
-
     double integral =  factor * sqrt(PI/a)*exp(pow(b,2)/(4*a));
 
     return Py_BuildValue("d", integral);
 }
 
+
+double ExpIntegralC(int n, double a, double b)
+{
+
+    double integral;
+    double PI = acos(-1.0);
+
+
+    if (n == 0) {
+        integral = sqrt(PI/a)*exp(pow(b, 2)/(4.0*a));
+        return integral;
+    }
+
+    if (n == 1) {
+        integral = sqrt(PI)/(2.0*pow(a, 3.0/2))*b*exp(pow(b, 2)/(4.0*a));
+        return integral;
+    }
+
+    double factor = 0.0;
+
+    for (int k = 0; k < n/2+1; k++)
+    {
+        factor += nCr(n, 2*k)*pow(b/(2.0*a), n-2*k) * fact(2*k)/(pow(2, 2*k)*fact(k)*pow(a,k));
+    }
+
+    integral =  factor * sqrt(PI/a)*exp(pow(b,2)/(4*a));
+
+    return integral;
+}
 
 
 static PyObject* ExpIntegral(PyObject* self, PyObject *arg, PyObject *keywords)
@@ -141,35 +173,13 @@ static PyObject* ExpIntegral(PyObject* self, PyObject *arg, PyObject *keywords)
     double integral;
     double PI = acos(-1.0);
 
-    //  Interface with Python
+    // Interface with Python
     static char *kwlist[] = {"n", "a", "b", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "idd", kwlist, &n, &a, &b))  return NULL;
 
-    //Create new numpy array for storing result
+    // Create new numpy array for storing result
+    return Py_BuildValue("d", ExpIntegralC(n, a, b));
 
-    if (n == 0) {
-        integral = sqrt(PI/a)*exp(pow(b, 2)/(4.0*a));
-        return Py_BuildValue("d", integral);
-    }
-
-    if (n == 1) {
-        integral = sqrt(PI)/(2.0*pow(a, 3.0/2))*b*exp(pow(b, 2)/(4.0*a));
-        return Py_BuildValue("d", integral);
-    }
-
-    double factor = 0.0;
-
-    for (int k = 0; k < n/2+1; k++)
-    {
-        factor += nCr(n, 2*k)*pow(b/(2.0*a), n-2*k) * fact(2*k)/(pow(2, 2*k)*fact(k)*pow(a,k));
-    }
-
-    //double factor = np.sum([math.comb(n, 2*k)*(b/(2*a))**(n-2*k)*math.factorial(2*k)/(2**(2*k)*math.factorial(k)*a**k)
-    //                      for k in range(n//2+1)])
-
-    integral =  factor * sqrt(PI/a)*exp(pow(b,2)/(4*a));
-
-    return Py_BuildValue("d", integral);
 }
 
 int dim3to1(int n1, int n2, int n3, int dim)
@@ -246,20 +256,63 @@ static PyObject* PolyProduct(PyObject* self, PyObject *arg, PyObject *keywords)
     }
 
 
-
-    // polyCoeffProd[dim3to1(0, 0, 1, maxLim1)] = 8;
-
     // Free python memory
     Py_DECREF(polyCoeffArray);
     Py_DECREF(polyCoeff2Array);
 
     return(PyArray_Return(polyCoeffArray_object));
 
-
-    //Create new numpy array for storing result
-    //double f[5] = {0,1,2,3,4};
-    //int d[1] = {5};
-    //PyObject *c = PyArray_FromDims(1,d,NPY_DOUBLE);
-    //memcpy(PyArray_DATA(c), f, 5*sizeof(double));
-    //return PyArray_DATA(c);
 }
+
+
+static PyObject* GaussianIntegral(PyObject* self, PyObject *arg, PyObject *keywords)
+{
+
+    //  Interface with Python
+    PyObject *polyCoeff_obj, *center_obj;
+    double alpha;
+
+    static char *kwlist[] = {"alpha", "center", "poly_coeff", NULL};
+    if (!PyArg_ParseTupleAndKeywords(arg, keywords, "dOO", kwlist, &alpha, &center_obj, &polyCoeff_obj))  return NULL;
+
+    PyObject *polyCoeffArray = PyArray_FROM_OTF(polyCoeff_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *centerArray = PyArray_FROM_OTF(center_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+
+    if (polyCoeffArray == NULL || centerArray == NULL ) {
+        Py_XDECREF(polyCoeffArray);
+        Py_XDECREF(centerArray);
+        return NULL;
+    }
+
+    double *polyCoeff    = (double*)PyArray_DATA(polyCoeffArray);
+    double *center   = (double*)PyArray_DATA(centerArray);
+
+    int maxLim = (int)PyArray_DIM(polyCoeffArray, 0);
+
+    // Dot product center
+    double dot_center = 0.0;
+    for (int i = 0; i < 3; i++) {
+        dot_center += center[i] * center[i];
+    }
+
+    double pre_exponential = exp(-alpha * dot_center);
+
+    double integral = 0.0;
+    for (int i = 0; i < maxLim; i++) {
+        for (int j = 0; j < maxLim; j++) {
+            for (int k = 0; k < maxLim; k++) {
+                //printf("coef: %f\n", polyCoeff[dim3to1(i, j, k, maxLim)]);
+                integral += polyCoeff[dim3to1(i, j, k, maxLim)] *
+                    ExpIntegralC(i, alpha, 2*alpha*center[0]) *
+                    ExpIntegralC(j, alpha, 2*alpha*center[1]) *
+                    ExpIntegralC(k, alpha, 2*alpha*center[2]);
+            }
+        }
+    }
+
+    // Free python memory
+    Py_DECREF(polyCoeffArray);
+
+    return Py_BuildValue("d", integral * pre_exponential);
+}
+
