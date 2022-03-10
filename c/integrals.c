@@ -298,6 +298,8 @@ static PyObject* GaussianIntegral(PyObject* self, PyObject *arg, PyObject *keywo
     double pre_exponential = exp(-alpha * dot_center);
 
     double integral = 0.0;
+//    omp_get_max_threads(4);
+//    # pragma omp parallel for reduction(+:integral) default(shared)
     for (int i = 0; i < maxLim; i++) {
         for (int j = 0; j < maxLim; j++) {
             for (int k = 0; k < maxLim; k++) {

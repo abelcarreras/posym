@@ -180,26 +180,24 @@ class PrimitiveGaussian:
     def apply_rotation(self, angle, axis):
 
         from posym.operations.rotation import rotation
-
         rot_matrix = rotation(angle, axis)
-
         max_lim = len(self.poly_coeff)
 
         if max_lim > 1:
-
-            poly_coeff_rot = np.zeros((max_lim, max_lim, max_lim))
+            max_lim_final = max_lim * 3 # * NDIM (naive max dimmension can be improved)
+            poly_coeff_rot = np.zeros((max_lim_final, max_lim_final, max_lim_final))
 
             for i, j, k in itertools.product(range(max_lim), repeat=3):
-                poly_temp_xyz = np.zeros((max_lim, max_lim, max_lim))
+                poly_temp_xyz = np.zeros((max_lim_final, max_lim_final, max_lim_final))
                 poly_temp_xyz[0, 0, 0] = 1.0
-                for l, alpha in enumerate([i, j, k]):
+                for l, m in enumerate([i, j, k]):
                     poly_temp = np.zeros((max_lim, max_lim, max_lim))
                     poly_temp[1, 0, 0] = rot_matrix[0, l]
                     poly_temp[0, 1, 0] = rot_matrix[1, l]
                     poly_temp[0, 0, 1] = rot_matrix[2, l]
-                    poly_temp = exp_poly_coeff(poly_temp, alpha, max_lim)
+                    poly_temp = exp_poly_coeff(poly_temp, m, max_lim_final)
 
-                    poly_temp_xyz = product_poly_coeff(poly_temp_xyz, poly_temp, max_lim)
+                    poly_temp_xyz = product_poly_coeff(poly_temp_xyz, poly_temp, max_lim_final)
 
                 poly_coeff_rot += self.poly_coeff[i, j, k] * poly_temp_xyz
 
@@ -313,10 +311,11 @@ if __name__ == '__main__':
     pxb = PrimitiveGaussian(alpha=0.1478600533, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     pxc = PrimitiveGaussian(alpha=0.0480886784, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     px = BasisFunction([pxa, pxb, pxc], [0.1559162750, 0.6076837186, 0.3919573931],
-                       coordinates=[1.0, 0.2, 0.0]
+                       coordinates=[0.0, 0.0, 0.0]
                        )
     print('px:', (px*px).integrate)
-    px.apply_rotation(0.33*2*np.pi/2, [0.2, 5.0, 1.0])
+    px.apply_rotation(np.pi/2, [0.0, 0.0, 1.0])
+
     print('px rot:', (px*px).integrate)
 
     print('pxa:', (pxa*pxa).integrate)
@@ -342,21 +341,34 @@ if __name__ == '__main__':
     pz = BasisFunction([pza, pzb, pzc], [0.1559162750, 0.6076837186, 0.3919573931])
     print('pz:', (pz*pz).integrate)
 
-    d1a = PrimitiveGaussian(alpha=21.45684671, l=[2, 0, 0], coordinates=[2.0, 0.0, 0.0], normalize=True)
-    d1b = PrimitiveGaussian(alpha=6.545022156, l=[2, 0, 0], coordinates=[2.0, 0.0, 0.0], normalize=True)
-    d1c = PrimitiveGaussian(alpha=2.525273021, l=[2, 0, 0], coordinates=[2.0, 0.0, 0.0], normalize=True)
+    d1a = PrimitiveGaussian(alpha=21.45684671, l=[1, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    d1b = PrimitiveGaussian(alpha=6.545022156, l=[1, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    d1c = PrimitiveGaussian(alpha=2.525273021, l=[1, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
     d1 = BasisFunction([d1a, d1b, d1c], [0.2197679508, 0.6555473627, 0.2865732590])
+    d1.apply_rotation(np.pi/4, [0.0, 0.0, 1.0])
     print('d1:', (d1*d1).integrate)
 
     px2 = px * px
+    print('px2:', px2.integrate)
+
     # from scipy import integrate
     # f = lambda x, y, z: px2([x, y, z])
     # num_integral = integrate.tplquad(f, -5, 5, lambda x: -5, lambda x: 5, lambda x, y: -5, lambda x, y: 5)
     # print('num_integral px*px', num_integral)
 
     import matplotlib.pyplot as plt
-    x = np.linspace(-5, 5, 500)
+    x = np.linspace(-2, 2, 200)
+    X, Y = np.meshgrid(x, x)
+    Z = []
+    for x, y in zip(X, Y):
+        zv = [d1([x2, y2, 0.0]) for x2, y2 in zip(x, y)]
+        Z.append(zv)
+    Z = np.array(Z)
 
+    plt.contour(X, Y, Z, colors='k')
+    plt.show()
+
+    x = np.linspace(-5, 5, 200)
     plt.plot(x, [o1([x_,  0.0, 0.0]) for x_ in x], label='O1')
     plt.plot(x, [o2([x_,  0.0, 0.0]) for x_ in x], label='O2')
     plt.plot(x, [px([x_,  0.0, 0.0])*py([x_, 0, 0])for x_ in x], label='px*py')
