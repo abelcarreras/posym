@@ -155,14 +155,30 @@ class PrimitiveGaussian:
         poly_coeff_sq = product_poly_coeff(self.poly_coeff, self.poly_coeff)
         return self.prefactor * gaussian_integral(2*self.alpha, self.coordinates, poly_coeff_sq)
 
-    def __call__(self, value):
+    def __call__(self, *value):
         value = np.array(value)
         max_lim = len(self.poly_coeff)
 
-        coef_matrix = np.fromfunction(lambda i, j, k: value[0]**i*value[1]**j*value[2]**k, (max_lim, max_lim, max_lim))
-        angular = np.sum(self.poly_coeff * coef_matrix)
+        # to work with vectorized like calls
+        if len(value[0].shape) or len(value[1].shape) or len(value[2].shape) > 1:
 
-        return self.prefactor * angular * np.exp(-self.alpha * np.linalg.norm(value - self.coordinates)**2)
+            angular = np.zeros_like(value[0])
+            radial = np.zeros_like(value[0])
+
+            for indices in itertools.product(*[range(m) for m in value[0].shape]):
+                coef_matrix = np.fromfunction(lambda i, j, k: value[0][indices] ** i * value[1][indices] ** j * value[2][indices] ** k,
+                                              (max_lim, max_lim, max_lim))
+                angular[indices] = np.sum(self.poly_coeff * coef_matrix)
+
+                dot = np.sum([(value[m][indices] - self.coordinates[m])**2 for m in range(3)])
+                radial[indices] = np.exp(-self.alpha * dot)
+
+        else:
+            coef_matrix = np.fromfunction(lambda i, j, k: value[0]**i*value[1]**j*value[2]**k, (max_lim, max_lim, max_lim))
+            radial = np.exp(-self.alpha * np.linalg.norm(value - self.coordinates)**2)
+            angular = np.sum(self.poly_coeff * coef_matrix)
+
+        return self.prefactor * angular * radial
 
     def __mul__(self, other):
         return gaussian_product(self, other)
@@ -241,8 +257,8 @@ class BasisFunction:
     def integrate(self):
         return sum([coef * prim.integrate for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
 
-    def __call__(self, value):
-        return sum([coef * prim(value) for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
+    def __call__(self, *value):
+        return sum([coef * prim(*value) for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
 
     def __mul__(self, other):
         if isinstance(other, float):
@@ -358,23 +374,23 @@ if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
     x = np.linspace(-2, 2, 200)
-    X, Y = np.meshgrid(x, x)
-    Z = []
-    for x, y in zip(X, Y):
-        zv = [d1([x2, y2, 0.0]) for x2, y2 in zip(x, y)]
-        Z.append(zv)
-    Z = np.array(Z)
+    y = np.linspace(-2, 2, 200)
 
+    X, Y = np.meshgrid(x, y)
+    Z = d1(X, Y, np.zeros_like(X))
+    plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
+    plt.figure()
     plt.contour(X, Y, Z, colors='k')
     plt.show()
 
     x = np.linspace(-5, 5, 200)
-    plt.plot(x, [o1([x_,  0.0, 0.0]) for x_ in x], label='O1')
-    plt.plot(x, [o2([x_,  0.0, 0.0]) for x_ in x], label='O2')
-    plt.plot(x, [px([x_,  0.0, 0.0])*py([x_, 0, 0])for x_ in x], label='px*py')
-    plt.plot(x, [px2([x_, 0.0, 0.0]) for x_ in x], '--', label='px2')
-    plt.plot(x, [d1([x_,  0.0, 0.0]) for x_ in x], '-', label='d1')
-    plt.plot(x, [pxa([x_, 0.0, 0.0]) for x_ in x], '-', label='pxa')
+    zeros = np.zeros_like(x)
+    plt.plot(x, o1(x, zeros, zeros), label='O1')
+    plt.plot(x, o2(x,  zeros, zeros), label='O2')
+    plt.plot(x, [px(x_,  0.0, 0.0)*py(x_, 0, 0)for x_ in x], label='px*py')
+    plt.plot(x, [px2(x_, 0.0, 0.0) for x_ in x], '--', label='px2')
+    plt.plot(x, [d1(x_,  0.0, 0.0) for x_ in x], '-', label='d1')
+    plt.plot(x, [pxa(x_, 0.0, 0.0) for x_ in x], '-', label='pxa')
 
     plt.legend()
     plt.show()
