@@ -129,6 +129,28 @@ def gaussian_integral_py(alpha, center, poly_coeff):
     return pre_exponential * integrate
 
 
+def simplify_poly_coeff(poly_coeff):
+    """
+    Simplify a polynomial coefficient matrix
+
+    :param poly_coeff: polynomial coefficient matrix
+    :return: simplified polynomial coefficient matrix
+    """
+
+    n_dim = len(poly_coeff)
+    k = 0
+    for i in range(1, n_dim-1):
+
+        if poly_coeff[-i, :, :].any() or poly_coeff[:, -i, :].any() or poly_coeff[:, :, -i].any():
+            break
+        k += 1
+
+    if k == 0:
+        return poly_coeff
+
+    return poly_coeff[:-k, :-k, :-k]
+
+
 class PrimitiveGaussian:
     def __init__(self, alpha, prefactor=1.0, coordinates=(0, 0, 0), l=(0, 0, 0), normalize=True, poly_coeff=None):
         self._n_dim = len(coordinates)
@@ -146,6 +168,8 @@ class PrimitiveGaussian:
             norm = self._get_norm()
 
             self.prefactor = prefactor / np.sqrt(norm)
+
+        self.poly_coeff = simplify_poly_coeff(self.poly_coeff)
 
     @property
     def integrate(self):
@@ -191,7 +215,7 @@ class PrimitiveGaussian:
         for i, j, k in itertools.product(range(max_lim), repeat=3):
             poly_coeff_trans += self.poly_coeff[i, j, k] * binomial_expansion([i, j, k], -translation, max_lim=max_lim)
         self.coordinates = self.coordinates + translation
-        self.poly_coeff = poly_coeff_trans
+        self.poly_coeff = simplify_poly_coeff(poly_coeff_trans)
 
     def apply_rotation(self, angle, axis):
 
@@ -217,7 +241,7 @@ class PrimitiveGaussian:
 
                 poly_coeff_rot += self.poly_coeff[i, j, k] * poly_temp_xyz
 
-            self.poly_coeff = poly_coeff_rot
+            self.poly_coeff = simplify_poly_coeff(poly_coeff_rot)
         self.coordinates = np.dot(rot_matrix, self.coordinates)
 
 
@@ -367,14 +391,13 @@ if __name__ == '__main__':
     px2 = px * px
     print('px2:', px2.integrate)
 
-    # from scipy import integrate
-    # f = lambda x, y, z: px2([x, y, z])
-    # num_integral = integrate.tplquad(f, -5, 5, lambda x: -5, lambda x: 5, lambda x, y: -5, lambda x, y: 5)
+    from scipy import integrate
+    # num_integral = integrate.tplquad(px2, -5, 5, lambda x: -5, lambda x: 5, lambda x, y: -5, lambda x, y: 5)
     # print('num_integral px*px', num_integral)
 
     import matplotlib.pyplot as plt
-    x = np.linspace(-2, 2, 200)
-    y = np.linspace(-2, 2, 200)
+    x = np.linspace(-2, 2, 100)
+    y = np.linspace(-2, 2, 100)
 
     X, Y = np.meshgrid(x, y)
     Z = d1(X, Y, np.zeros_like(X))
@@ -485,11 +508,24 @@ if __name__ == '__main__':
     o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * \
          -0.44922168 + s2_H * 0.449221684
 
+
+    x = np.linspace(-2, 2, 10)
+    y = np.linspace(-2, 2, 10)
+
+    X, Y = np.meshgrid(x, y)
+    o2.apply_rotation(np.pi/2, [1, 0, 0])
+    o2.apply_translation([0, -0.5, 0])
+    Z = o2(X, Y, np.zeros_like(X))
+    plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
+    plt.figure()
+    plt.contour(X, Y, Z, colors='k')
+    plt.show()
+
     print('dot o1o1', (o1*o1).integrate)
     print('dot o2o2', (o2*o2).integrate)
     print('dot o1o2', (o2*o1).integrate)
 
-    density_matrix = 2 * np.outer(mo_coefficients[0], mo_coefficients[0]) + \
+    density_matrix = 0 * np.outer(mo_coefficients[0], mo_coefficients[0]) + \
                      2 * np.outer(mo_coefficients[1], mo_coefficients[1]) + \
                      2 * np.outer(mo_coefficients[2], mo_coefficients[2]) + \
                      2 * np.outer(mo_coefficients[3], mo_coefficients[3]) + \
@@ -507,6 +543,34 @@ if __name__ == '__main__':
 
 
     print('total electrons', total_electrons)
+
+    def build_density(basis_set_1, density_matrix):
+
+        basis_functions = BasisFunction([PrimitiveGaussian(1, 1)], [0])
+        for i, basis1 in enumerate(basis_set_1):
+            for j, basis2 in enumerate(basis_set_1):
+                basis_functions += basis1*basis2 * density_matrix[i, j]
+
+        return basis_functions
+
+    density = build_density(basis_functions, density_matrix)
+    density.apply_rotation(np.pi/2, [1, 0, 0])
+    density.apply_translation([0, 0.0, 0])
+
+    print('density (valence)\n', density(0, 0, 0))
+    print('n_electrons (valence)\n', density.integrate)
+    print('self_similarity (valence)\n', (density*density).integrate)
+
+    X, Y = np.meshgrid(x, y)
+    # density.apply_rotation(np.pi/4, [1, 0, 0])
+    density.apply_translation([0, -0.5, 0.1])
+    Z = density(X, Y, np.zeros_like(X))
+    plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
+    plt.figure()
+    plt.contour(X, Y, Z, colors='k')
+    plt.show()
+
+    #exit()
 
     def get_overlap_density_naive(basis_set_1, basis_set_2, density_matrix):
         n = len(basis_set_1)
