@@ -304,7 +304,7 @@ class BasisFunction:
         return sum([coef * prim(*value) for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
 
     def __mul__(self, other):
-        if isinstance(other, float):
+        if isinstance(other, (float, int)):
             return BasisFunction(self.primitive_gaussians, [coef * other for coef in self.coefficients])
 
         elif isinstance(other, BasisFunction):
@@ -318,9 +318,10 @@ class BasisFunction:
                     coefficients.append(coeff_1 * coeff_2)
 
             return BasisFunction(primitive_gaussians, coefficients)
+        raise Exception("No product defined for type: {}".format(type(other)))
 
     def __rmul__(self, other):
-        return self * other
+        return self.__mul__(other)
 
     def __add__(self, other):
         return BasisFunction(self.primitive_gaussians + other.primitive_gaussians,

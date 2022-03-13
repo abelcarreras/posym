@@ -109,6 +109,18 @@ def build_density(basis_set, density_matrix):
 
     return density
 
+def build_density_short(basis_set, density_matrix):
+    density = BasisFunction([], [])
+    n_functions = len(basis_set)
+    for i in range(n_functions):
+        for j in range(i+1, n_functions):
+            density += 2.0*basis_set[i]*basis_set[j] * density_matrix[i, j]
+
+    for i, basis in enumerate(basis_set):
+        density += basis * basis * density_matrix[i, i]
+
+    return density
+
 def build_orbital(basis_set, mo_coefficients):
     orbital = BasisFunction([], [])
     for mo_coeff, basis in zip(mo_coefficients, basis_set):
@@ -135,7 +147,8 @@ print('Symmetry O3: ', sym_o3)
 print('Symmetry O4: ', sym_o4)
 print('Symmetry O5: ', sym_o5)
 
-f_density = build_density(basis_functions, density_matrix)
+f_density = build_density_short(basis_functions, density_matrix)
+print('density integral: ', f_density.integrate)
 
 sym_density = SymmetryFunction('c2v', coordinates, symbols, f_density)
 print('Symmetry density: ', sym_density)
