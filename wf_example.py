@@ -120,14 +120,20 @@ def build_orbital(basis_set, mo_coefficients):
 orbital_1 = build_orbital(basis_functions, mo_coefficients[0])
 orbital_2 = build_orbital(basis_functions, mo_coefficients[1])
 orbital_3 = build_orbital(basis_functions, mo_coefficients[2])
+orbital_4 = build_orbital(basis_functions, mo_coefficients[3])
+orbital_5 = build_orbital(basis_functions, mo_coefficients[4])
 
 sym_o1 = SymmetryFunction('c2v', coordinates, symbols, orbital_1)
 sym_o2 = SymmetryFunction('c2v', coordinates, symbols, orbital_2)
 sym_o3 = SymmetryFunction('c2v', coordinates, symbols, orbital_3)
+sym_o4 = SymmetryFunction('c2v', coordinates, symbols, orbital_4)
+sym_o5 = SymmetryFunction('c2v', coordinates, symbols, orbital_5)
 
 print('Symmetry O1: ', sym_o1)
 print('Symmetry O2: ', sym_o2)
 print('Symmetry O3: ', sym_o3)
+print('Symmetry O4: ', sym_o4)
+print('Symmetry O5: ', sym_o5)
 
 f_density = build_density(basis_functions, density_matrix)
 
