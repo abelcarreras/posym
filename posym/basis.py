@@ -217,10 +217,8 @@ class PrimitiveGaussian:
         self.coordinates = self.coordinates + translation
         self.poly_coeff = simplify_poly_coeff(poly_coeff_trans)
 
-    def apply_rotation(self, angle, axis):
+    def apply_linear_transformation(self, operation_matrix):
 
-        from posym.operations.rotation import rotation
-        rot_matrix = rotation(angle, axis)
         max_lim = len(self.poly_coeff)
 
         if max_lim > 1:
@@ -232,9 +230,9 @@ class PrimitiveGaussian:
                 poly_temp_xyz[0, 0, 0] = 1.0
                 for l, m in enumerate([i, j, k]):
                     poly_temp = np.zeros((max_lim, max_lim, max_lim))
-                    poly_temp[1, 0, 0] = rot_matrix[0, l]
-                    poly_temp[0, 1, 0] = rot_matrix[1, l]
-                    poly_temp[0, 0, 1] = rot_matrix[2, l]
+                    poly_temp[1, 0, 0] = operation_matrix[0, l]
+                    poly_temp[0, 1, 0] = operation_matrix[1, l]
+                    poly_temp[0, 0, 1] = operation_matrix[2, l]
                     poly_temp = exp_poly_coeff(poly_temp, m, max_lim_final)
 
                     poly_temp_xyz = product_poly_coeff(poly_temp_xyz, poly_temp, max_lim_final)
@@ -242,7 +240,18 @@ class PrimitiveGaussian:
                 poly_coeff_rot += self.poly_coeff[i, j, k] * poly_temp_xyz
 
             self.poly_coeff = simplify_poly_coeff(poly_coeff_rot)
-        self.coordinates = np.dot(rot_matrix, self.coordinates)
+        self.coordinates = np.dot(operation_matrix, self.coordinates)
+
+    def apply_rotation(self, angle, axis):
+        from scipy.spatial.transform import Rotation as R
+
+        rotation_vector = angle * np.array(axis) / np.linalg.norm(axis)
+        rotation = R.from_rotvec(rotation_vector)
+
+        self.apply_linear_transformation(rotation.as_matrix())
+
+    def copy(self):
+        return deepcopy(self)
 
 
 class BasisFunction:
@@ -270,12 +279,22 @@ class BasisFunction:
 
         self.primitive_gaussians = primitive_gaussians
 
+    def apply_linear_transformation(self, transformation_matrix):
+        primitive_gaussians = deepcopy(self.primitive_gaussians)
+        for primitive in primitive_gaussians:
+            primitive.apply_linear_transformation(transformation_matrix)
+
+        self.primitive_gaussians = primitive_gaussians
+
     def apply_rotation(self, angle, axis):
         primitive_gaussians = deepcopy(self.primitive_gaussians)
         for primitive in primitive_gaussians:
             primitive.apply_rotation(angle, axis)
 
         self.primitive_gaussians = primitive_gaussians
+
+    def copy(self):
+        return deepcopy(self)
 
     @property
     def integrate(self):
@@ -526,7 +545,7 @@ if __name__ == '__main__':
     print('dot o1o2', (o2*o1).integrate)
 
     density_matrix = 0 * np.outer(mo_coefficients[0], mo_coefficients[0]) + \
-                     2 * np.outer(mo_coefficients[1], mo_coefficients[1]) + \
+                     0 * np.outer(mo_coefficients[1], mo_coefficients[1]) + \
                      2 * np.outer(mo_coefficients[2], mo_coefficients[2]) + \
                      2 * np.outer(mo_coefficients[3], mo_coefficients[3]) + \
                      0 * np.outer(mo_coefficients[4], mo_coefficients[4]) + \
@@ -554,7 +573,7 @@ if __name__ == '__main__':
         return basis_functions
 
     density = build_density(basis_functions, density_matrix)
-    density.apply_rotation(np.pi/2, [1, 0, 0])
+    density.apply_rotation(-np.pi/2, [1, 0, 0])
     density.apply_translation([0, 0.0, 0])
 
     print('density (valence)\n', density(0, 0, 0))
@@ -563,7 +582,6 @@ if __name__ == '__main__':
 
     X, Y = np.meshgrid(x, y)
     # density.apply_rotation(np.pi/4, [1, 0, 0])
-    density.apply_translation([0, -0.5, 0.1])
     Z = density(X, Y, np.zeros_like(X))
     plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
     plt.figure()
@@ -625,15 +643,13 @@ if __name__ == '__main__':
     print('self_similarity', self_similarity)
 
     def rotate_basis_set(basis_set, angle, axis):
-        import copy
-        new_basis_set = copy.deepcopy(basis_set)
+        new_basis_set = deepcopy(basis_set)
         for bf in new_basis_set:
             bf.apply_rotation(angle, axis)
         return new_basis_set
 
     def translate_basis_set(basis_set, translation):
-        import copy
-        new_basis_set = copy.deepcopy(basis_set)
+        new_basis_set = deepcopy(basis_set)
         for bf in new_basis_set:
             bf.apply_translation(translation)
         return new_basis_set

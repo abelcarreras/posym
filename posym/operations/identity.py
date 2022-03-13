@@ -17,7 +17,7 @@ class Identity(Operation):
 
         return np.array(self._measure_mode)
 
-    def get_measure_op(self, coordinates, symbols, simp_matrix, orientation=None):
+    def get_measure_func(self, op_function, self_similarity, orientation=None):
         return 1.0
 
     def get_measure_pos(self, coordinates, symbols, orientation=None):

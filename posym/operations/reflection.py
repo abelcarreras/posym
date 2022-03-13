@@ -53,22 +53,16 @@ class Reflection(Operation):
 
         return mesure_coor
 
-    def get_measure_op(self, coordinates, symbols, operator_matrix, orientation=None):
+    def get_measure_func(self, op_function, self_similarity, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         operation = reflection(rotated_axis)
 
-        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        op_function_r = op_function.copy()
+        op_function_r.apply_linear_transformation(operation)
 
-        permu_matrix = np.array(operator_matrix).T[permu].T[permu]
-
-        measure = np.trace(np.dot(operator_matrix, permu_matrix.T))
-        normalization = np.trace(np.dot(operator_matrix, operator_matrix.T))
-
-        measure_coor_total = measure/normalization
-
-        return measure_coor_total
+        return (op_function*op_function_r).integrate/self_similarity
 
 
     @property

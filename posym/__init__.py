@@ -184,6 +184,93 @@ class SymmetryModes(SymmetryBase):
         return self._angles
 
 
+class SymmetryFunction(SymmetryBase):
+    def __init__(self, group, coordinates, symbols, function, orientation_angles=None):
+
+        pg = PointGroup(group)
+
+        # set coordinates at geometrical center
+        self._coordinates = np.array([c - np.average(coordinates, axis=0) for c in coordinates])
+
+        self._function = function
+        self._symbols = symbols
+
+        self._coor_measures = []
+        self._operator_measures = []
+
+        if orientation_angles is None:
+            self._angles = self.get_orientation(pg.operations)
+        else:
+            self._angles = orientation_angles
+
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+        self._self_similarity = (self._function * self._function).integrate
+
+        for operation in pg.operations:
+            operations_dic = pg.get_all_operations()
+            operator_measures = []
+            for op in operations_dic[operation.label]:
+                operator_m = op.get_measure_func(self._function, self._self_similarity, orientation=rotmol)
+                operator_measures.append(operator_m)
+
+            operator_measures = np.average(operator_measures, axis=0)
+            self._operator_measures.append(operator_measures)
+
+        total_state = pd.Series(self._operator_measures, index=pg.op_labels)
+
+        super().__init__(group, total_state)
+
+    def get_orientation(self, operations):
+
+        def optimization_function(angles):
+
+            rotmol = R.from_euler('zyx', angles, degrees=True)
+
+            coor_measures = []
+            for operation in operations:
+                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                coor_measures.append(coor_m)
+
+            # definition group measure
+            return np.linalg.norm(coor_measures)
+
+        # preliminar scan
+        list_m = []
+        list_a = []
+        for i in np.arange(0, 180, 36):
+            for j in np.arange(0, 180, 36):
+                for k in np.arange(0, 180, 36):
+                    list_m.append(optimization_function([i, j, k]))
+                    list_a.append([i, j, k])
+
+        initial = np.array(list_a[np.nanargmin(list_m)])
+        res = minimize(optimization_function, initial, method='CG',
+                       # bounds=((0, 360), (0, 360), (0, 360)),
+                       # tol=1e-20
+                       )
+
+        return res.x
+
+    @property
+    def self_similarity(self):
+        return self._self_similarity
+
+    @property
+    def get_measure_pos(self):
+        return np.product(self._coor_measures)
+
+    @property
+    def opt_coordinates(self):
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+        return rotmol.apply(self._coordinates)
+
+    @property
+    def orientation_angles(self):
+        return self._angles
+
+
+
 if __name__ == '__main__':
 
     from pyqchem import get_output_from_qchem, Structure

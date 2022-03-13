@@ -46,16 +46,14 @@ class Inversion(Operation):
 
         return mesure_coor
 
-    def get_measure_op(self, coordinates, symbols, operator_matrix, orientation=None):
+    def get_measure_func(self, op_function, self_similarity, orientation=None):
 
         operation = inversion()
-        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
 
-        permu_matrix = np.array(operator_matrix).T[permu].T[permu]
-        measure = np.trace(np.dot(operator_matrix, permu_matrix.T))
-        normalization = np.trace(np.dot(operator_matrix, operator_matrix.T))
+        op_function_i = op_function.copy()
+        op_function_i.apply_linear_transformation(operation)
 
-        return measure / normalization
+        return (op_function*op_function_i).integrate/self_similarity
 
     @property
     def operation_matrix_list(self):
