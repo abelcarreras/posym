@@ -171,6 +171,12 @@ class PrimitiveGaussian:
 
         self.poly_coeff = simplify_poly_coeff(self.poly_coeff)
 
+    def __hash__(self):
+        return hash((self.prefactor, self.alpha, self.coordinates.data.tobytes(), self.poly_coeff.data.tobytes()))
+
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()
+
     @property
     def integrate(self):
         return self.prefactor * gaussian_integral(self.alpha, self.coordinates, self.poly_coeff)
@@ -324,13 +330,32 @@ class BasisFunction:
         return self.__mul__(other)
 
     def __add__(self, other):
-        return BasisFunction(self.primitive_gaussians + other.primitive_gaussians,
-                             self.coefficients + other.coefficients)
+
+        primitive_gaussians = deepcopy(self.primitive_gaussians)
+        coefficients = deepcopy(self.coefficients)
+
+        for prim, coeff in zip(other.primitive_gaussians, other.coefficients):
+            if prim in primitive_gaussians:
+                coefficients[primitive_gaussians.index(prim)] += coeff
+            else:
+                primitive_gaussians.append(prim)
+                coefficients.append(coeff)
+
+        return BasisFunction(primitive_gaussians, coefficients)
 
     def __sub__(self, other):
+        primitive_gaussians = deepcopy(self.primitive_gaussians)
+        coefficients = deepcopy(self.coefficients)
+
         negative_coefficients = list(-np.array(other.coefficients))
-        return BasisFunction(self.primitive_gaussians + other.primitive_gaussians,
-                             self.coefficients + negative_coefficients)
+        for prim, coeff in zip(other.primitive_gaussians, negative_coefficients):
+            if prim in primitive_gaussians:
+                coefficients[primitive_gaussians.index(prim)] += coeff
+            else:
+                primitive_gaussians.append(prim)
+                coefficients.append(coeff)
+
+        return BasisFunction(primitive_gaussians, coefficients)
 
 
 if __name__ == '__main__':
