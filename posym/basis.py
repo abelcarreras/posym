@@ -80,8 +80,8 @@ def gaussian_product(g_1, g_2):
     prefactor = g_1.prefactor * g_2.prefactor
     p = g_1.alpha * g_2.alpha
 
-    PG = g_1.coordinates - g_2.coordinates
-    coordinates = (g_1.coordinates * g_1.alpha + g_2.coordinates * g_2.alpha) / alpha
+    PG = g_1.center - g_2.center
+    coordinates = (g_1.center * g_1.alpha + g_2.center * g_2.alpha) / alpha
     K = np.exp(-p/alpha * np.dot(PG, PG))
 
     poly_coeff = product_poly_coeff(g_1.poly_coeff, g_2.poly_coeff)
@@ -152,14 +152,13 @@ def simplify_poly_coeff(poly_coeff):
 
 
 class PrimitiveGaussian:
-    def __init__(self, alpha, prefactor=1.0, coordinates=(0, 0, 0), l=(0, 0, 0), normalize=True, poly_coeff=None):
-        self._n_dim = len(coordinates)
+    def __init__(self, alpha, prefactor=1.0, center=(0, 0, 0), l=(0, 0, 0), normalize=True, poly_coeff=None):
+        self._n_dim = len(center)
         self.alpha = alpha
         self.prefactor = prefactor
-        self.coordinates = np.array(coordinates)
-        self.l = l
+        self.center = np.array(center)
         if poly_coeff is None:
-            self.poly_coeff = binomial_expansion(l, -self.coordinates)
+            self.poly_coeff = binomial_expansion(l, -self.center)
         else:
             self.poly_coeff = poly_coeff
 
@@ -172,18 +171,18 @@ class PrimitiveGaussian:
         self.poly_coeff = simplify_poly_coeff(self.poly_coeff)
 
     def __hash__(self):
-        return hash((self.prefactor, self.alpha, self.coordinates.data.tobytes(), self.poly_coeff.data.tobytes()))
+        return hash((self.prefactor, self.alpha, self.center.data.tobytes(), self.poly_coeff.data.tobytes()))
 
     def __eq__(self, other):
         return self.__hash__() == other.__hash__()
 
     @property
     def integrate(self):
-        return self.prefactor * gaussian_integral(self.alpha, self.coordinates, self.poly_coeff)
+        return self.prefactor * gaussian_integral(self.alpha, self.center, self.poly_coeff)
 
     def _get_norm(self):
         poly_coeff_sq = product_poly_coeff(self.poly_coeff, self.poly_coeff)
-        return self.prefactor * gaussian_integral(2*self.alpha, self.coordinates, poly_coeff_sq)
+        return self.prefactor * gaussian_integral(2 * self.alpha, self.center, poly_coeff_sq)
 
     def __call__(self, *value):
         value = np.array(value)
@@ -200,12 +199,12 @@ class PrimitiveGaussian:
                                               (max_lim, max_lim, max_lim))
                 angular[indices] = np.sum(self.poly_coeff * coef_matrix)
 
-                dot = np.sum([(value[m][indices] - self.coordinates[m])**2 for m in range(3)])
+                dot = np.sum([(value[m][indices] - self.center[m]) ** 2 for m in range(3)])
                 radial[indices] = np.exp(-self.alpha * dot)
 
         else:
             coef_matrix = np.fromfunction(lambda i, j, k: value[0]**i*value[1]**j*value[2]**k, (max_lim, max_lim, max_lim))
-            radial = np.exp(-self.alpha * np.linalg.norm(value - self.coordinates)**2)
+            radial = np.exp(-self.alpha * np.linalg.norm(value - self.center) ** 2)
             angular = np.sum(self.poly_coeff * coef_matrix)
 
         return self.prefactor * angular * radial
@@ -220,7 +219,7 @@ class PrimitiveGaussian:
 
         for i, j, k in itertools.product(range(max_lim), repeat=3):
             poly_coeff_trans += self.poly_coeff[i, j, k] * binomial_expansion([i, j, k], -translation, max_lim=max_lim)
-        self.coordinates = self.coordinates + translation
+        self.center = self.center + translation
         self.poly_coeff = simplify_poly_coeff(poly_coeff_trans)
 
     def apply_linear_transformation(self, operation_matrix):
@@ -246,7 +245,7 @@ class PrimitiveGaussian:
                 poly_coeff_rot += self.poly_coeff[i, j, k] * poly_temp_xyz
 
             self.poly_coeff = simplify_poly_coeff(poly_coeff_rot)
-        self.coordinates = np.dot(operation_matrix, self.coordinates)
+        self.center = np.dot(operation_matrix, self.center)
 
     def apply_rotation(self, angle, axis):
         from scipy.spatial.transform import Rotation as R
@@ -261,12 +260,12 @@ class PrimitiveGaussian:
 
 
 class BasisFunction:
-    def __init__(self, primitive_gaussians, coefficients, coordinates=None):
+    def __init__(self, primitive_gaussians, coefficients, center=None):
         primitive_gaussians = deepcopy(primitive_gaussians)
-        if coordinates is not None:
-            coordinates = np.array(coordinates)
+        if center is not None:
+            center = np.array(center)
             for primitive in primitive_gaussians:
-                primitive.apply_translation(coordinates - primitive.coordinates)
+                primitive.apply_translation(center - primitive.center)
 
         self.primitive_gaussians = primitive_gaussians
         self.coefficients = coefficients
@@ -276,7 +275,7 @@ class BasisFunction:
 
     def set_coordinates(self, coordinates):
         for primitive in self.primitive_gaussians:
-            primitive.coordinates = np.array(coordinates)
+            primitive.center = np.array(coordinates)
 
     def apply_translation(self, translation):
         primitive_gaussians = deepcopy(self.primitive_gaussians)
@@ -379,24 +378,24 @@ if __name__ == '__main__':
 *
     """
 
-    sa = PrimitiveGaussian(alpha=16.11957475, l=[0, 0, 0], coordinates=(0.0, 0.0, 0.0), normalize=True)
-    sb = PrimitiveGaussian(alpha=2.936200663, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    sc = PrimitiveGaussian(alpha=0.794650487, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    sa = PrimitiveGaussian(alpha=16.11957475, l=[0, 0, 0], center=(0.0, 0.0, 0.0), normalize=True)
+    sb = PrimitiveGaussian(alpha=2.936200663, l=[0, 0, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    sc = PrimitiveGaussian(alpha=0.794650487, l=[0, 0, 0], center=[0.0, 0.0, 0.0], normalize=True)
     s1 = BasisFunction([sa, sb, sc], [0.1543289673, 0.5353281423, 0.4446345422])
     print('s:', (s1*s1).integrate)
     s1.apply_rotation(0.33*2*np.pi/2, [0.2, 5.0, 1.0])
 
-    s2a = PrimitiveGaussian(alpha=0.6362897469, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    s2b = PrimitiveGaussian(alpha=0.1478600533, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    s2c = PrimitiveGaussian(alpha=0.0480886784, l=[0, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    s2a = PrimitiveGaussian(alpha=0.6362897469, l=[0, 0, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    s2b = PrimitiveGaussian(alpha=0.1478600533, l=[0, 0, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    s2c = PrimitiveGaussian(alpha=0.0480886784, l=[0, 0, 0], center=[0.0, 0.0, 0.0], normalize=True)
     s2 = BasisFunction([s2a, s2b, s2c], [-0.09996722919, 0.3995128261, 0.7001154689])
     print('s2:', (s2*s2).integrate)
 
-    pxa = PrimitiveGaussian(alpha=0.6362897469, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pxb = PrimitiveGaussian(alpha=0.1478600533, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pxc = PrimitiveGaussian(alpha=0.0480886784, l=[1, 0, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    pxa = PrimitiveGaussian(alpha=0.6362897469, l=[1, 0, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    pxb = PrimitiveGaussian(alpha=0.1478600533, l=[1, 0, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    pxc = PrimitiveGaussian(alpha=0.0480886784, l=[1, 0, 0], center=[0.0, 0.0, 0.0], normalize=True)
     px = BasisFunction([pxa, pxb, pxc], [0.1559162750, 0.6076837186, 0.3919573931],
-                       coordinates=[0.0, 0.0, 0.0]
+                       center=[0.0, 0.0, 0.0]
                        )
     print('px:', (px*px).integrate)
     px.apply_rotation(np.pi/2, [0.0, 0.0, 1.0])
@@ -414,21 +413,21 @@ if __name__ == '__main__':
     o2 = 0.276812804 * s1 -1.02998914 * s2
     print('o2:', (o2*o2).integrate)
 
-    pya = PrimitiveGaussian(alpha=0.6362897469, l=[0, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pyb = PrimitiveGaussian(alpha=0.1478600533, l=[0, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pyc = PrimitiveGaussian(alpha=0.0480886784, l=[0, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    pya = PrimitiveGaussian(alpha=0.6362897469, l=[0, 1, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    pyb = PrimitiveGaussian(alpha=0.1478600533, l=[0, 1, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    pyc = PrimitiveGaussian(alpha=0.0480886784, l=[0, 1, 0], center=[0.0, 0.0, 0.0], normalize=True)
     py = BasisFunction([pya, pyb, pyc], [0.1559162750, 0.6076837186, 0.3919573931])
     print('py:', (py*py).integrate)
 
-    pza = PrimitiveGaussian(alpha=0.6362897469, l=[0, 0, 1], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pzb = PrimitiveGaussian(alpha=0.1478600533, l=[0, 0, 1], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    pzc = PrimitiveGaussian(alpha=0.0480886784, l=[0, 0, 1], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    pza = PrimitiveGaussian(alpha=0.6362897469, l=[0, 0, 1], center=[0.0, 0.0, 0.0], normalize=True)
+    pzb = PrimitiveGaussian(alpha=0.1478600533, l=[0, 0, 1], center=[0.0, 0.0, 0.0], normalize=True)
+    pzc = PrimitiveGaussian(alpha=0.0480886784, l=[0, 0, 1], center=[0.0, 0.0, 0.0], normalize=True)
     pz = BasisFunction([pza, pzb, pzc], [0.1559162750, 0.6076837186, 0.3919573931])
     print('pz:', (pz*pz).integrate)
 
-    d1a = PrimitiveGaussian(alpha=21.45684671, l=[1, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    d1b = PrimitiveGaussian(alpha=6.545022156, l=[1, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
-    d1c = PrimitiveGaussian(alpha=2.525273021, l=[1, 1, 0], coordinates=[0.0, 0.0, 0.0], normalize=True)
+    d1a = PrimitiveGaussian(alpha=21.45684671, l=[1, 1, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    d1b = PrimitiveGaussian(alpha=6.545022156, l=[1, 1, 0], center=[0.0, 0.0, 0.0], normalize=True)
+    d1c = PrimitiveGaussian(alpha=2.525273021, l=[1, 1, 0], center=[0.0, 0.0, 0.0], normalize=True)
     d1 = BasisFunction([d1a, d1b, d1c], [0.2197679508, 0.6555473627, 0.2865732590])
     d1.apply_rotation(np.pi/4, [0.0, 0.0, 1.0])
     print('d1:', (d1*d1).integrate)
@@ -504,14 +503,14 @@ if __name__ == '__main__':
     sc = PrimitiveGaussian(alpha=6.4436083)
     s_O = BasisFunction([sa, sb, sc],
                         [0.154328969, 0.535328136, 0.444634536],
-                        coordinates=[0.0000000000, 0.000000000, -0.0808819]) # Bohr
+                        center=[0.0000000000, 0.000000000, -0.0808819]) # Bohr
 
     sa = PrimitiveGaussian(alpha=5.03315132)
     sb = PrimitiveGaussian(alpha=1.1695961)
     sc = PrimitiveGaussian(alpha=0.3803890)
     s2_O = BasisFunction([sa, sb, sc],
                          [-0.099967228, 0.399512825, 0.700115461],
-                         coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+                         center=[0.0000000000, 0.000000000, -0.0808819])
 
     pxa = PrimitiveGaussian(alpha=5.0331513, l=[1, 0, 0])
     pxb = PrimitiveGaussian(alpha=1.1695961, l=[1, 0, 0])
@@ -527,13 +526,13 @@ if __name__ == '__main__':
 
     px_O = BasisFunction([pxa, pxb, pxc],
                          [0.155916268, 0.6076837186, 0.3919573931],
-                         coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+                         center=[0.0000000000, 0.000000000, -0.0808819])
     py_O = BasisFunction([pya, pyb, pyc],
                          [0.155916268, 0.6076837186, 0.3919573931],
-                         coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+                         center=[0.0000000000, 0.000000000, -0.0808819])
     pz_O = BasisFunction([pza, pzb, pzc],
                          [0.155916268, 0.6076837186, 0.3919573931],
-                         coordinates=[0.0000000000, 0.000000000,  -0.0808819])
+                         center=[0.0000000000, 0.000000000, -0.0808819])
 
     # Hydrogen atoms
     sa = PrimitiveGaussian(alpha=3.42525091)
@@ -541,11 +540,11 @@ if __name__ == '__main__':
     sc = PrimitiveGaussian(alpha=0.1688554)
     s_H = BasisFunction([sa, sb, sc],
                         [0.154328971, 0.535328142, 0.444634542],
-                        coordinates=[-1.43262, 0.000000000, -1.28237])
+                        center=[-1.43262, 0.000000000, -1.28237])
 
     s2_H = BasisFunction([sa, sb, sc],
                          [0.154328971, 0.535328142, 0.444634542],
-                         coordinates=[1.43262, 0.000000000, -1.28237])
+                         center=[1.43262, 0.000000000, -1.28237])
 
     o1 = s_O * 0.994216442 + s2_O * 0.025846814 + px_O * 0.0 + py_O * 0.0 + pz_O * \
          -0.004164076 + s_H * -0.005583712 + s2_H * -0.005583712
@@ -614,7 +613,6 @@ if __name__ == '__main__':
     plt.contour(X, Y, Z, colors='k')
     plt.show()
 
-    #exit()
 
     def get_overlap_density_naive(basis_set_1, basis_set_2, density_matrix):
         n = len(basis_set_1)
@@ -694,15 +692,3 @@ if __name__ == '__main__':
 
     print('measure dens:', get_overlap_density(basis_functions, basis_functions_r, density_matrix)/self_similarity)
 
-
-    # Fock matrix
-    fock_matrix = np.array([[-20.24290797856165, -5.163857371773464, 0.0, 0.0, 0.028693754710997377, -1.1083321876539016, -1.1083321876539016],
-                   [-5.163857371773464, -2.4396904148844447, 0.0, 0.0, 0.11807009938463243, -0.9717587486764925, -0.9717587486764925],
-                   [ 0.0, 0.0, -0.2938600995387204, 0.0, 0.0, 0.37840779313794853, -0.37840779313794853],
-                   [ 0.0, 0.0, 0.0, -0.392614627464097, 0.0, -2.4402816249492116e-17, 2.4402816249492126e-17],
-                   [ 0.028693754710997377, 0.11807009938463243, 0.0, 0.0, -0.33633212331400564, 0.37348029921997167, 0.3734802992199712],
-                   [-1.1083321876539016, -0.9717587486764925, 0.37840779313794853, -2.4402816249492116e-17, 0.37348029921997167, -0.5411484908071187, -0.3753070759124842],
-                   [-1.1083321876539016, -0.9717587486764925, -0.37840779313794853, 2.4402816249492126e-17, 0.3734802992199712, -0.3753070759124842, -0.5411484908071187]])
-
-    self_similarity = get_self_similarity(basis_functions, fock_matrix)
-    print('measure fock:', get_overlap_density(basis_functions, basis_functions_r, fock_matrix)/self_similarity)

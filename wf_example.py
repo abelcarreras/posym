@@ -48,14 +48,14 @@ sb = PrimitiveGaussian(alpha=23.808861)
 sc = PrimitiveGaussian(alpha=6.4436083)
 s_O = BasisFunction([sa, sb, sc],
                     [0.154328969, 0.535328136, 0.444634536],
-                    coordinates=coordinates[0])
+                    center=coordinates[0])
 
 sa = PrimitiveGaussian(alpha=5.03315132)
 sb = PrimitiveGaussian(alpha=1.1695961)
 sc = PrimitiveGaussian(alpha=0.3803890)
 s2_O = BasisFunction([sa, sb, sc],
                      [-0.099967228, 0.399512825, 0.700115461],
-                     coordinates=coordinates[0])
+                     center=coordinates[0])
 
 pxa = PrimitiveGaussian(alpha=5.0331513, l=[1, 0, 0])
 pxb = PrimitiveGaussian(alpha=1.1695961, l=[1, 0, 0])
@@ -71,13 +71,13 @@ pzc = PrimitiveGaussian(alpha=0.3803890, l=[0, 0, 1])
 
 px_O = BasisFunction([pxa, pxb, pxc],
                      [0.155916268, 0.6076837186, 0.3919573931],
-                     coordinates=coordinates[0])
+                     center=coordinates[0])
 py_O = BasisFunction([pya, pyb, pyc],
                      [0.155916268, 0.6076837186, 0.3919573931],
-                     coordinates=coordinates[0])
+                     center=coordinates[0])
 pz_O = BasisFunction([pza, pzb, pzc],
                      [0.155916268, 0.6076837186, 0.3919573931],
-                     coordinates=[0.0000000000, 0.000000000, -0.0808819])
+                     center=[0.0000000000, 0.000000000, -0.0808819])
 
 # Hydrogen atoms
 sa = PrimitiveGaussian(alpha=3.42525091)
@@ -85,11 +85,11 @@ sb = PrimitiveGaussian(alpha=0.62391373)
 sc = PrimitiveGaussian(alpha=0.1688554)
 s_H = BasisFunction([sa, sb, sc],
                     [0.154328971, 0.535328142, 0.444634542],
-                    coordinates=coordinates[1])
+                    center=coordinates[1])
 
 s2_H = BasisFunction([sa, sb, sc],
                      [0.154328971, 0.535328142, 0.444634542],
-                     coordinates=coordinates[2])
+                     center=coordinates[2])
 
 basis_functions = [s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H]
 
