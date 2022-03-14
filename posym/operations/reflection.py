@@ -59,10 +59,10 @@ class Reflection(Operation):
 
         operation = reflection(rotated_axis)
 
-        op_function_r = op_function.copy()
-        op_function_r.apply_linear_transformation(operation)
+        fn_function_r = op_function.copy()
+        fn_function_r.apply_linear_transformation(operation)
 
-        return (op_function*op_function_r).integrate/self_similarity
+        return (op_function*fn_function_r).integrate/self_similarity
 
 
     @property

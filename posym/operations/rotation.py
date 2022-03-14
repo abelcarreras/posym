@@ -99,10 +99,10 @@ class Rotation(Operation):
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
             operation = rotation(angle, rotated_axis)
 
-            op_function_r = op_function.copy()
-            op_function_r.apply_linear_transformation(operation)
+            fn_function_r = op_function.copy()
+            fn_function_r.apply_linear_transformation(operation)
 
-            measure_op.append((op_function_r*op_function).integrate/self_similarity)
+            measure_op.append((fn_function_r*op_function).integrate/self_similarity)
 
         measure_coor_total = np.average(measure_op)
 

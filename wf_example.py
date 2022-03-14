@@ -39,6 +39,7 @@ coordinates = [[ 0.00000, 0.0000000, -0.0808819],
                [-1.43262, 0.0000000, -1.2823700],
                [ 1.43262, 0.0000000, -1.2823700]]
 
+
 symbols = ['O', 'H', 'H']
 
 # Oxigen atom
@@ -47,14 +48,14 @@ sb = PrimitiveGaussian(alpha=23.808861)
 sc = PrimitiveGaussian(alpha=6.4436083)
 s_O = BasisFunction([sa, sb, sc],
                     [0.154328969, 0.535328136, 0.444634536],
-                    coordinates=[0.0000000000, 0.000000000, -0.0808819])
+                    coordinates=coordinates[0])
 
 sa = PrimitiveGaussian(alpha=5.03315132)
 sb = PrimitiveGaussian(alpha=1.1695961)
 sc = PrimitiveGaussian(alpha=0.3803890)
 s2_O = BasisFunction([sa, sb, sc],
                      [-0.099967228, 0.399512825, 0.700115461],
-                     coordinates=[0.0000000000, 0.000000000, -0.0808819])
+                     coordinates=coordinates[0])
 
 pxa = PrimitiveGaussian(alpha=5.0331513, l=[1, 0, 0])
 pxb = PrimitiveGaussian(alpha=1.1695961, l=[1, 0, 0])
@@ -70,10 +71,10 @@ pzc = PrimitiveGaussian(alpha=0.3803890, l=[0, 0, 1])
 
 px_O = BasisFunction([pxa, pxb, pxc],
                      [0.155916268, 0.6076837186, 0.3919573931],
-                     coordinates=[0.0000000000, 0.000000000, -0.0808819])
+                     coordinates=coordinates[0])
 py_O = BasisFunction([pya, pyb, pyc],
                      [0.155916268, 0.6076837186, 0.3919573931],
-                     coordinates=[0.0000000000, 0.000000000, -0.0808819])
+                     coordinates=coordinates[0])
 pz_O = BasisFunction([pza, pzb, pzc],
                      [0.155916268, 0.6076837186, 0.3919573931],
                      coordinates=[0.0000000000, 0.000000000, -0.0808819])
@@ -84,11 +85,11 @@ sb = PrimitiveGaussian(alpha=0.62391373)
 sc = PrimitiveGaussian(alpha=0.1688554)
 s_H = BasisFunction([sa, sb, sc],
                     [0.154328971, 0.535328142, 0.444634542],
-                    coordinates=[-1.43262, 0.000000000, -1.28237])
+                    coordinates=coordinates[1])
 
 s2_H = BasisFunction([sa, sb, sc],
                      [0.154328971, 0.535328142, 0.444634542],
-                     coordinates=[1.43262, 0.000000000, -1.28237])
+                     coordinates=coordinates[2])
 
 basis_functions = [s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H]
 
@@ -109,12 +110,12 @@ def build_density(basis_set, density_matrix):
 
     return density
 
-def build_density_short(basis_set, density_matrix):
+def build_density_symm(basis_set, density_matrix):
     density = BasisFunction([], [])
     n_functions = len(basis_set)
     for i in range(n_functions):
         for j in range(i+1, n_functions):
-            density += 2.0*basis_set[i]*basis_set[j] * density_matrix[i, j]
+            density += 2 * basis_set[i]*basis_set[j] * density_matrix[i, j]
 
     for i, basis in enumerate(basis_set):
         density += basis * basis * density_matrix[i, i]
@@ -128,6 +129,30 @@ def build_orbital(basis_set, mo_coefficients):
 
     return orbital
 
+dipole_x = [[           0.,           0.,   5.0792e-02,           0.,           0.,  -2.8130e-03,   2.8130e-03],
+            [           0.,           0.,   6.4117e-01,           0.,           0.,  -2.7580e-01,   2.7580e-01],
+            [   5.0792e-02,   6.4117e-01,           0.,           0.,           0.,   4.7462e-01,   4.7462e-01],
+            [           0.,           0.,           0.,           0.,           0.,           0.,           0.],
+            [           0.,           0.,           0.,           0.,           0.,   1.5329e-01,  -1.5329e-01],
+            [  -2.8130e-03,  -2.7580e-01,   4.7462e-01,           0.,   1.5329e-01,  -1.4326e+00,   6.9389e-18],
+            [   2.8130e-03,   2.7580e-01,   4.7462e-01,           0.,  -1.5329e-01,   6.9389e-18,   1.4326e+00]]
+
+
+dipole_y = [[       0.,       0.,       0.,   0.0508,       0.,       0.,       0.],
+            [       0.,       0.,       0.,   0.6412,       0.,       0.,       0.],
+            [       0.,       0.,       0.,       0.,       0.,       0.,       0.],
+            [   0.0508,   0.6412,       0.,       0.,       0.,   0.2918,   0.2918],
+            [       0.,       0.,       0.,       0.,       0.,       0.,       0.],
+            [       0.,       0.,       0.,   0.2918,       0.,       0.,       0.],
+            [       0.,       0.,       0.,   0.2918,       0.,       0.,       0.]]
+
+dipole_z = [[  -0.0809,  -0.0191,       0.,       0.,   0.0508,  -0.0064,  -0.0064],
+            [  -0.0191,  -0.0809,       0.,       0.,   0.6412,  -0.2680,  -0.2680],
+            [       0.,       0.,  -0.0809,       0.,       0.,   0.1770,  -0.1770],
+            [       0.,       0.,       0.,  -0.0809,       0.,       0.,       0.],
+            [   0.0508,   0.6412,       0.,       0.,  -0.0809,   0.4403,   0.4403],
+            [  -0.0064,  -0.2680,   0.1770,       0.,   0.4403,  -1.2824,  -0.3217],
+            [  -0.0064,  -0.2680,  -0.1770,       0.,   0.4403,  -0.3217,  -1.2824]]
 
 orbital_1 = build_orbital(basis_functions, mo_coefficients[0])
 orbital_2 = build_orbital(basis_functions, mo_coefficients[1])
@@ -147,10 +172,21 @@ print('Symmetry O3: ', sym_o3)
 print('Symmetry O4: ', sym_o4)
 print('Symmetry O5: ', sym_o5)
 
-f_density = build_density_short(basis_functions, density_matrix)
+f_density = build_density_symm(basis_functions, density_matrix)
 print('density integral: ', f_density.integrate)
 
 sym_density = SymmetryFunction('c2v', coordinates, symbols, f_density)
 print('Symmetry density: ', sym_density)
-print('Symmetry norm: ', al.norm(sym_density))
 print('density self_similarity', sym_density.self_similarity)
+
+f_dipole_x = build_density_symm(basis_functions, np.array(dipole_x))
+f_dipole_y = build_density_symm(basis_functions, np.array(dipole_y))
+f_dipole_z = build_density_symm(basis_functions, np.array(dipole_z))
+
+sym_dipole_x = SymmetryFunction('c2v', coordinates, symbols, f_dipole_x)
+sym_dipole_y = SymmetryFunction('c2v', coordinates, symbols, f_dipole_y)
+sym_dipole_z = SymmetryFunction('c2v', coordinates, symbols, f_dipole_z)
+
+print('Symmetry dipole X: ', sym_dipole_x)
+print('Symmetry dipole Y: ', sym_dipole_y)
+print('Symmetry dipole Z: ', sym_dipole_z)

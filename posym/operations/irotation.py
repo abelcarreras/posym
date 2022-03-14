@@ -82,7 +82,7 @@ class ImproperRotation(Operation):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
-        measure_op = []
+        measure_fn = []
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
             operation1 = rotation(angle, rotated_axis)
             operation2 = reflection(rotated_axis)
@@ -91,9 +91,9 @@ class ImproperRotation(Operation):
             op_function_ir = op_function.copy()
             op_function_ir.apply_linear_transformation(operation)
 
-            measure_op.append((op_function_ir*op_function).integrate/self_similarity)
+            measure_fn.append((op_function_ir*op_function).integrate/self_similarity)
 
-        measure_coor_total = np.average(measure_op)
+        measure_coor_total = np.average(measure_fn)
 
         return measure_coor_total
 

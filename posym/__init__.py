@@ -270,7 +270,6 @@ class SymmetryFunction(SymmetryBase):
         return self._angles
 
 
-
 if __name__ == '__main__':
 
     from pyqchem import get_output_from_qchem, Structure
