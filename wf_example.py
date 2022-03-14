@@ -103,6 +103,7 @@ density_matrix = 0 * np.outer(mo_coefficients[0], mo_coefficients[0]) + \
                  0 * np.outer(mo_coefficients[6], mo_coefficients[6])
 
 def build_density(basis_set, density_matrix):
+    density_matrix = np.array(density_matrix)
     density = BasisFunction([], [])
     for i, basis1 in enumerate(basis_set):
         for j, basis2 in enumerate(basis_set):
@@ -111,6 +112,7 @@ def build_density(basis_set, density_matrix):
     return density
 
 def build_density_symm(basis_set, density_matrix):
+    density_matrix = np.array(density_matrix)
     density = BasisFunction([], [])
     n_functions = len(basis_set)
     for i in range(n_functions):
@@ -129,30 +131,40 @@ def build_orbital(basis_set, mo_coefficients):
 
     return orbital
 
-dipole_x = [[           0.,           0.,   5.0792e-02,           0.,           0.,  -2.8130e-03,   2.8130e-03],
-            [           0.,           0.,   6.4117e-01,           0.,           0.,  -2.7580e-01,   2.7580e-01],
-            [   5.0792e-02,   6.4117e-01,           0.,           0.,           0.,   4.7462e-01,   4.7462e-01],
-            [           0.,           0.,           0.,           0.,           0.,           0.,           0.],
-            [           0.,           0.,           0.,           0.,           0.,   1.5329e-01,  -1.5329e-01],
-            [  -2.8130e-03,  -2.7580e-01,   4.7462e-01,           0.,   1.5329e-01,  -1.4326e+00,   6.9389e-18],
-            [   2.8130e-03,   2.7580e-01,   4.7462e-01,           0.,  -1.5329e-01,   6.9389e-18,   1.4326e+00]]
+dipole_x = [[          0.,          0.,  5.0792e-02,   0.,          0., -2.8130e-03,   2.8130e-03],
+            [          0.,          0.,  6.4117e-01,   0.,          0., -2.7580e-01,   2.7580e-01],
+            [  5.0792e-02,  6.4117e-01,          0.,   0.,          0.,  4.7462e-01,   4.7462e-01],
+            [          0.,          0.,          0.,   0.,          0.,          0.,           0.],
+            [          0.,          0.,          0.,   0.,          0.,  1.5329e-01,  -1.5329e-01],
+            [ -2.8130e-03, -2.7580e-01,  4.7462e-01,   0.,  1.5329e-01, -1.4326e+00,   6.9389e-18],
+            [  2.8130e-03,  2.7580e-01,  4.7462e-01,   0., -1.5329e-01,  6.9389e-18,   1.4326e+00]]
 
 
-dipole_y = [[       0.,       0.,       0.,   0.0508,       0.,       0.,       0.],
-            [       0.,       0.,       0.,   0.6412,       0.,       0.,       0.],
-            [       0.,       0.,       0.,       0.,       0.,       0.,       0.],
-            [   0.0508,   0.6412,       0.,       0.,       0.,   0.2918,   0.2918],
-            [       0.,       0.,       0.,       0.,       0.,       0.,       0.],
-            [       0.,       0.,       0.,   0.2918,       0.,       0.,       0.],
-            [       0.,       0.,       0.,   0.2918,       0.,       0.,       0.]]
+dipole_y = [[     0.,     0.,     0.,   0.0508,     0.,     0.,     0.],
+            [     0.,     0.,     0.,   0.6412,     0.,     0.,     0.],
+            [     0.,     0.,     0.,       0.,     0.,     0.,     0.],
+            [ 0.0508, 0.6412,     0.,       0.,     0., 0.2918, 0.2918],
+            [     0.,     0.,     0.,       0.,     0.,     0.,     0.],
+            [     0.,     0.,     0.,   0.2918,     0.,     0.,     0.],
+            [     0.,     0.,     0.,   0.2918,     0.,     0.,     0.]]
 
-dipole_z = [[  -0.0809,  -0.0191,       0.,       0.,   0.0508,  -0.0064,  -0.0064],
-            [  -0.0191,  -0.0809,       0.,       0.,   0.6412,  -0.2680,  -0.2680],
-            [       0.,       0.,  -0.0809,       0.,       0.,   0.1770,  -0.1770],
-            [       0.,       0.,       0.,  -0.0809,       0.,       0.,       0.],
-            [   0.0508,   0.6412,       0.,       0.,  -0.0809,   0.4403,   0.4403],
-            [  -0.0064,  -0.2680,   0.1770,       0.,   0.4403,  -1.2824,  -0.3217],
-            [  -0.0064,  -0.2680,  -0.1770,       0.,   0.4403,  -0.3217,  -1.2824]]
+dipole_z = [[  -0.0809,  -0.0191,      0.,      0.,   0.0508,  -0.0064,  -0.0064],
+            [  -0.0191,  -0.0809,      0.,      0.,   0.6412,  -0.2680,  -0.2680],
+            [       0.,       0., -0.0809,      0.,       0.,   0.1770,  -0.1770],
+            [       0.,       0.,      0., -0.0809,       0.,       0.,       0.],
+            [   0.0508,   0.6412,      0.,      0.,  -0.0809,   0.4403,   0.4403],
+            [  -0.0064,  -0.2680,  0.1770,      0.,   0.4403,  -1.2824,  -0.3217],
+            [  -0.0064,  -0.2680, -0.1770,      0.,   0.4403,  -0.3217,  -1.2824]]
+
+
+fock_matrix = [[-20.242907978346196, -5.163857371732694, -3.075065754527229e-16, 1.8323635972251456e-16, 0.028693754702171125, -1.108332187645028, -1.1083321876450283],
+               [-5.163857371732694, -2.439690414788265, -1.6261798133412796e-16, -1.496562668754178e-17, 0.11807009928392057, -0.971758748616808, -0.9717587486168073],
+               [-3.075065754527229e-16, -1.6261798133412796e-16, -0.2938600994977424, 1.0117677673805833e-16, -1.9479752048417142e-16, 0.3784077931020735, -0.3784077931020744],
+               [ 1.8323635972251456e-16, -1.496562668754178e-17, 1.0117677673805833e-16, -0.39261462735921066, 1.703969857431259e-18, -2.0264868649535489e-16, 5.016795557159616e-18],
+               [ 0.028693754702171125, 0.11807009928392057, -1.9479752048417142e-16, 1.703969857431259e-18, -0.33633212327437595, 0.3734802991314477, 0.3734802991314475],
+               [-1.108332187645028, -0.971758748616808, 0.3784077931020735, -2.0264868649535489e-16, 0.3734802991314477, -0.5411484905625149, -0.375307075852357],
+               [-1.1083321876450283, -0.9717587486168073, -0.3784077931020744, 5.016795557159616e-18, 0.3734802991314475, -0.375307075852357, -0.541148490562514]]
+
 
 orbital_1 = build_orbital(basis_functions, mo_coefficients[0])
 orbital_2 = build_orbital(basis_functions, mo_coefficients[1])
@@ -179,14 +191,18 @@ sym_density = SymmetryFunction('c2v', coordinates, symbols, f_density)
 print('Symmetry density: ', sym_density)
 print('density self_similarity', sym_density.self_similarity)
 
-f_dipole_x = build_density_symm(basis_functions, np.array(dipole_x))
-f_dipole_y = build_density_symm(basis_functions, np.array(dipole_y))
-f_dipole_z = build_density_symm(basis_functions, np.array(dipole_z))
+f_dipole_x = build_density_symm(basis_functions, dipole_x)
+f_dipole_y = build_density_symm(basis_functions, dipole_y)
+f_dipole_z = build_density_symm(basis_functions, dipole_z)
 
 sym_dipole_x = SymmetryFunction('c2v', coordinates, symbols, f_dipole_x)
 sym_dipole_y = SymmetryFunction('c2v', coordinates, symbols, f_dipole_y)
 sym_dipole_z = SymmetryFunction('c2v', coordinates, symbols, f_dipole_z)
 
-print('Symmetry dipole X: ', sym_dipole_x)
-print('Symmetry dipole Y: ', sym_dipole_y)
-print('Symmetry dipole Z: ', sym_dipole_z)
+print('Symmetry dipole X operator: ', sym_dipole_x)
+print('Symmetry dipole Y operator: ', sym_dipole_y)
+print('Symmetry dipole Z operator: ', sym_dipole_z)
+
+f_fock = build_density_symm(basis_functions, fock_matrix)
+sym_fock = SymmetryFunction('c2v', coordinates, symbols, f_fock)
+print('Symmetry Fock operator: ', sym_fock)
