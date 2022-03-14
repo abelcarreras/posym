@@ -554,8 +554,8 @@ if __name__ == '__main__':
          -0.44922168 + s2_H * 0.449221684
 
 
-    x = np.linspace(-2, 2, 10)
-    y = np.linspace(-2, 2, 10)
+    x = np.linspace(-2, 2, 50)
+    y = np.linspace(-2, 2, 50)
 
     X, Y = np.meshgrid(x, y)
     o2.apply_rotation(np.pi/2, [1, 0, 0])
