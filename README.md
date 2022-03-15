@@ -7,11 +7,12 @@ A python library for point symmetry operations
 Requisites
 ----------
 - numpy
+- scipy
 - pandas
 - yaml
 
-Example
--------
+Basic example
+-------------
 
 ```python
 from posym import PointGroup, SymmetryBase
