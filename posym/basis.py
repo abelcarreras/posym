@@ -3,6 +3,7 @@ from copy import deepcopy
 import math
 import itertools
 from posym.integrals import product_poly_coeff, gaussian_integral
+from scipy.special import comb
 
 
 def binomial_expansion(l, x, max_lim=None):
@@ -15,11 +16,11 @@ def binomial_expansion(l, x, max_lim=None):
     vector_z = np.zeros((max_lim, max_lim, max_lim))
 
     for k in range(l[0]+1):
-        vector_x[k, 0, 0] += math.comb(l[0], k) * x[0]**(l[0]-k)
+        vector_x[k, 0, 0] += comb(l[0], k) * x[0]**(l[0]-k)
     for k in range(l[1] + 1):
-        vector_y[0, k, 0] += math.comb(l[1], k) * x[1]**(l[1]-k)
+        vector_y[0, k, 0] += comb(l[1], k) * x[1]**(l[1]-k)
     for k in range(l[2] + 1):
-        vector_z[0, 0, k] += math.comb(l[2], k) * x[2]**(l[2]-k)
+        vector_z[0, 0, k] += comb(l[2], k) * x[2]**(l[2]-k)
 
     vector = product_poly_coeff(product_poly_coeff(vector_x, vector_y), vector_z, max_lim)
     return vector
@@ -113,7 +114,7 @@ def integrate_exponential_py(n, a, b):
     elif n == 1:
         return np.sqrt(np.pi)/(2*a**(3/2))*b*np.exp(b**2/(4*a))
     else:
-        factor = np.sum([math.comb(n, 2*k)*(b/(2*a))**(n-2*k)*math.factorial(2*k)/(2**(2*k)*math.factorial(k)*a**k)
+        factor = np.sum([comb(n, 2*k)*(b/(2*a))**(n-2*k)*math.factorial(2*k)/(2**(2*k)*math.factorial(k)*a**k)
                           for k in range(n//2+1)])
         return factor * np.sqrt(np.pi/a)*np.exp(b**2/(4*a))
 
