@@ -338,25 +338,85 @@ def get_sn(n):
                      multiplicities=multiplicity)
 
 
+def get_dn(n):
+
+    if n<2:
+        raise Exception('Group not valid')
+
+    if n == 2:
+
+        return CharTable('D2',
+                         [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
+                          Rotation(label="C_2'", axis=[0, 1, 0]), Reflection(label="C_2''", axis=[1, 0, 0])],
+                         {'A1': pd.Series([+1, +1, +1, +1]),
+                          'B1': pd.Series([+1, +1, -1, -1]),
+                          'B2': pd.Series([+1, -1, -1, +1]),
+                          'B3': pd.Series([+1, -1, +1, -1])
+                         },
+                         rotations=['B3', 'B2', 'B1'],
+                         translations=['B3', 'B2', 'B1'],
+                         multiplicities=[1, 1, 1, 1])
+
+    ir_data = get_cn(n)
+    operations_new = ir_data.operations
+
+    ir_data_new = {}
+    ir_data_new['A1'] = pd.Series(list(ir_data['A']) + [ 1])
+    ir_data_new['A2'] = pd.Series(list(ir_data['A']) + [-1])
+    operations_new += [Rotation(label="C_2'", axis=[0, 1, 0])]
+
+    if 'B' in ir_data:
+        ir_data_new['B1'] = pd.Series(list(ir_data['B']) + [ 1, -1])
+        ir_data_new['B2'] = pd.Series(list(ir_data['B']) + [-1,  1])
+
+        ir_data_new['A1'] = pd.Series(list(ir_data_new['A1']) + [ 1])
+        ir_data_new['A2'] = pd.Series(list(ir_data_new['A2']) + [-1])
+
+        operations_new += [Rotation(label="C_2''", axis=[1, 0, 0])]
+
+    for data in ir_data.keys():
+        if data.startswith('E'):
+            ir_data_new[data] = pd.Series(list(ir_data[data]) + [0])
+
+    if 'B' in ir_data:
+        for data in ir_data.keys():
+            if data.startswith('E'):
+                ir_data_new[data] = pd.Series(list(ir_data_new[data]) + [0])
+
+    multiplicites = ir_data.multiplicities
+    if np.mod(n, 2) == 0:
+        multiplicites += [n//2, n//2]
+    else:
+        multiplicites += [n]
+
+    if n == 2:
+        rotations = ['B2', 'B2', 'A1']
+        translations = ['B1', 'B2', 'A1']
+    elif n == 3 or n == 4:
+        rotations = ['E', 'E', 'A2']
+        translations = ['E', 'E', 'A2']
+    else:
+        rotations = ['E1', 'E1', 'A2']
+        translations = ['E1', 'E1', 'A2']
+
+    return CharTable('D{}'.format(n),
+                     operations_new,
+                     ir_data_new,
+                     rotations=rotations,  # x, y, z
+                     translations=translations,  # Rx, Ry, Rz
+                     multiplicities=multiplicites)
+
+
 if __name__ == '__main__':
 
     #for i in range(1, 9):
     #    print(get_cnh(i))
 
-    #print(get_sn(2))
-    #print(get_sn(4))
-    #print(get_sn(6))
-    #print(get_sn(12))
-    #print(get_sn(10))
-    #exit()
-    #print(get_sn(12))
-    print(get_sn(14))
+    print(get_dn(2))
+    print(get_dn(3))
+    print(get_dn(4))
+    print(get_dn(5))
+    print(get_dn(6))
+    print(get_dn(7))
 
     exit()
-    get_cn(2)
-    get_cn(3)
-    get_cn(4)
-    get_cn(5)
-    get_cn(6)
-    get_cn(7)
-    get_cn(24)
