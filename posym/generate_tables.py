@@ -297,14 +297,28 @@ def get_sn(n):
             else:
                 traces.append(1)
 
-        ir_data.update({'Au': pd.Series(traces)})
-
-        for i in range(0, l//2):
+        for i in range(l//2):
             subtrace = np.roll([k+1 for k in range(n//4)], -i)
             label = 'E{}g'.format(i+1) if l > 2 else 'Eg'
             ir_data.update({label: pd.Series([2] + [real_radical(k, n)*(-1)**(k+2*i) for k in subtrace] + [real_radical(k, n)*(-1)**(k+2*i) for k in subtrace[::-1]] + [2])})
+
+        ir_data.update({'Au': pd.Series(traces)})
+
+        for i in range(l//2):
+            subtrace = np.roll([k + 1 for k in range(n // 4)], -i)
             label = 'E{}u'.format(i+1) if l > 2 else 'Eu'
-            ir_data.update({label: pd.Series([2] + [real_radical(k, n)*(-1)**(k+2*i + k//2) for k in subtrace] + [real_radical(k, n)*(-1)**(k+2*i + k//2 + 1) for k in subtrace[::-1]] + [-2])})
+            # print(i, '-', [[2] , [(-1)**(m+1) for m, k in enumerate(subtrace)] , [(-1)**(m+l//2+1) for m, k in enumerate(subtrace[::-1])] , [-2]])
+            ir_data.update({label: pd.Series([2] +
+                                             [real_radical(k, n)*(-1)**(k+2*i) * (-1)**(m+1) for m, k in enumerate(subtrace)] +
+                                             [real_radical(k, n)*(-1)**(k+2*i) *(-1)**(m+l//2+1) for m, k in enumerate(subtrace[::-1])] +
+                                             [-2])})
+
+        # reorder columns to follow convention
+        new_indexing = [0] + list(range(2, l+1, 2)) + [ndim-1] + list(range(1, l+1, 2))
+        operations = np.array(operations)[new_indexing].tolist()
+        multiplicity = np.array(multiplicity)[new_indexing].tolist()
+        for key in ir_data.keys():
+            ir_data[key] = ir_data[key][new_indexing]
 
         if n == 2:
             rotations = ['Ag', 'Ag', 'Ag']
@@ -329,12 +343,13 @@ if __name__ == '__main__':
     #for i in range(1, 9):
     #    print(get_cnh(i))
 
-    print(get_sn(2))
-    print(get_sn(4))
-    print(get_sn(6))
-    print(get_sn(8))
-    print(get_sn(10))
-    print(get_sn(12))
+    #print(get_sn(2))
+    #print(get_sn(4))
+    #print(get_sn(6))
+    #print(get_sn(12))
+    #print(get_sn(10))
+    #exit()
+    #print(get_sn(12))
     print(get_sn(14))
 
     exit()
