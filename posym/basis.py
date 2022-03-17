@@ -178,6 +178,10 @@ class PrimitiveGaussian:
         return self.__hash__() == other.__hash__()
 
     @property
+    def shape(self):
+        return hash((self.prefactor, self.alpha, self.poly_coeff.data.tobytes()))
+
+    @property
     def integrate(self):
         return self.prefactor * gaussian_integral(self.alpha, self.center, self.poly_coeff)
 
@@ -305,6 +309,30 @@ class BasisFunction:
     @property
     def integrate(self):
         return sum([coef * prim.integrate for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
+
+    def get_environment_centers(self):
+        unique_center = np.unique(np.array([p.center for p in self.primitive_gaussians]), axis=0)
+        data_dict = {}
+        coor_dict = {}
+
+        for i, center in enumerate(unique_center):
+            data = np.where((np.array([p.center for p in self.primitive_gaussians] == center).all(axis=1)))
+            key = tuple(np.array([p.shape for p in self.primitive_gaussians])[data])
+            if key in data_dict:
+                data_dict[key].append(i)
+                coor_dict[key].append(center)
+            else:
+                data_dict[key] = [i]
+                coor_dict[key] = [center]
+
+        symbols_ = []
+        coordinates_ = []
+        for i, (key, value) in enumerate(data_dict.items()):
+            for v, c in zip(value, coor_dict[key]):
+                symbols_.append('{}'.format(i))
+                coordinates_.append(list(c))
+
+        return symbols_, coordinates_
 
     def __call__(self, *value):
         return sum([coef * prim(*value) for coef, prim in zip(self.coefficients, self.primitive_gaussians)])

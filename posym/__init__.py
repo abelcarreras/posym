@@ -185,7 +185,9 @@ class SymmetryModes(SymmetryBase):
 
 
 class SymmetryFunction(SymmetryBase):
-    def __init__(self, group, coordinates, symbols, function, orientation_angles=None):
+    def __init__(self, group, function, orientation_angles=None):
+
+        symbols, coordinates = function.get_environment_centers()
 
         pg = PointGroup(group)
 
