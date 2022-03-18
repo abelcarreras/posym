@@ -196,16 +196,29 @@ def get_cnh(n):
                 ir_data_new[data+"''"] = pd.Series(list(ir_data[data]) + [-2])
 
         for i in range((n-1)//2):
-            j = gcd(i+1, n)
-            up = (i+1)//j
+            j = gcd(2*i+1, n)
+            up = (2*i+1)//j
+            #print('----------------', n, i*2+1, ':', (2*i+1)//j, n//j)
             down = n//j
             if up == 1:
                 operations_new += [ImproperRotation(label='S_{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
             else:
                 operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
 
-            for data in ir_data_new.keys():
-                element = list(ir_data_new[data])[1+i] * np.sign(list(ir_data_new[data])[(n-1)//2+1])
+            for l, data in enumerate(ir_data_new.keys()):
+                # real_radical((i + 1) * (k + 1), n)
+                sign = np.sign(list(ir_data_new[data])[(n - 1) // 2 + 1])
+                element = list(ir_data_new[data])[1+i] * sign
+                if data.startswith('E'):
+                    try:
+                        k = int(data[1])-1
+                    except ValueError:
+                        k = 0
+
+                    # print([real_radical((k + 1) * (m + 1), n) for m in range(0, n,2)])
+                    # element = [real_radical((k + 1) * (m + 1), n) for m in range(0, n, 2)][i] * sign
+                    element = real_radical((k + 1) * (2*i + 1), n) * sign
+
                 ir_data_new[data] = pd.Series(list(ir_data_new[data]) + [element])
 
         if n == 1:
@@ -407,16 +420,195 @@ def get_dn(n):
                      multiplicities=multiplicites)
 
 
+def get_dnh(n):
+
+    ir_data = get_dn(n)
+    operations_new = ir_data.operations
+    ir_data_new = {}
+    ir_data_new_u = {}
+
+    if n == 2:
+        return CharTable('D2h',
+                         [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
+                          Rotation(label="C_2'", axis=[0, 1, 0]), Rotation(label="C_2''", axis=[1, 0, 0]),
+                          Inversion(label='i'), Reflection(label='s_h', axis=[0, 0, 1]),
+                          Reflection(label='s_v', axis=[0, 1, 0]), Reflection(label='s_d', axis=[1, 0, 0])],
+                         {'Ag': pd.Series( [+1, +1, +1, +1, +1, +1, +1, +1]),
+                          'B1g': pd.Series([+1, +1, -1, -1, +1, +1, -1, -1]),
+                          'B2g': pd.Series([+1, -1, -1, +1, +1, -1, +1, -1]),
+                          'B3g': pd.Series([+1, -1, +1, -1, +1, -1, -1, +1]),
+                          'Au': pd.Series( [+1, +1, +1, +1, -1, -1, -1, -1]),
+                          'B1u': pd.Series([+1, +1, -1, -1, -1, -1, +1, +1]),
+                          'B2u': pd.Series([+1, -1, -1, +1, -1, +1, -1, +1]),
+                          'B3u': pd.Series([+1, -1, +1, -1, -1, +1, +1, -1]),
+                          },
+                         rotations=['B3g', 'B2g', 'B1g'],
+                         translations=['B3u', 'B2u', 'B1u'],
+                         multiplicities=[1, 1, 1, 1, 1, 1, 1, 1])
+
+    if np.mod(n, 2) == 0:
+        # for even n only
+
+        ir_data_new['A1g'] =   pd.Series(list(ir_data['A1']) + [ 1,  1,  1,  1])
+        ir_data_new_u['A1u'] = pd.Series(list(ir_data['A1']) + [-1, -1, -1, -1])
+
+        ir_data_new['A2g'] =   pd.Series(list(ir_data['A2']) + [ 1,  1, -1, -1])
+        ir_data_new_u['A2u'] = pd.Series(list(ir_data['A2']) + [-1, -1,  1,  1])
+
+        l = (-1)**(n//2)
+        ir_data_new['B1g'] =   pd.Series(list(ir_data['B1']) + [ 1,  1*l,  1*l, -1*l])
+        ir_data_new_u['B1u'] = pd.Series(list(ir_data['B1']) + [-1, -1*l, -1*l,  1*l])
+
+        ir_data_new['B2g'] =   pd.Series(list(ir_data['B2']) + [ 1,  1*l,  -1*l,  1*l])
+        ir_data_new_u['B2u'] = pd.Series(list(ir_data['B2']) + [-1, -1*l,   1*l, -1*l])
+
+        operations_new += [Inversion(label='i'), Reflection(label='s_h', axis=[0, 0, 1]),
+                           Reflection(label='s_v', axis=[0, 1, 0]), Reflection(label='s_d', axis=[1, 0, 0])]
+
+        for data in ir_data.keys():
+            if data.startswith('E'):
+                if len(data[1:]) == 0:
+                    k = int((np.mod(1, 2) -0.5)*4)
+                else:
+                    k = int((np.mod(int(data[1:]), 2) -0.5)*4)
+                # print(data+'u', list(ir_data[data]))
+                ir_data_new[data+'g'] = pd.Series(list(ir_data[data]) + [2, -k, 0, 0])
+                ir_data_new_u[data+'u'] = pd.Series(list(ir_data[data]) + [-2, k, 0, 0])
+
+        ir_data_new.update(ir_data_new_u)
+
+        for i in range((n-1)//2):
+            j = gcd(i+1, n)
+            up = (i+1)//j
+            down = n//j
+            if up == 1:
+                operations_new += [ImproperRotation(label='S_{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
+            else:
+                operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
+
+            for data in ir_data_new.keys():
+                #print(1+i, (n-1)//2+5)
+                element = list(ir_data_new[data])[1+i] * np.sign(list(ir_data_new[data])[(n-1)//2+5])
+                #print(data, len(ir_data_new[data]), element)
+                ir_data_new[data] = pd.Series(list(ir_data_new[data]) + [element])
+            #print('----')
+
+        # swap columns for convention
+        l = 2 + n // 2+2
+        for kk in range(3):
+            value = operations_new.pop(l)
+            operations_new.append(value)
+            for data in ir_data_new.keys():
+                row = list(ir_data_new[data])
+                value = row.pop(l)
+                row.append(value)
+                ir_data_new[data] = pd.Series(row)
+
+        #print(((n-1)//2))
+        multiplicites = [1] + [2]*((n-1)//2) + [1]  + [n//2, n//2] + [1] + [2]*((n-1)//2) + [1, n//2, n//2]
+
+        print(multiplicites)
+        if n == 2:
+            rotations = ['B3g', 'B2g', 'B1g']
+            translations = ['B3u', 'B2u', 'B1u']
+        elif  n == 4:
+            rotations = ['Eg', 'Eg', 'A2g']
+            translations = ['Eu', 'Eu', 'A2u']
+        else:
+            rotations = ['E1g', 'E1g', 'A2g']
+            translations = ['E1u', 'E1u', 'A2u']
+    else:
+
+        ir_data_new["A1'"] = pd.Series(list(ir_data['A1']) + [1, 1])
+        ir_data_new["A1''"] = pd.Series(list(ir_data['A1']) + [-1, -1])
+
+        ir_data_new["A2'"] = pd.Series(list(ir_data['A2']) + [1, -1])
+        ir_data_new["A2''"] = pd.Series(list(ir_data['A2']) + [-1, 1])
+
+        multiplicites = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
+
+        operations_new += [Reflection(label='s_h', axis=[0, 0, 1]),
+                           Reflection(label='s_v', axis=[0, 1, 0])]
+
+        for data in ir_data.keys():
+            if data.startswith('E'):
+                ir_data_new[data+"'"] = pd.Series(list(ir_data[data]) + [2, 0])
+                ir_data_new[data+"''"] = pd.Series(list(ir_data[data]) + [-2, 0])
+
+        for i in range((n-1)//2):
+            j = gcd(2*i+1, n)
+            up = (2*i+1)//j
+            down = n//j
+            if up == 1:
+                operations_new += [ImproperRotation(label='S_{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
+            else:
+                operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
+
+            for data in ir_data_new.keys():
+                sign = np.sign(list(ir_data_new[data])[(n - 1) // 2 + 2])
+                element = list(ir_data_new[data])[1+i] * sign
+                if data.startswith('E'):
+                    try:
+                        k = int(data[1])-1
+                    except ValueError:
+                        k = 0
+
+                    # print('E{}'.format(k+1), [real_radical((k + 1) * (m + 1), n) for m in range(0, 7)])
+                    # element = [real_radical((k + 1) * (m + 1), n) for m in range(0, n,2)][i] * sign
+                    element = real_radical((k + 1) * (2*i + 1), n) * sign
+
+                ir_data_new[data] = pd.Series(list(ir_data_new[data]) + [element])
+
+        # swap columns for convention
+        l = 2 + n // 2+1
+        for kk in range(1):
+            value = operations_new.pop(l)
+            operations_new.append(value)
+            for data in ir_data_new.keys():
+                row = list(ir_data_new[data])
+                value = row.pop(l)
+                row.append(value)
+                ir_data_new[data] = pd.Series(row)
+
+        if n == 1:
+            rotations = ["A1''", "A2''", "A2'"]
+            translations = ["A1'", "A2'", "A2''"]
+        elif n == 3:
+            rotations = ["E''", "E''", "A2'"]
+            translations = ["E'", "E'", "A2''"]
+        else:
+            rotations = ["E1''", "E1''", "A2'"]
+            translations = ["E1'", "E1'", "A2''"]
+
+    return CharTable('D{}h'.format(n),
+                     operations_new,
+                     ir_data_new,
+                     rotations=rotations,  # x, y, z
+                     translations=translations,  # Rx, Ry, Rz
+                     multiplicities=multiplicites)
+
+
 if __name__ == '__main__':
 
     #for i in range(1, 9):
     #    print(get_cnh(i))
 
-    print(get_dn(2))
-    print(get_dn(3))
-    print(get_dn(4))
+    print(get_dnh(2))
+    print(get_dnh(3))
+    print(get_dnh(4))
+    print(get_dnh(5))
+    print(get_dnh(6))
+    exit()
+
+    print(get_dnh(3))
+    print(get_dnh(5))
+    print(get_dnh(7))
+    print(get_dnh(9))
+
+    exit()
     print(get_dn(5))
-    print(get_dn(6))
-    print(get_dn(7))
+    print(get_dnh(5))
+    print(get_dnh(6))
+    print(get_dnh(7))
 
     exit()
