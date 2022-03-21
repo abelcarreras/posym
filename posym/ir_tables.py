@@ -210,9 +210,9 @@ ir_table_list = [
     CharTable('T',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
                Rotation(label='C2', axis=[np.sqrt(2 / 9), 0, 1 / 3], order=2)],
-              {'A': pd.Series([+1, +1, +1, +1]),
-               'E': pd.Series([+2, -1, +2, +2]),
-               'T': pd.Series([+3, 0, -1, -1])
+              {'A': pd.Series([+1, +1, +1]),
+               'E': pd.Series([+2, -1, +2]),
+               'T': pd.Series([+3,  0, -1])
                },
               rotations=['T', 'T', 'T'],
               translations=['T', 'T', 'T'],
@@ -334,7 +334,7 @@ if __name__ == '__main__':
 
 
     ct = ir_table_list[-1]
-    print(ct.ir_degeneracy)
+    print(ct)
 
     exit()
 
