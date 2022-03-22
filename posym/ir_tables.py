@@ -233,10 +233,10 @@ ir_table_list = [
               multiplicities=[1, 8, 3, 6, 6]),
     CharTable('Th',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
-               Rotation(label='C2', axis=[np.sqrt(2 / 9), 0, 1 / 3], order=2),
+               Rotation(label='C2', axis=[np.sqrt(2/9), 0, 1/3], order=2),
                Inversion(label='i'),
-               ImproperRotation(label='S6', axis=[np.sqrt(2 / 9), 0, 1 / 3], order=6),
-               Reflection(label='sh', axis=[0, 0, 1])],
+               ImproperRotation(label='S6', axis=[0, 0, 1], order=6),
+               Reflection(label='sh', axis=[0, 1, 0])],
               {'Ag': pd.Series([+1, +1, +1, +1, +1, +1]),
                'Eg': pd.Series([+2, -1, +2, +2, -1, +2]),
                'Tg': pd.Series([+3,  0, -1, +3,  0, -1]),
@@ -311,7 +311,7 @@ ir_table_list = [
                Rotation(label="C2'", axis=[0, 0, 1], order=2),
                Inversion(label='i'),
                ImproperRotation(label='S_10', axis=[0, -1, (np.sqrt(5) + 1) / 2], order=10),
-               ImproperRotation(label='S^3_10', axis=[1 - (np.sqrt(5) + 1) / 2, 0, (np.sqrt(5) + 1) / 2], order=10),
+               ImproperRotation(label='S^3_10', axis=[0, -1, (np.sqrt(5) + 1) / 2], order=10),
                ImproperRotation(label='S_6', axis=[1 - (np.sqrt(5) + 1) / 2, 0, (np.sqrt(5) + 1) / 2], order=6),
                Reflection(label='s_h', axis=[1, 0, 0])],
               {'Ag' : pd.Series([+1, +1, +1, +1, +1, +1, +1, +1, +1, +1]),
@@ -333,11 +333,12 @@ ir_table_list = [
 if __name__ == '__main__':
 
 
-    ct = ir_table_list[-1]
-    print(ct)
+    for pg in  ir_table_list[14:]:
+        print(pg.name)
+        print(pg)
+        print(len(pg.get_all_operations()))
 
     exit()
-
 
 
     print(ir_table_list[-1].sort_index().index)

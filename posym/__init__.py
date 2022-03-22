@@ -121,8 +121,9 @@ class SymmetryModes(SymmetryBase):
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
+        operations_dic = pg.get_all_operations()
+
         for operation in pg.operations:
-            operations_dic = pg.get_all_operations()
             mode_measures = []
             for op in operations_dic[operation.label]:
                 mode_m = op.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
