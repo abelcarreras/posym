@@ -7,18 +7,22 @@ from pyqchem.tools import get_geometry_from_pubchem
 import numpy as np
 import posym.algebra as al
 
-water_coor = [[0.00000000, 0.00000000e+00, 2.40297090e-01],
-              [-1.43261539,  0.00000000e+00, -9.61188362e-01],
-              [ 1.43261539,  0.00000000e+00, -9.61188362e-01]]
-water_coor = np.array(water_coor) * 0.5
 
+sh6_coor = [[ 0.16290727, -0.36340852,  0.00000000],
+            [ 1.47290727, -0.36340852,  0.00000000],
+            [ 0.16290727,  0.94659148,  0.00000000],
+            [ 0.16290727, -0.36340852,  1.31000000],
+            [-1.14709273, -0.36340852,  0.00000000],
+            [ 0.16290727, -1.67340852,  0.00000000],
+            [ 0.16290727, -0.36340852, -1.31000000]]
+sh6_sym = ['S', 'H', 'H', 'H', 'H', 'H', 'H']
 
-water_mol = Structure(coordinates=water_coor,
-                      symbols=['O', 'H', 'H'],
-                      charge=0,
-                      multiplicity=1)
+sh6_mol = Structure(coordinates=sh6_coor,
+                    symbols=sh6_sym,
+                    charge=0,
+                    multiplicity=1)
 
-dicloro_coor = [[2.1437, 0.1015, -0.0002],
+dicloro_coor = [[ 2.1437,  0.1015, -0.0002],
                 [-2.1439, -0.1011, -0.0002],
                 [ 0.5135, -0.4232,  0.0002],
                 [-0.5132,  0.4227,  0.0002],
@@ -26,22 +30,23 @@ dicloro_coor = [[2.1437, 0.1015, -0.0002],
                 [-0.4237,  1.5009,  0.0001]]
 dcl_symbols = ['Cl', 'Cl', 'C', 'C', 'H', 'H']
 
-from scipy.spatial.transform import Rotation as R
-
-angles = [100, 200, 300]
-rotmol = R.from_euler('zyx', angles, degrees=True)
-dicloro_coor = rotmol.apply(dicloro_coor)
+# from scipy.spatial.transform import Rotation as R
+# angles = [100, 200, 300]
+# rotmol = R.from_euler('zyx', angles, degrees=True)
+# dicloro_coor = rotmol.apply(dicloro_coor)
 
 dichloro_mol = Structure(coordinates=dicloro_coor,
                          symbols=dcl_symbols,
                          charge=0,
                          multiplicity=1)
 
-methane = get_geometry_from_pubchem('methane')
-ammonia = get_geometry_from_pubchem('ammonia')
+methane_mol = get_geometry_from_pubchem('methane')
+ammonia_mol = get_geometry_from_pubchem('ammonia')
+water_mol = get_geometry_from_pubchem('water')
 
 
-for molecule, group in zip([water_mol, dichloro_mol, methane, ammonia], ['c2v', 'c2h', 'Td', 'c3v']):
+for molecule, group in zip([sh6_mol, water_mol, dichloro_mol, methane_mol, ammonia_mol],
+                           ['Oh',     'c2v',       'c2h',       'Td',        'c3v']):
 
     qc_input = QchemInput(molecule,
                           jobtype='opt',
