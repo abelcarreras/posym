@@ -241,7 +241,7 @@ def get_cnh(n):
 def get_sn(n):
 
     if np.mod(n, 2) != 0:
-        raise Exception('n must be even')
+        raise Exception('Order of Sn group must have even')
 
     if np.mod(n, 4) == 0:
 
@@ -686,7 +686,7 @@ def get_dnd(n):
             rotations = ["E1g", "E1g", "A2g"]
             translations = ["E1u", "E1u", "A2u"]
 
-    return CharTable('D{}h'.format(n),
+    return CharTable('D{}d'.format(n),
                      operations_new,
                      ir_data_new,
                      rotations=rotations,  # x, y, z
@@ -694,8 +694,41 @@ def get_dnd(n):
                      multiplicities=multiplicites)
 
 
+def get_table_from_name(name):
+    name = name.lower().strip()
+    n = len(name)
+
+    type = name[0]
+    if type in ['c', 'd', 's']:
+        code = type[0]
+        subtype = name[-1]
+        try:
+            if subtype in ['d', 'h', 'v']:
+                order = int(name[1:-1])
+                code += subtype
+            else:
+                order = int(name[1:])
+        except ValueError:
+            code = order = None
+
+        functions = {'d': get_dn, 'dd': get_dnd, 'dh': get_dnh,
+                     'c': get_cn, 'ch': get_cnh, 'cv':get_cnv,
+                     's': get_sn}
+
+        try:
+            return functions[code](order)
+        except KeyError:
+            pass
+
+    raise Exception('Point group label {} not recognized'.format(name))
+
+
 if __name__ == '__main__':
 
+    pg = get_table_from_name('c7')
+    print(pg.name)
+    print(pg)
+    exit()
     #for i in range(1, 9):
     #    print(get_cnh(i))
 

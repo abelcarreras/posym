@@ -18,7 +18,9 @@ class PointGroup():
                 self._table = table
                 return
 
-        raise Exception('{} group not found'.format(group))
+        # get auto-generated table
+        from posym.generate_tables import get_table_from_name
+        self._table = get_table_from_name(group)
 
     def __hash__(self):
         return hash(self._group)
