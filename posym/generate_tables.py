@@ -10,6 +10,7 @@ from posym.operations.inversion import Inversion
 from posym.operations.irotation import ImproperRotation
 from posym.ir_tables import CharTable
 from posym.ir_tables import real_radical
+from posym.ir_tables import ir_table_list
 
 
 def get_cn(n):
@@ -694,20 +695,26 @@ def get_dnd(n):
                      multiplicities=multiplicites)
 
 
-def get_table_from_name(name):
-    name = name.lower().strip()
-    n = len(name)
+def get_table_from_label(label):
 
-    type = name[0]
+    label = label.lower().strip()
+
+    # Check into explicitly defined tables
+    for table in ir_table_list:
+        if label == table.name.lower():
+            return table
+
+    # Generate table
+    type = label[0]
     if type in ['c', 'd', 's']:
         code = type[0]
-        subtype = name[-1]
+        subtype = label[-1]
         try:
             if subtype in ['d', 'h', 'v']:
-                order = int(name[1:-1])
+                order = int(label[1:-1])
                 code += subtype
             else:
-                order = int(name[1:])
+                order = int(label[1:])
         except ValueError:
             code = order = None
 
@@ -720,12 +727,12 @@ def get_table_from_name(name):
         except KeyError:
             pass
 
-    raise Exception('Point group label {} not recognized'.format(name))
+    raise Exception('Point group label {} not recognized'.format(label))
 
 
 if __name__ == '__main__':
 
-    pg = get_table_from_name('c7')
+    pg = get_table_from_label('c1')
     print(pg.name)
     print(pg)
     exit()

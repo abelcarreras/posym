@@ -1,5 +1,5 @@
 import numpy as np
-from posym.ir_tables import ir_table_list
+from posym.generate_tables import get_table_from_label
 
 
 class PointGroup():
@@ -13,14 +13,8 @@ class PointGroup():
         self._trans_matrix = None
         self._trans_matrix_inv = None
 
-        for table in ir_table_list:
-            if group.upper() == table.name.upper():
-                self._table = table
-                return
-
-        # get auto-generated table
-        from posym.generate_tables import get_table_from_name
-        self._table = get_table_from_name(group)
+        # get IR table
+        self._table = get_table_from_label(group)
 
     def __hash__(self):
         return hash(self._group)
