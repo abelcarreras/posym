@@ -1,5 +1,6 @@
 from posym.basis import PrimitiveGaussian, BasisFunction
 from posym import SymmetryFunction
+from posym.tools import build_orbital, build_density, get_basis_set
 import numpy as np
 import posym.algebra as al
 
@@ -38,6 +39,8 @@ mo_coefficients = [[ 0.994216442,  0.025846814, 0.000000000,  0.000000000, -0.00
 coordinates = [[ 0.00000, 0.0000000, -0.0808819],
                [-1.43262, 0.0000000, -1.2823700],
                [ 1.43262, 0.0000000, -1.2823700]]
+
+basis_set_test = get_basis_set(coordinates, basis)
 
 
 symbols = ['O', 'H', 'H']
@@ -92,7 +95,7 @@ s2_H = BasisFunction([sa, sb, sc],
                      center=coordinates[2])
 
 basis_functions = [s_O, s2_O, px_O, py_O, pz_O, s_H, s2_H]
-
+# basis_functions = get_basis_set(coordinates, basis)
 
 density_matrix = 0 * np.outer(mo_coefficients[0], mo_coefficients[0]) + \
                  0 * np.outer(mo_coefficients[1], mo_coefficients[1]) + \
@@ -102,21 +105,6 @@ density_matrix = 0 * np.outer(mo_coefficients[0], mo_coefficients[0]) + \
                  0 * np.outer(mo_coefficients[5], mo_coefficients[5]) + \
                  0 * np.outer(mo_coefficients[6], mo_coefficients[6])
 
-def build_density(basis_set, density_matrix):
-    density_matrix = np.array(density_matrix)
-    density = BasisFunction([], [])
-    for i, basis1 in enumerate(basis_set):
-        for j, basis2 in enumerate(basis_set):
-            density += basis1*basis2 * density_matrix[i, j]
-
-    return density
-
-def build_orbital(basis_set, mo_coefficients):
-    orbital = BasisFunction([], [])
-    for mo_coeff, basis in zip(mo_coefficients, basis_set):
-        orbital += mo_coeff * basis
-
-    return orbital
 
 dipole_x = [[          0.,          0.,  5.0792e-02,   0.,          0., -2.8130e-03,   2.8130e-03],
             [          0.,          0.,  6.4117e-01,   0.,          0., -2.7580e-01,   2.7580e-01],

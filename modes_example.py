@@ -43,18 +43,19 @@ dichloro_mol = Structure(coordinates=dicloro_coor,
 methane_mol = get_geometry_from_pubchem('methane')
 ammonia_mol = get_geometry_from_pubchem('ammonia')
 water_mol = get_geometry_from_pubchem('water')
+h2o2_mol = get_geometry_from_pubchem('h2o2')
 
 
-for molecule, group in zip([sh6_mol, water_mol, dichloro_mol, methane_mol, ammonia_mol],
-                           ['Oh',     'c2v',       'c2h',       'Td',        'c3v']):
+for molecule, group in zip([h2o2_mol, sh6_mol, water_mol, dichloro_mol, methane_mol, ammonia_mol],
+                           ['c2',      'Oh',     'c2v',       'c2h',       'Td',        'c3v']):
 
     qc_input = QchemInput(molecule,
                           jobtype='opt',
                           exchange='hf',
-                          basis='6-31g',
-                          geom_opt_tol_gradient=1,
-                          geom_opt_tol_energy=1,
-                          geom_opt_max_cycles=500,
+                          basis='sto-3g',
+                          #geom_opt_tol_gradient=1,
+                          #geom_opt_tol_energy=1,
+                          #geom_opt_max_cycles=500,
                           )
 
     parsed_data = get_output_from_qchem(qc_input, parser=basic_optimization, processors=6)
@@ -62,7 +63,7 @@ for molecule, group in zip([sh6_mol, water_mol, dichloro_mol, methane_mol, ammon
     qc_input = QchemInput(parsed_data['optimized_molecule'],
                           jobtype='freq',
                           exchange='hf',
-                          basis='6-31g',
+                          basis='sto-3g',
                           #sym_ignore=True,
                           )
 

@@ -14,7 +14,7 @@ class SymmetryBase():
     def __init__(self, group, rep):
 
         self._pg = PointGroup(group)
-        self._group = group
+        self._group = group.lower()
 
         if isinstance(rep, str):
             if rep not in self._pg.ir_labels:
@@ -186,7 +186,12 @@ class SymmetryModes(SymmetryBase):
 
 
 class SymmetryFunction(SymmetryBase):
-    def __init__(self, group, function, orientation_angles=None):
+    def __init__(self, group, function, orientation_angles=None, center=None):
+
+        if center is None:
+            center = function.global_center()
+            function = function.copy()
+            function.apply_translation(-np.array(center))
 
         symbols, coordinates = function.get_environment_centers()
 

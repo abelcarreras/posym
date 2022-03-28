@@ -334,6 +334,15 @@ class BasisFunction:
 
         return symbols_, coordinates_
 
+    def global_center(self):
+        centers = []
+        weights = []
+        for coef, prim in zip(self.coefficients, self.primitive_gaussians):
+            centers.append(prim.center)
+            weights.append(coef**2)
+
+        return np.average(centers, weights=weights, axis=0)
+
     def __call__(self, *value):
         return sum([coef * prim(*value) for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
 
@@ -617,14 +626,8 @@ if __name__ == '__main__':
 
     print('total electrons', total_electrons)
 
-    def build_density(basis_set_1, density_matrix):
+    from posym.tools import rotate_basis_set, translate_basis_set, get_self_similarity, get_overlap_density, build_density
 
-        basis_functions = BasisFunction([PrimitiveGaussian(1, 1)], [0])
-        for i, basis1 in enumerate(basis_set_1):
-            for j, basis2 in enumerate(basis_set_1):
-                basis_functions += basis1*basis2 * density_matrix[i, j]
-
-        return basis_functions
 
     density = build_density(basis_functions, density_matrix)
     density.apply_rotation(-np.pi/2, [1, 0, 0])
@@ -643,69 +646,13 @@ if __name__ == '__main__':
     plt.show()
 
 
-    def get_overlap_density_naive(basis_set_1, basis_set_2, density_matrix):
-        n = len(basis_set_1)
-        s = np.zeros((n, n, n, n))
 
-        for i, basis1 in enumerate(basis_set_1):
-            for j, basis2 in enumerate(basis_set_1):
-                for k, basis3 in enumerate(basis_set_2):
-                    for l, basis4 in enumerate(basis_set_2):
-                        dens_prod = density_matrix[i, j] * density_matrix[k, l]
-                        basis_prod = basis1 * basis2 * basis3 * basis4
-                        s[i, j, k, l] = basis_prod.integrate * dens_prod
-
-        return np.sum(s)
-
-    from sympy.utilities.iterables import multiset_permutations
-    def get_overlap_density(basis_set_1, basis_set_2, density_matrix):
-        n = len(basis_set_1)
-        s = np.zeros((n, n, n, n))
-
-        for i in range(n):
-            for j in range(i+1):
-                for k in range(n):
-                    for l in range(k+1):
-                        dens_prod = density_matrix[i, j] * density_matrix[k, l]
-                        integral = (basis_set_1[i] * basis_set_1[j] * basis_set_2[k] * basis_set_2[l]).integrate
-                        for perm in multiset_permutations([i, j]):
-                            for perm2 in multiset_permutations([k, l]):
-                                s[perm[0], perm[1], perm2[0], perm2[1]] = integral * dens_prod
-
-        return np.sum(s)
-
-    def get_self_similarity(basis_set_1, density_matrix):
-        n = len(basis_set_1)
-        s = np.zeros((n, n, n, n))
-
-        for i in range(n):
-            for j in range(i+1):
-                for k in range(j+1):
-                    for l in range(k+1):
-                        integral = (basis_set_1[i] * basis_set_1[j] * basis_set_1[k] * basis_set_1[l]).integrate
-                        for perm in multiset_permutations([i, j, k, l]):
-                            dens_prod = density_matrix[perm[0], perm[1]] * density_matrix[perm[2], perm[3]]
-                            s[perm[0], perm[1], perm[2], perm[3]] = integral * dens_prod
-
-        return np.sum(s)
 
     self_similarity = get_overlap_density(basis_functions, basis_functions, density_matrix)
     print('self_similarity', self_similarity)
 
     self_similarity = get_self_similarity(basis_functions, density_matrix)
     print('self_similarity', self_similarity)
-
-    def rotate_basis_set(basis_set, angle, axis):
-        new_basis_set = deepcopy(basis_set)
-        for bf in new_basis_set:
-            bf.apply_rotation(angle, axis)
-        return new_basis_set
-
-    def translate_basis_set(basis_set, translation):
-        new_basis_set = deepcopy(basis_set)
-        for bf in new_basis_set:
-            bf.apply_translation(translation)
-        return new_basis_set
 
 
     basis_functions_r = rotate_basis_set(basis_functions, np.pi, [1, 0, 0])

@@ -8,7 +8,7 @@ class PointGroup():
 
     """
     def __init__(self, group):
-        self._group = group
+        self._group = group.lower()
 
         self._trans_matrix = None
         self._trans_matrix_inv = None
