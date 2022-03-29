@@ -1,7 +1,10 @@
 # Simple single point calculation
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.basic import basic_parser_qchem
+from posym import SymmetryFunction, SymmetryBase
+import posym.algebra as al
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 molecule_cis = Structure(coordinates=[[ -1.07076839,   -2.13175980,    0.03234382],
@@ -30,7 +33,6 @@ qc_input = QchemInput(molecule_cis,
 data_cis, ee_cis = get_output_from_qchem(qc_input,
                                          read_fchk=True,
                                          processors=4,
-                                         # force_recalculation=True,
                                          parser=basic_parser_qchem)
 
 
@@ -61,7 +63,6 @@ qc_input = QchemInput(molecule_trans,
 data_trans, ee_trans = get_output_from_qchem(qc_input,
                                              read_fchk=True,
                                              processors=4,
-                                             # force_recalculation=True,
                                              parser=basic_parser_qchem,
                                              )
 
@@ -79,26 +80,26 @@ basis_set_trans = get_basis_set(coordinates_trans, basis)
 basis_set_cis = get_basis_set(coordinates_cis, basis)
 
 
-o1_cis = build_orbital(basis_set_cis, coefficients_cis['alpha'][4])
-o1_trans = build_orbital(basis_set_trans, coefficients_trans['alpha'][4])
+o1_cis = build_orbital(basis_set_cis, coefficients_cis['alpha'][15])
+o1_trans = build_orbital(basis_set_trans, coefficients_trans['alpha'][15])
 
-c = o1_trans.global_center()
-
-import matplotlib.pyplot as plt
 x = np.linspace(-5, 5, 50)
 y = np.linspace(-5, 5, 50)
 
 X, Y = np.meshgrid(x, y)
+
+Z = o1_cis(X, Y, np.zeros_like(X))
+plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
+plt.figure()
+plt.contour(X, Y, Z, colors='k')
+plt.show()
+
 
 Z = o1_trans(X, Y, np.zeros_like(X))
 plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
 plt.figure()
 plt.contour(X, Y, Z, colors='k')
 plt.show()
-
-from posym import SymmetryFunction, SymmetryBase
-import posym.algebra as al
-
 
 
 def get_wf_symm(orbitals_symm, alpha=(1,), beta=(1,)):
@@ -143,7 +144,7 @@ def check_transition(transtion):
     if al.dot(transtion, SymmetryBase(group='C2v', rep='A1')) > 0.1:
         return 'Allowed'
     else:
-        return 'Prohibited'
+        return 'Forbidden'
 
 print('wf_0 -> wf_1: ', cis_wf_0 * cis_dm * cis_wf_1, check_transition(cis_wf_0 * cis_dm * cis_wf_1))
 print('wf_0 -> wf_2: ', cis_wf_0 * cis_dm * cis_wf_2, check_transition(cis_wf_0 * cis_dm * cis_wf_2))
@@ -177,7 +178,7 @@ def check_transition(transition):
     if al.dot(transition, SymmetryBase(group='C2h', rep='Ag')) > 0.1:
         return 'Allowed'
     else:
-        return 'Prohibited'
+        return 'Forbidden'
 
 
 print('wf_0 -> wf_1: ', trans_wf_0 * trans_dm * trans_wf_1, check_transition(trans_wf_0 * trans_dm * trans_wf_1))
