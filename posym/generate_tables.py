@@ -26,7 +26,7 @@ def get_cn(n):
         j = gcd(i+1, n)
         up = (i+1)//j
         down = n//j
-        label = 'C_{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
+        label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
 
         operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
@@ -133,7 +133,7 @@ def get_cnh(n):
         ir_data_new['Bg'] = pd.Series(list(ir_data['B']) + [ 1, 1*l])
         ir_data_new_u['Bu'] = pd.Series(list(ir_data['B']) + [-1, -1*l])
 
-        operations_new += [Inversion(label='i'), Reflection(label='s_h', axis=[0, 0, 1])]
+        operations_new += [Inversion(label='i'), Reflection(label='sh', axis=[0, 0, 1])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -189,7 +189,7 @@ def get_cnh(n):
 
         multiplicites = [1] + [2]*((n-1)//2) + [1] + [2]*((n-1)//2)
 
-        operations_new += [Reflection(label='s_h', axis=[0, 0, 1])]
+        operations_new += [Reflection(label='sh', axis=[0, 0, 1])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -258,10 +258,10 @@ def get_sn(n):
             up = (i+1)//j
             down = n//j
             if np.mod(i, 2) == 0:
-                label = 'S_{}'.format(down) if up == 1 else 'S^{}_{}'.format(up, down)
+                label = 'S{}'.format(down) if up == 1 else 'S^{}_{}'.format(up, down)
                 operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
             else:
-                label = 'C_{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
+                label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
                 operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
         ir_data = {'A': pd.Series([1] * ndim)}
@@ -297,10 +297,10 @@ def get_sn(n):
                     label = 'i'.format(down)
                     operations.append(Inversion(label=label))
                 else:
-                    label = 'S_{}'.format(down) if up == 1 else 'S^{}_{}'.format(up, down)
+                    label = 'S{}'.format(down) if up == 1 else 'S^{}_{}'.format(up, down)
                     operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
             else:
-                label = 'C_{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
+                label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
                 operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
         ir_data = {'Ag': pd.Series([1] * ndim)}
@@ -361,7 +361,7 @@ def get_dn(n):
 
         return CharTable('D2',
                          [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
-                          Rotation(label="C_2'", axis=[0, 1, 0]), Reflection(label="C_2''", axis=[1, 0, 0])],
+                          Rotation(label="C2'", axis=[0, 1, 0]), Reflection(label="C2''", axis=[1, 0, 0])],
                          {'A1': pd.Series([+1, +1, +1, +1]),
                           'B1': pd.Series([+1, +1, -1, -1]),
                           'B2': pd.Series([+1, -1, -1, +1]),
@@ -377,7 +377,7 @@ def get_dn(n):
     ir_data_new = {}
     ir_data_new['A1'] = pd.Series(list(ir_data['A']) + [ 1])
     ir_data_new['A2'] = pd.Series(list(ir_data['A']) + [-1])
-    operations_new += [Rotation(label="C_2'", axis=[0, 1, 0])]
+    operations_new += [Rotation(label="C2'", axis=[0, 1, 0])]
 
     if 'B' in ir_data:
         ir_data_new['B1'] = pd.Series(list(ir_data['B']) + [ 1, -1])
@@ -386,7 +386,7 @@ def get_dn(n):
         ir_data_new['A1'] = pd.Series(list(ir_data_new['A1']) + [ 1])
         ir_data_new['A2'] = pd.Series(list(ir_data_new['A2']) + [-1])
 
-        operations_new += [Rotation(label="C_2''", axis=[1, 0, 0])]
+        operations_new += [Rotation(label="C2''", axis=[1, 0, 0])]
 
     for data in ir_data.keys():
         if data.startswith('E'):
@@ -431,9 +431,9 @@ def get_dnh(n):
     if n == 2:
         return CharTable('D2h',
                          [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
-                          Rotation(label="C_2'", axis=[0, 1, 0]), Rotation(label="C_2''", axis=[1, 0, 0]),
-                          Inversion(label='i'), Reflection(label='s_h', axis=[0, 0, 1]),
-                          Reflection(label='s_v', axis=[0, 1, 0]), Reflection(label='s_d', axis=[1, 0, 0])],
+                          Rotation(label="C2'", axis=[0, 1, 0]), Rotation(label="C2''", axis=[1, 0, 0]),
+                          Inversion(label='i'), Reflection(label='sh', axis=[0, 0, 1]),
+                          Reflection(label='sv', axis=[0, 1, 0]), Reflection(label='sd', axis=[1, 0, 0])],
                          {'Ag': pd.Series( [+1, +1, +1, +1, +1, +1, +1, +1]),
                           'B1g': pd.Series([+1, +1, -1, -1, +1, +1, -1, -1]),
                           'B2g': pd.Series([+1, -1, -1, +1, +1, -1, +1, -1]),
@@ -463,8 +463,8 @@ def get_dnh(n):
         ir_data_new['B2g'] =   pd.Series(list(ir_data['B2']) + [ 1,  1*l,  -1*l,  1*l])
         ir_data_new_u['B2u'] = pd.Series(list(ir_data['B2']) + [-1, -1*l,   1*l, -1*l])
 
-        operations_new += [Inversion(label='i'), Reflection(label='s_h', axis=[0, 0, 1]),
-                           Reflection(label='s_v', axis=[0, 1, 0]), Reflection(label='s_d', axis=[1, 0, 0])]
+        operations_new += [Inversion(label='i'), Reflection(label='sh', axis=[0, 0, 1]),
+                           Reflection(label='s_v', axis=[0, 1, 0]), Reflection(label='sd', axis=[1, 0, 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -483,7 +483,7 @@ def get_dnh(n):
             up = (i+1)//j
             down = n//j
             if up == 1:
-                operations_new += [ImproperRotation(label='S_{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
+                operations_new += [ImproperRotation(label='S{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
             else:
                 operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
 
@@ -528,8 +528,8 @@ def get_dnh(n):
 
         multiplicites = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
 
-        operations_new += [Reflection(label='s_h', axis=[0, 0, 1]),
-                           Reflection(label='s_v', axis=[0, 1, 0])]
+        operations_new += [Reflection(label='sh', axis=[0, 0, 1]),
+                           Reflection(label='sv', axis=[0, 1, 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -600,13 +600,13 @@ def get_dnd(n):
         ir_data = get_sn(2*n)
         operations_new = ir_data.operations
 
-        ir_data_new['A1'] =   pd.Series(list(ir_data['A']) + [ 1,  1])
-        ir_data_new['A2'] =   pd.Series(list(ir_data['A']) + [-1, -1])
+        ir_data_new['A1'] = pd.Series(list(ir_data['A']) + [ 1,  1])
+        ir_data_new['A2'] = pd.Series(list(ir_data['A']) + [-1, -1])
 
-        ir_data_new['B1'] =   pd.Series(list(ir_data['B']) + [ 1, -1])
-        ir_data_new['B2'] =   pd.Series(list(ir_data['B']) + [-1,  1])
+        ir_data_new['B1'] = pd.Series(list(ir_data['B']) + [ 1, -1])
+        ir_data_new['B2'] = pd.Series(list(ir_data['B']) + [-1,  1])
 
-        operations_new += [Rotation(label="C2'", axis=[1, 0, 0], order=2), Reflection(label='s_d', axis=[1, 0, 0])]
+        operations_new += [Rotation(label="C2'", axis=[1, 0, 0], order=2), Reflection(label='sd', axis=[1, 0, 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -634,7 +634,7 @@ def get_dnd(n):
         multiplicites = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
 
         operations_new += [Inversion(label='i'),
-                           Reflection(label='s_d', axis=[1, 0, 0])]
+                           Reflection(label='sd', axis=[1, 0, 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -648,7 +648,7 @@ def get_dnd(n):
             up = (2*i+1)//j
             down = 2*n//j
             if up == 1:
-                operations_new += [ImproperRotation(label='S_{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
+                operations_new += [ImproperRotation(label='S{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
             else:
                 operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
 
