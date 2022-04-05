@@ -265,7 +265,7 @@ class PrimitiveGaussian:
 
 
 class BasisFunction:
-    def __init__(self, primitive_gaussians, coefficients, center=None):
+    def __init__(self, primitive_gaussians, coefficients, center=None, label=None):
         primitive_gaussians = deepcopy(primitive_gaussians)
         if center is not None:
             center = np.array(center)
@@ -274,6 +274,7 @@ class BasisFunction:
 
         self.primitive_gaussians = primitive_gaussians
         self.coefficients = coefficients
+        self.label = label
 
     def get_number_of_primitives(self):
         return len(self.primitive_gaussians)
@@ -342,6 +343,10 @@ class BasisFunction:
             weights.append(coef**2)
 
         return np.average(centers, weights=weights, axis=0)
+    def __repr__(self):
+        if self.label is not None:
+            return '{}'.format(self.label)
+        return super(BasisFunction, self).__repr__()
 
     def __call__(self, *value):
         return sum([coef * prim(*value) for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
