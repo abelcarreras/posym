@@ -80,7 +80,10 @@ def build_orbital(basis_set, mo_coefficients):
     return orbital
 
 
-def get_basis_set(coordinates, basis_set):
+def get_basis_set(coordinates, basis_set, use_angstrom=True):
+    if use_angstrom:
+        coordinates = np.array(coordinates)*1.8897259886  # convert from Angstrom to bohr
+
     basis_list = []
     for iatom, atom in enumerate(basis_set['atoms']):
         for shell in atom['shells']:
@@ -89,30 +92,68 @@ def get_basis_set(coordinates, basis_set):
                 for exponent in shell['p_exponents']:
                     primitives.append(PrimitiveGaussian(alpha=exponent))
 
-                basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom]))
+                basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:S'.format(atom['symbol'])))
 
             elif shell['shell_type'] == 'sp':
                 primitives = []
                 for exponent in shell['p_exponents']:
                     primitives.append(PrimitiveGaussian(alpha=exponent))
 
-                basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom]))
+                basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:S'.format(atom['symbol'])))
 
                 for l_set in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
                     primitives = []
-                    for exponent in  shell['p_exponents']:
+                    for exponent in shell['p_exponents']:
                         primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
 
-                    basis_list.append(BasisFunction(primitives, shell['p_con_coefficients'], center=coordinates[iatom]))
+                    basis_list.append(BasisFunction(primitives, shell['p_con_coefficients'], center=coordinates[iatom], label='{}:P_{}'.format(atom['symbol'], l_set)))
 
             elif shell['shell_type'] == 'p':
                 for l_set in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
                     primitives = []
-                    for exponent in  shell['p_exponents']:
+                    for exponent in shell['p_exponents']:
                         primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
 
-                    basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom]))
+                    basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:P_{}'.format(atom['symbol'], l_set)))
+
+            elif shell['shell_type'] == 'd':
+                for l_set in [[2, 0, 0], [0, 2, 0], [0, 0, 2], [1, 1, 0], [1, 0, 1], [0, 1, 1]]:
+                    primitives = []
+                    for exponent in shell['p_exponents']:
+                        primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
+                    basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:D_{}'.format(atom['symbol'], l_set)))
+
+            elif shell['shell_type'] == 'd_':
+                basis_list_temp = []
+                for l_set in [[2, 0, 0], [0, 2, 0], [0, 0, 2], [1, 1, 0], [1, 0, 1], [0, 1, 1]]:
+                    primitives = []
+                    for exponent in shell['p_exponents']:
+                        primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
+                    basis_list_temp.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:D_{}'.format(atom['symbol'], l_set)))
+
+                # d0 : 2*z2-x2-y2
+                d0 = 2 * basis_list_temp[2] - basis_list_temp[0] - basis_list_temp[1]
+                norm = 1/np.sqrt((d0*d0).integrate)
+                basis_list.append(d0 * norm)
+
+                # d1 : xz
+                d1 = basis_list_temp[4]
+                basis_list.append(d1)
+
+                # d2 : yz
+                d2 = basis_list_temp[5]
+                basis_list.append(d2)
+
+                # d3 : x2-y2
+                d3 = basis_list_temp[0] - basis_list_temp[1]
+                norm = 1/np.sqrt((d3*d3).integrate)
+                basis_list.append(d3 * norm)
+
+                # d4 : xy
+                d4 = basis_list_temp[3]
+                basis_list.append(d4)
+
             else:
-                raise Exception('Unknown/not implemented shell type')
+                raise Exception('Unknown/not implemented shell type:{}'.format(shell['shell_type']))
 
     return basis_list
