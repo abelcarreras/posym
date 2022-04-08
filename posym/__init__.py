@@ -188,17 +188,18 @@ class SymmetryModes(SymmetryBase):
 class SymmetryFunction(SymmetryBase):
     def __init__(self, group, function, orientation_angles=None, center=None):
 
+        symbols, coordinates = function.get_environment_centers()
+
         if center is None:
-            center = function.global_center()
+            # center = function.global_center()
+            center = np.average(coordinates, axis=0)
             function = function.copy()
             function.apply_translation(-np.array(center))
-
-        symbols, coordinates = function.get_environment_centers()
+            coordinates = np.array([c - center for c in coordinates])
 
         pg = PointGroup(group)
 
-        # set coordinates at geometrical center
-        self._coordinates = np.array([c - np.average(coordinates, axis=0) for c in coordinates])
+        self._coordinates = np.array(coordinates)
 
         self._function = function
         self._symbols = symbols
