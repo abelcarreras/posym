@@ -18,6 +18,7 @@ static PyObject* ExpIntegralSimple(PyObject* self, PyObject *arg, PyObject *keyw
 static PyObject* ExpIntegral(PyObject* self, PyObject *arg, PyObject *keywords);
 static PyObject* PolyProduct(PyObject* self, PyObject *arg, PyObject *keywords);
 static PyObject* GaussianIntegral(PyObject* self, PyObject *arg, PyObject *keywords);
+static PyObject* GaussianIntegral2(PyObject* self, PyObject *arg, PyObject *keywords);
 
 
 //  Python Interface
@@ -36,6 +37,8 @@ static PyMethodDef extension_funcs[] = {
     {"integrate_exponential",  (PyCFunction)ExpIntegral, METH_VARARGS|METH_KEYWORDS, function_docstring_2},
     {"product_poly_coeff",  (PyCFunction)PolyProduct, METH_VARARGS|METH_KEYWORDS, function_docstring_3},
     {"gaussian_integral",  (PyCFunction)GaussianIntegral, METH_VARARGS|METH_KEYWORDS, function_docstring_4},
+    {"gaussian_integral_2",  (PyCFunction)GaussianIntegral2, METH_VARARGS|METH_KEYWORDS, function_docstring_4},
+
     {NULL, NULL, 0, NULL}
 };
 
@@ -170,8 +173,8 @@ static PyObject* ExpIntegral(PyObject* self, PyObject *arg, PyObject *keywords)
 
     int n;
     double a, b;
-    double integral;
-    double PI = acos(-1.0);
+    // double integral;
+    // double PI = acos(-1.0);
 
     // Interface with Python
     static char *kwlist[] = {"n", "a", "b", NULL};
@@ -318,3 +321,138 @@ static PyObject* GaussianIntegral(PyObject* self, PyObject *arg, PyObject *keywo
     return Py_BuildValue("d", integral * pre_exponential);
 }
 
+struct expContainer {
+    double prefactor, exponent;
+};
+
+
+struct expContainer ExpIntegralPartial(int n, double a, double b)
+{
+
+    //double integral;
+    double PI = acos(-1.0);
+
+    struct expContainer integral;
+
+    if (n == 0) {
+        //integral = sqrt(PI/a)*exp(pow(b, 2)/(4.0*a));
+        integral.prefactor = sqrt(PI/a);
+        integral.exponent = b*b/(4.0*a);
+        return integral;
+    }
+
+    if (n == 1) {
+        //integral = sqrt(PI)/(2.0*pow(a, 3.0/2))*b*exp(pow(b, 2)/(4.0*a));
+        integral.prefactor = sqrt(PI)/(2.0*pow(a, 3.0/2.0))*b;
+        integral.exponent = b*b/(4.0*a);
+
+        return integral;
+    }
+
+    double factor = 0.0;
+
+    for (int k = 0; k < n/2+1; k++)
+    {
+        factor += nCr(n, 2*k)*pow(b/(2.0*a), n-2*k) * fact(2*k)/(pow(2, 2*k)*fact(k)*pow(a,k));
+    }
+
+    //integral =  factor * sqrt(PI/a)*exp(pow(b,2)/(4*a));
+
+    integral.prefactor = factor * sqrt(PI/a);
+    integral.exponent = pow(b,2)/(4*a);
+    return integral;
+}
+
+int getMinFomList(double *list, int n){
+    double min = list[0];
+    int index = 0;
+
+    for (int i=1; i<n; i++){
+        if (list[i] < min){
+            index = i;
+            min = list[i];
+        }
+    }
+
+    return index;
+
+}
+
+static PyObject* GaussianIntegral2(PyObject* self, PyObject *arg, PyObject *keywords)
+{
+
+    //  Interface with Python
+    PyObject *polyCoeff_obj, *center_obj;
+    double alpha;
+
+    static char *kwlist[] = {"alpha", "center", "poly_coeff", NULL};
+    if (!PyArg_ParseTupleAndKeywords(arg, keywords, "dOO", kwlist, &alpha, &center_obj, &polyCoeff_obj))  return NULL;
+
+    PyObject *polyCoeffArray = PyArray_FROM_OTF(polyCoeff_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *centerArray = PyArray_FROM_OTF(center_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+
+    if (polyCoeffArray == NULL || centerArray == NULL ) {
+        Py_XDECREF(polyCoeffArray);
+        Py_XDECREF(centerArray);
+        return NULL;
+    }
+
+    double *polyCoeff    = (double*)PyArray_DATA(polyCoeffArray);
+    double *center   = (double*)PyArray_DATA(centerArray);
+
+    int maxLim = (int)PyArray_DIM(polyCoeffArray, 0);
+    int n;
+
+    struct expContainer intX, intY, intZ;
+    // Dot product center
+    double dot_center = 0.0;
+    for (int i = 0; i < 3; i++) {
+        dot_center += center[i] * center[i];
+    }
+
+    double generalExponent = -alpha * dot_center;
+
+    //double integral = 0.0;
+    int totalDim = maxLim*maxLim*maxLim;
+//    omp_get_max_threads(4);
+//    # pragma omp parallel for reduction(+:integral) default(shared)
+    double expList[totalDim];
+    double preExpList[totalDim];
+    //printf("-----\n");
+    for (int i = 0; i < maxLim; i++) {
+        for (int j = 0; j < maxLim; j++) {
+            for (int k = 0; k < maxLim; k++) {
+                n = i*maxLim*maxLim + j * maxLim + k;
+                //printf("coef: %f\n", polyCoeff[dim3to1(i, j, k, maxLim)]);
+                intX = ExpIntegralPartial(i, alpha, 2*alpha*center[0]);
+                intY = ExpIntegralPartial(j, alpha, 2*alpha*center[1]);
+                intZ = ExpIntegralPartial(k, alpha, 2*alpha*center[2]);
+                expList[n] = intX.exponent + intY.exponent + intZ.exponent;
+                preExpList[n] = polyCoeff[dim3to1(i, j, k, maxLim)] * intX.prefactor * intY.prefactor * intZ.prefactor;
+                //printf("%f %f %f\n", center[0], center[1], center[2]);
+                //printf("%i %i %i %f %f %f\n", i, j, k, intX.prefactor, intY.prefactor, intZ.prefactor);
+                //printf("%i %f %f %f\n", n, expList[n], preExpList[n], polyCoeff[dim3to1(i, j, k, maxLim)]);
+            }
+        }
+    }
+
+    for (int i = 0; i < totalDim; i++) {
+        //printf("%f %f\n", preExpList[i], expList[i]);
+    }
+
+    int lowIndex = getMinFomList(expList, totalDim);
+    double commonExp = expList[lowIndex];
+    for (int i = 0; i < totalDim; i++) {
+        expList[i] -= commonExp;
+    }
+
+    double preExponential = 0.0;
+    for (int i = 0; i < totalDim; i++) {
+        preExponential += preExpList[i]*exp(expList[i]);
+    }
+
+    // Free python memory
+    Py_DECREF(polyCoeffArray);
+
+    return Py_BuildValue("d", preExponential * exp(commonExp + generalExponent));
+}

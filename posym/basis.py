@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 import math
 import itertools
-from posym.integrals import product_poly_coeff, gaussian_integral
+from posym.integrals import product_poly_coeff, gaussian_integral, gaussian_integral_2
 from scipy.special import comb
 
 
@@ -130,6 +130,48 @@ def gaussian_integral_py(alpha, center, poly_coeff):
     return pre_exponential * integrate
 
 
+def integrate_exponential_sep_py(n, a, b):
+    """
+    norm for integrals type  x^n exp(-(ax^2+bx))
+    separated in prefactor and exponential
+
+    """
+    if n == 0:
+        return np.sqrt(np.pi/a), b**2/(4*a)
+    elif n == 1:
+        return np.sqrt(np.pi)/(2*a**(3/2))*b, b**2/(4*a)
+    else:
+        factor = np.sum([comb(n, 2*k)*(b/(2*a))**(n-2*k)*math.factorial(2*k)/(2**(2*k)*math.factorial(k)*a**k)
+                          for k in range(n//2+1)])
+        return factor * np.sqrt(np.pi/a), b**2/(4*a)
+
+
+def gaussian_integral_2_py(alpha, center, poly_coeff):
+    """
+    integrals type  x^n exp(-(ax^2+bx))
+    alternative implementation to handle large exponents
+
+    """
+
+    max_lim = len(poly_coeff)
+    pre_exponent = -alpha * np.dot(center, center)
+
+    exp_list = []
+    pre_exp_list = []
+    for i, j, k in itertools.product(range(max_lim), repeat=3):
+        list_data = [integrate_exponential_sep_py(l, alpha, 2 * alpha * c) for c, l in zip(center, [i, j, k])]
+        pre_exp_list.append(poly_coeff[i, j, k] * np.prod([l[0] for l in list_data]))
+        exp_list.append(np.sum([l[1] for l in list_data]))
+
+    lowest_index = np.argmin(exp_list)
+    exponential = exp_list[lowest_index]
+    exp_list = np.array(exp_list) - exponential
+
+    pre_exponential = np.sum([a*np.exp(b) for a, b in zip(pre_exp_list, exp_list)])
+
+    return pre_exponential * np.exp(exponential + pre_exponent)
+
+
 def simplify_poly_coeff(poly_coeff):
     """
     Simplify a polynomial coefficient matrix
@@ -183,11 +225,26 @@ class PrimitiveGaussian:
 
     @property
     def integrate(self):
-        return self.prefactor * gaussian_integral(self.alpha, self.center, self.poly_coeff)
+        return self.prefactor * gaussian_integral_2(self.alpha, self.center, self.poly_coeff)
+        # return self.prefactor * gaussian_integral(self.alpha, self.center, self.poly_coeff)
+
+    def _get_norm_l(self, l):
+
+        def d_fact(n):
+            #print(list(range(1, n, 2)))
+            return np.prod(list(range(1, n, 2)))
+
+        num = 2**sum(l)*self.alpha**((2*l[0] + 2*l[1] + 2*l[2]+ 3)/4)
+        denom = d_fact(2*l[0]) * d_fact(2*l[1]) * d_fact(2*l[2])
+
+        # print('res', (2*np.pi)**(3/4)* num/np.sqrt(denom))
+        return (2*np.pi)**(3/4) * num/np.sqrt(denom)
 
     def _get_norm(self):
         poly_coeff_sq = product_poly_coeff(self.poly_coeff, self.poly_coeff)
-        return self.prefactor * gaussian_integral(2 * self.alpha, self.center, poly_coeff_sq)
+        return self.prefactor * gaussian_integral_2(2 * self.alpha, self.center, poly_coeff_sq)
+        # return self.prefactor * gaussian_integral(2 * self.alpha, self.center, poly_coeff_sq)
+
 
     def __call__(self, *value):
         value = np.array(value)
@@ -631,7 +688,7 @@ if __name__ == '__main__':
 
     print('total electrons', total_electrons)
 
-    from posym.tools import rotate_basis_set, translate_basis_set, get_self_similarity, get_overlap_density, build_density
+    from posym.tools import rotate_basis_set, translate_basis_set, get_self_similarity, build_density
 
 
     density = build_density(basis_functions, density_matrix)
@@ -653,8 +710,8 @@ if __name__ == '__main__':
 
 
 
-    self_similarity = get_overlap_density(basis_functions, basis_functions, density_matrix)
-    print('self_similarity', self_similarity)
+    #self_similarity = get_overlap_density(basis_functions, basis_functions, density_matrix)
+    #print('self_similarity', self_similarity)
 
     self_similarity = get_self_similarity(basis_functions, density_matrix)
     print('self_similarity', self_similarity)
@@ -671,5 +728,5 @@ if __name__ == '__main__':
     o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * -0.44922168 + s2_H * 0.449221684
     print('dot(trans)', (o2*o2).integrate)
 
-    print('measure dens:', get_overlap_density(basis_functions, basis_functions_r, density_matrix)/self_similarity)
+    #print('measure dens:', get_overlap_density(basis_functions, basis_functions_r, density_matrix)/self_similarity)
 
