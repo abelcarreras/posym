@@ -5,6 +5,12 @@ from scipy.optimize import minimize
 import numpy as np
 import pandas as pd
 
+cache_orientation = {}
+def get_hash(coordinates, symbols, group):
+    return hash((np.array2string(coordinates, precision=2),
+                 tuple(symbols),
+                 group))
+
 
 class SymmetryBase():
     """
@@ -115,7 +121,7 @@ class SymmetryModes(SymmetryBase):
         self._mode_measures = []
 
         if orientation_angles is None:
-            self._angles = self.get_orientation(pg.operations)
+            self._angles = self.get_orientation(pg)
         else:
             self._angles = orientation_angles
 
@@ -140,14 +146,18 @@ class SymmetryModes(SymmetryBase):
         return SymmetryBase(group=self._group, rep=pd.Series(np.array(self._mode_measures).T[n],
                                                              index=self._pg.op_labels))
 
-    def get_orientation(self, operations):
+    def get_orientation(self, pg):
+
+        hash_num = get_hash(self._coordinates, self._symbols, pg.label)
+        if hash_num in cache_orientation:
+            return cache_orientation[hash_num]
 
         def optimization_function(angles):
 
             rotmol = R.from_euler('zyx', angles, degrees=True)
 
             coor_measures = []
-            for operation in operations:
+            for operation in pg.operations:
                 coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
                 coor_measures.append(coor_m)
 
@@ -168,8 +178,8 @@ class SymmetryModes(SymmetryBase):
                        # bounds=((0, 360), (0, 360), (0, 360)),
                        # tol=1e-20
                        )
-
-        return res.x
+        cache_orientation[hash_num] = res.x
+        return cache_orientation[hash_num]
 
     @property
     def get_measure_pos(self):
@@ -208,7 +218,7 @@ class SymmetryFunction(SymmetryBase):
         self._operator_measures = []
 
         if orientation_angles is None:
-            self._angles = self.get_orientation(pg.operations)
+            self._angles = self.get_orientation(pg)
         else:
             self._angles = orientation_angles
 
@@ -230,14 +240,18 @@ class SymmetryFunction(SymmetryBase):
 
         super().__init__(group, total_state)
 
-    def get_orientation(self, operations):
+    def get_orientation(self, pg):
+
+        hash_num = get_hash(self._coordinates, self._symbols, pg.label)
+        if hash_num in cache_orientation:
+            return cache_orientation[hash_num]
 
         def optimization_function(angles):
 
             rotmol = R.from_euler('zyx', angles, degrees=True)
 
             coor_measures = []
-            for operation in operations:
+            for operation in pg.operations:
                 coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
                 coor_measures.append(coor_m)
 
@@ -258,8 +272,8 @@ class SymmetryFunction(SymmetryBase):
                        # bounds=((0, 360), (0, 360), (0, 360)),
                        # tol=1e-20
                        )
-
-        return res.x
+        cache_orientation[hash_num] = res.x
+        return cache_orientation[hash_num]
 
     @property
     def self_similarity(self):
