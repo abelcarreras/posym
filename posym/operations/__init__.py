@@ -61,7 +61,6 @@ def get_permutation_simple(distance_table, symbols):
 
 class Operation:
     def __init__(self, label):
-
         self._label = label
 
     def get_permutation(self, operation, coordinates, symbols):
