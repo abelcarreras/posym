@@ -7,18 +7,20 @@ def dot(state1, state2, normalize=False):
     if state1.get_point_group() != state2.get_point_group():
         raise ValueError("States must have same point group")
 
-    # pg = state1.get_point_group()
+    pg = state1.get_point_group()
+    norm = pg.ir_table.T['E'].values
 
     v1 = state1.get_ir_representation()
     v2 = state2.get_ir_representation()
 
-    n1 = np.sum(v1.values)
-    n2 = np.sum(v2.values)
-
-    dot = np.sum([np.sqrt((a*b).clip(min=0)) for a, b in zip(v1.values, v2.values)])
-    # dot = np.dot(np.sqrt(v1.values), np.sqrt(v2.values))
+    dot = np.sum([np.sqrt((a*b).clip(min=0)) for a, b in zip(np.multiply(v1.values, norm),
+                                                             np.multiply(v2.values, norm))])
 
     if normalize:
+
+        n1 = np.sum(np.multiply(v1.values, norm))
+        n2 = np.sum(np.multiply(v2.values, norm))
+
         dot = dot / np.sqrt(n1 * n2)
 
     dot = np.square(dot)
@@ -29,7 +31,9 @@ def dot(state1, state2, normalize=False):
 def norm(state1):
 
     v1 = state1.get_ir_representation()
+    pg = state1.get_point_group()
+    norm = pg.ir_table.T['E'].values
 
-    dot = np.sum([np.sqrt(a**2) for a in v1.values])
+    dot = np.sum([a*n for a, n in zip(v1.values, norm)])
 
     return dot

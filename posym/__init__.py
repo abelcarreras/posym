@@ -17,7 +17,7 @@ class SymmetryBase():
     This class is supposed to be used as a base for more complex symmetry objects
 
     """
-    def __init__(self, group, rep):
+    def __init__(self, group, rep, normalize=False):
 
         self._pg = PointGroup(group)
         self._group = group.lower()
@@ -26,12 +26,18 @@ class SymmetryBase():
             if rep not in self._pg.ir_labels:
                 raise Exception('Representation do not match with group\nAvailable: {}'.format(self._pg.ir_labels))
             self._op_representation = self._pg.ir_table[rep]
+            #if normalize:
+            #    self._op_representation /= self._pg.ir_table[rep]['E']
 
         elif isinstance(rep, pd.Series):
             if np.all(self._pg.ir_table.sort_index().index == rep.sort_index().index):
                 self._op_representation = rep.reindex(self._pg.ir_table.index)
             else:
                 raise Exception('Representation not in group')
+
+        if normalize:
+            op_rep = np.dot(self._pg.trans_matrix_norm, np.dot(self._pg.trans_matrix_inv, self._op_representation.values))
+            self._op_representation = pd.Series(op_rep, index=self._pg.op_labels)
 
     def get_op_representation(self):
         return self._op_representation
@@ -52,12 +58,14 @@ class SymmetryBase():
 
         str = ''
         for i, r in enumerate(ir_rep):
+            #ir_norm = self._pg.ir_table[ir_labels[i]]['E']
+            #r *= ir_norm
             #print('>> ', np.add.reduce(np.square(ir_rep[:i])), 'r:', r)
             if np.add.reduce(np.square(ir_rep[:i])) > 0 and r > 0:
                     str += ' + '
             elif r < 0:
                     str += ' - '
-            if r == 1:
+            if np.abs(r - 1) < 2e-2:
                 str += ir_labels[i]
             elif np.abs(r) > 0:
                 str += '{} {}'.format(abs(r), ir_labels[i])
@@ -138,8 +146,8 @@ class SymmetryModes(SymmetryBase):
             mode_measures = np.average(mode_measures, axis=0)
             self._mode_measures.append(mode_measures)
 
-        # Normalization
-        self._mode_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._mode_measures))
+        # De-normalization
+        # self._mode_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._mode_measures))
 
         total_state = pd.Series(np.add.reduce(self._mode_measures, axis=1), index=pg.op_labels)
 
@@ -240,8 +248,8 @@ class SymmetryFunction(SymmetryBase):
             operator_measures = np.average(operator_measures, axis=0)
             self._operator_measures.append(operator_measures)
 
-        # Normalization
-        self._operator_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._operator_measures))
+        # De-normalization
+        #self._operator_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._operator_measures))
 
         total_state = pd.Series(self._operator_measures, index=pg.op_labels)
 
