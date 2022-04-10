@@ -25,7 +25,7 @@ class SymmetryBase():
         if isinstance(rep, str):
             if rep not in self._pg.ir_labels:
                 raise Exception('Representation do not match with group\nAvailable: {}'.format(self._pg.ir_labels))
-            self._op_representation = self._pg.ir_table[rep]/self._pg.ir_table[rep]['E']
+            self._op_representation = self._pg.ir_table[rep]
 
         elif isinstance(rep, pd.Series):
             if np.all(self._pg.ir_table.sort_index().index == rep.sort_index().index):
@@ -138,11 +138,15 @@ class SymmetryModes(SymmetryBase):
             mode_measures = np.average(mode_measures, axis=0)
             self._mode_measures.append(mode_measures)
 
+        # Normalization
+        self._mode_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._mode_measures))
+
         total_state = pd.Series(np.add.reduce(self._mode_measures, axis=1), index=pg.op_labels)
 
         super().__init__(group, total_state)
 
     def get_state_mode(self, n):
+
         return SymmetryBase(group=self._group, rep=pd.Series(np.array(self._mode_measures).T[n],
                                                              index=self._pg.op_labels))
 
@@ -235,6 +239,9 @@ class SymmetryFunction(SymmetryBase):
 
             operator_measures = np.average(operator_measures, axis=0)
             self._operator_measures.append(operator_measures)
+
+        # Normalization
+        self._operator_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._operator_measures))
 
         total_state = pd.Series(self._operator_measures, index=pg.op_labels)
 

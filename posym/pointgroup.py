@@ -12,6 +12,8 @@ class PointGroup():
 
         self._trans_matrix = None
         self._trans_matrix_inv = None
+        self._trans_matrix_norm = None
+        self._trans_matrix_inv_norm = None
 
         # get IR table
         self._table = get_table_from_label(group)
@@ -67,9 +69,24 @@ class PointGroup():
         """
         if self._trans_matrix is None:
             self._trans_matrix = np.array([v for v in self.ir_table.T.values]).T
-            self._trans_matrix = self._trans_matrix/self._trans_matrix[0, :]  # normalization
+            self._trans_matrix = self._trans_matrix
 
         return self._trans_matrix
+
+    @property
+    def trans_matrix_norm(self):
+        """
+        transforms IR to Op
+
+        Op  = Mat * IR
+
+        :return: the transformation matrix
+        """
+        if self._trans_matrix_norm is None:
+            self._trans_matrix_norm = np.array([v for v in self.ir_table.T.values]).T
+            self._trans_matrix_norm = self._trans_matrix_norm/self._trans_matrix_norm[0, :]  # normalization
+
+        return self._trans_matrix_norm
 
     @property
     def trans_matrix_inv(self):
@@ -85,6 +102,21 @@ class PointGroup():
             self._trans_matrix_inv = np.linalg.inv(self.trans_matrix)
 
         return self._trans_matrix_inv
+
+    @property
+    def trans_matrix_inv_norm(self):
+        """
+        transforms Op to IR
+
+        IR = Mat * Op
+
+        :return: the transformation matrix
+        """
+
+        if self._trans_matrix_inv_norm is None:
+            self._trans_matrix_inv_norm = np.linalg.inv(self.trans_matrix_norm)
+
+        return self._trans_matrix_inv_norm
 
     @property
     def order(self):

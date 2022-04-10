@@ -26,7 +26,7 @@ e = SymmetryBase(group='Td', rep='E')
 t1 = SymmetryBase(group='Td', rep='T1')
 
 print('e*e + a1:', e * e + 2 * a1)
-
+print('t1*t1:', t1 * t1)
 
 pg = PointGroup(group='C2v')
 print('\nTest Point group table')
