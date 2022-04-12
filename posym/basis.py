@@ -283,6 +283,7 @@ class PrimitiveGaussian:
             poly_coeff_trans += self.poly_coeff[i, j, k] * binomial_expansion([i, j, k], -translation, max_lim=max_lim)
         self.center = self.center + translation
         self.poly_coeff = simplify_poly_coeff(poly_coeff_trans)
+        return self
 
     def apply_linear_transformation(self, operation_matrix):
 
@@ -308,6 +309,7 @@ class PrimitiveGaussian:
 
             self.poly_coeff = simplify_poly_coeff(poly_coeff_rot)
         self.center = np.dot(operation_matrix, self.center)
+        return self
 
     def apply_rotation(self, angle, axis):
         from scipy.spatial.transform import Rotation as R
@@ -316,6 +318,7 @@ class PrimitiveGaussian:
         rotation = R.from_rotvec(rotation_vector)
 
         self.apply_linear_transformation(rotation.as_matrix())
+        return self
 
     def copy(self):
         return deepcopy(self)
@@ -346,6 +349,7 @@ class BasisFunction:
             primitive.apply_translation(translation)
 
         self.primitive_gaussians = primitive_gaussians
+        return self
 
     def apply_linear_transformation(self, transformation_matrix):
         primitive_gaussians = deepcopy(self.primitive_gaussians)
@@ -353,6 +357,7 @@ class BasisFunction:
             primitive.apply_linear_transformation(transformation_matrix)
 
         self.primitive_gaussians = primitive_gaussians
+        return self
 
     def apply_rotation(self, angle, axis):
         primitive_gaussians = deepcopy(self.primitive_gaussians)
@@ -360,6 +365,7 @@ class BasisFunction:
             primitive.apply_rotation(angle, axis)
 
         self.primitive_gaussians = primitive_gaussians
+        return self
 
     def copy(self):
         return deepcopy(self)
@@ -529,7 +535,7 @@ if __name__ == '__main__':
     d1b = PrimitiveGaussian(alpha=6.545022156, l=[1, 1, 0], center=[0.0, 0.0, 0.0], normalize=True)
     d1c = PrimitiveGaussian(alpha=2.525273021, l=[1, 1, 0], center=[0.0, 0.0, 0.0], normalize=True)
     d1 = BasisFunction([d1a, d1b, d1c], [0.2197679508, 0.6555473627, 0.2865732590])
-    d1.apply_rotation(np.pi/4, [0.0, 0.0, 1.0])
+    d1.apply_rotation(np.pi/4, [0.0, 0.0, 1.0]).apply_translation([0.2, 0, 0])
     print('d1:', (d1*d1).integrate)
 
     px2 = px * px
