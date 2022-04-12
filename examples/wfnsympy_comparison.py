@@ -50,7 +50,7 @@ wf_results.print_wf_mo_IRD()
 
 def get_orbital_state(orbital_soev):
     state_orb = SymmetryBase(group='c2v',
-                             rep=pd.Series(orbital_soev, index=["E", "C2", "sv_xz", "sv_yz"])
+                             rep=pd.Series(orbital_soev, index=["E", "C2", "sv_xz", "sd_yz"])
                              )
     return state_orb
 
@@ -61,7 +61,11 @@ o3 = get_orbital_state(wf_results.mo_SOEVs_a[2])
 o4 = get_orbital_state(wf_results.mo_SOEVs_a[3])
 o5 = get_orbital_state(wf_results.mo_SOEVs_a[4])
 
-# print(o1.get_ir_representation())
-print('total alpha', o2*o3)
-print('total beta', o1*o2*o3*o4*o5)
-print('Total WF', o2*o3*o1*o2*o3*o4*o5)
+print('\n')
+for i, orbital in enumerate([o1, o2, o3, o4, o5]):
+    print('Orbital {}: '.format(i+1), orbital)
+
+
+print('\ntotal alpha: ', o2*o3)
+print('total beta: ', o1*o2*o3*o4*o5)
+print('Total WF: ', o2*o3*o1*o2*o3*o4*o5)

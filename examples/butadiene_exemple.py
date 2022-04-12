@@ -29,7 +29,6 @@ qc_input = QchemInput(molecule_cis,
                       )
 
 # calculate and parse qchem output
-
 data_cis, ee_cis = get_output_from_qchem(qc_input,
                                          read_fchk=True,
                                          processors=4,
