@@ -269,6 +269,13 @@ for i, orbital_coeff in enumerate(mo_coefficients['alpha']):
 
 ```
 
-
 Try an [interactive example](https://colab.research.google.com/github/abelcarreras/posym) in Google Colab
 
+
+Contact info
+------------
+Abel Carreras  
+abelcarreras83@gmail.com
+
+Donostia International Physics Center (DIPC)  
+Donostia-San Sebastian (Spain)
