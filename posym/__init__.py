@@ -1,3 +1,6 @@
+__author__ = 'Abel Carreras'
+__version__ = '0.1.1'
+
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
 from scipy.spatial.transform import Rotation as R

@@ -3,6 +3,12 @@ import numpy
 
 include_dirs_numpy = [numpy.get_include()]
 
+def get_version_number():
+    main_ns = {}
+    for line in open('posym/__init__.py', 'r').readlines():
+        if not(line.find('__version__')):
+            exec(line, main_ns)
+            return main_ns['__version__']
 
 def check_compiler():
     import subprocess
@@ -28,14 +34,15 @@ else:
                           sources=['c/integrals.c'])
 
 setup(name='posym',
-      version=0.1,
+      version=get_version_number(),
       description='posym module',
       long_description=open('README.md').read(),
+      long_description_content_type='text/markdown',
       author='Abel Carreras',
       url='https://github.com/abelcarreras/posym',
       author_email='abelcarreras83@gmail.com',
       packages=['posym',
                 'posym.operations'],
-      install_requires=['numpy', 'scipy', 'matplotlib'],
+      install_requires=['numpy', 'scipy', 'pandas', 'PyYaml'],
       license='MIT License',
       ext_modules=[integrals])

@@ -1,0 +1,8 @@
+###################################
+# Required packages for PoSym     #
+###################################
+
+numpy
+scipy
+PyYAML
+pandas

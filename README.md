@@ -216,8 +216,8 @@ print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
 
 ```
 
-Combine with PyQchem to create automatic workflows
---------------------------------------------------
+Combine with PyQchem to create useful automations
+-------------------------------------------------
 ```python
 
 from pyqchem import get_output_from_qchem, QchemInput, Structure
