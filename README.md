@@ -1,4 +1,5 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/abelcarreras/posym/)
+[![PyPI version](https://badge.fury.io/py/posym.svg)](https://badge.fury.io/py/posym)
 
 PoSym
 =====
