@@ -44,7 +44,7 @@ jobs:
       run: |
         #pytest test
         cd test
-        coverage run --source=../posym discover -p '*_test.py'
+        coverage run --source=../posym -m unittest discover . "*_test.py"
 
   deploy:
     runs-on: ubuntu-latest
