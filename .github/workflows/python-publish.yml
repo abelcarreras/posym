@@ -40,8 +40,8 @@ jobs:
         python setup.py build_ext --inplace
     - name: Test with pytest
       run: |
-        pytest tests
-        # python -m unittest discover -p 'test_*.py' tests
+        pytest test
+        # python -m unittest discover -p 'test_*.py' test
 
   deploy:
     runs-on: ubuntu-latest
