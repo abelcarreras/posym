@@ -39,7 +39,8 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Build c extensions
       run: |
-        python setup.py build_ext --inplace
+        #python setup.py build_ext --inplace
+        python setup.py install
     - name: Test with pytest
       run: |
         #pytest test
