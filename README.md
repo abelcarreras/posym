@@ -1,5 +1,6 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/abelcarreras/posym/)
 [![PyPI version](https://badge.fury.io/py/posym.svg)](https://badge.fury.io/py/posym)
+[![Test and Deploy](https://github.com/abelcarreras/posym/actions/workflows/python-publish.yml/badge.svg?branch=master)](https://github.com/abelcarreras/posym/actions/workflows/python-publish.yml)
 
 PoSym
 =====
