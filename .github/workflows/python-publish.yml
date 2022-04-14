@@ -40,10 +40,9 @@ jobs:
         python setup.py build_ext --inplace
     - name: Test with pytest
       run: |
-        pytest test
-        # python -m unittest discover -p 'test_*.py' test
-      env:
-        PYTHONPATH: posym
+        #pytest test
+        cd test
+        python -m unittest --source=../posym discover -p '*_test.py'
 
   deploy:
     runs-on: ubuntu-latest
