@@ -28,8 +28,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
-        python -m pip install coverage
-        python -m pip install coveralls
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
@@ -46,7 +44,6 @@ jobs:
         # pytest test
         cd test
         pytest
-        # coverage run --source=../posym -m unittest discover . "*_test.py"
 
   deploy:
     runs-on: ubuntu-latest
