@@ -43,9 +43,8 @@ jobs:
         python setup.py install
     - name: Test with pytest
       run: |
-        #pytest test
-        cd test
-        coverage run --source=../posym -m unittest discover . "*_test.py"
+        # pytest test
+        coverage run --source=../posym -m unittest discover test "*_test.py"
 
   deploy:
     runs-on: ubuntu-latest
