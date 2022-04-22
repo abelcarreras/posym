@@ -410,8 +410,8 @@ static PyObject* GaussianIntegral2(PyObject* self, PyObject *arg, PyObject *keyw
     int totalDim = maxLim*maxLim*maxLim;
 //    omp_get_max_threads(4);
 //    # pragma omp parallel for reduction(+:integral) default(shared)
-    double expList[totalDim];
-    double preExpList[totalDim];
+    double * expList = (double*) malloc(totalDim * sizeof(double));
+    double * preExpList = (double*) malloc(totalDim * sizeof(double));
     for (int i = 0; i < maxLim; i++) {
         for (int j = 0; j < maxLim; j++) {
             for (int k = 0; k < maxLim; k++) {
@@ -438,6 +438,8 @@ static PyObject* GaussianIntegral2(PyObject* self, PyObject *arg, PyObject *keyw
 
     // Free python memory
     Py_DECREF(polyCoeffArray);
+    free(expList);
+    free(preExpList);
 
     return Py_BuildValue("d", preExponential * exp(commonExp + generalExponent));
 }
