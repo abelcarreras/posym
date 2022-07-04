@@ -15,6 +15,10 @@ def get_hash(coordinates, symbols, group):
                  group))
 
 
+def get_simple(rep, group):
+    return pd.Series(rep.values, index=rep.index)
+
+
 class SymmetryBase():
     """
     This class is supposed to be used as a base for more complex symmetry objects
@@ -42,11 +46,17 @@ class SymmetryBase():
             op_rep = np.dot(self._pg.trans_matrix_norm, np.dot(self._pg.trans_matrix_inv, self._op_representation.values))
             self._op_representation = pd.Series(op_rep, index=self._pg.op_labels)
 
+    def get_reduced_op_representation(self):
+        red_values = []
+        for value in self._op_representation.values:
+            red_values.append(np.average(value))
+        return pd.Series(red_values, index=self._op_representation.index)
+
     def get_op_representation(self):
         return self._op_representation
 
     def get_ir_representation(self):
-        ir_rep = np.dot(self._pg.trans_matrix_inv, self._op_representation.values)
+        ir_rep = np.dot(self._pg.trans_matrix_inv, self.get_reduced_op_representation().values)
         return pd.Series(ir_rep, index=self._pg.ir_labels)
 
     def get_point_group(self):
@@ -146,19 +156,26 @@ class SymmetryModes(SymmetryBase):
                 mode_m = op.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
                 mode_measures.append(mode_m)
 
-            mode_measures = np.average(mode_measures, axis=0)
+            mode_measures = np.array(mode_measures)
             self._mode_measures.append(mode_measures)
+
+        # reshape mode measures
+        reshaped_modes_measures = []
+        for m in range(len(self._mode_measures[0].T)):
+            reshaped_modes_measures.append([k[:, m] for k in self._mode_measures])
+
+        self._mode_measures = reshaped_modes_measures
 
         # De-normalization
         # self._mode_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._mode_measures))
 
-        total_state = pd.Series(np.add.reduce(self._mode_measures, axis=1), index=pg.op_labels)
+        total_state = pd.Series(np.sum(self._mode_measures, axis=0).tolist(), index=pg.op_labels)
 
         super().__init__(group, total_state)
 
     def get_state_mode(self, n):
 
-        return SymmetryBase(group=self._group, rep=pd.Series(np.array(self._mode_measures).T[n],
+        return SymmetryBase(group=self._group, rep=pd.Series(self._mode_measures[n],
                                                              index=self._pg.op_labels))
 
     def get_orientation(self, pg):
@@ -248,7 +265,9 @@ class SymmetryFunction(SymmetryBase):
                 operator_m = op.get_measure_func(self._function, self._self_similarity, orientation=rotmol)
                 operator_measures.append(operator_m)
 
-            operator_measures = np.average(operator_measures, axis=0)
+            operator_measures = np.array(operator_measures)
+            # operator_measures = np.average(operator_measures, axis=0)
+
             self._operator_measures.append(operator_measures)
 
         # De-normalization
