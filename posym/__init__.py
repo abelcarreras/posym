@@ -262,16 +262,10 @@ class SymmetryFunction(SymmetryBase):
             operations_dic = pg.get_all_operations()
             operator_measures = []
             for op in operations_dic[operation.label]:
-                operator_m = op.get_measure_func(self._function, self._self_similarity, orientation=rotmol)
+                operator_m = op.get_overlap_func(self._function, orientation=rotmol)/self._self_similarity
                 operator_measures.append(operator_m)
 
-            operator_measures = np.array(operator_measures)
-            # operator_measures = np.average(operator_measures, axis=0)
-
-            self._operator_measures.append(operator_measures)
-
-        # De-normalization
-        #self._operator_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._operator_measures))
+            self._operator_measures.append(np.array(operator_measures))
 
         total_state = pd.Series(self._operator_measures, index=pg.op_labels)
 
@@ -328,6 +322,93 @@ class SymmetryFunction(SymmetryBase):
     @property
     def orientation_angles(self):
         return self._angles
+
+
+class SymmetryWaveFunction(SymmetryFunction):
+    def __init__(self, group, alpha_orbitals, beta_orbitals, center=None, orientation_angles=None):
+
+        function = alpha_orbitals[0]
+        symbols, coordinates = function.get_environment_centers()
+
+        if center is None:
+            # center = function.global_center()
+            center = np.average(coordinates, axis=0)
+            function = function.copy()
+            function.apply_translation(-np.array(center))
+            coordinates = np.array([c - center for c in coordinates])
+
+        pg = PointGroup(group)
+
+        self._coordinates = np.array(coordinates)
+
+        self._function = function
+        self._symbols = symbols
+
+        self._coor_measures = []
+        self._operator_overlaps = []
+
+        if orientation_angles is None:
+            self._angles = self.get_orientation(pg)
+        else:
+            self._angles = orientation_angles
+
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+
+        for a_orb in alpha_orbitals:
+            overlap_row = []
+            for b_orb in alpha_orbitals:
+
+                overlaps_list = []
+                for operation in pg.operations:
+                    operations_dic = pg.get_all_operations()
+                    operator_overlaps = []
+                    for op in operations_dic[operation.label]:
+                        overlap_m = op.get_measure_func(a_orb, b_orb, 1, orientation=rotmol)
+                        operator_overlaps.append(overlap_m)
+                        print(a_orb, b_orb, op, overlap_m)
+
+                    print('----')
+                    operator_overlaps = np.array(operator_overlaps)
+                    # operator_overlaps = np.average(operator_overlaps, axis=0)
+                    overlaps_list.append(operator_overlaps)
+
+                print('====')
+                overlap_row.append(overlaps_list)
+            self._operator_overlaps.append(overlap_row)
+
+        matrix = np.zeros((len(alpha_orbitals), len(beta_orbitals)))
+        for i in range(len(alpha_orbitals)):
+            for j in range(len(beta_orbitals)):
+                #print(self._operator_overlaps[i][j][0][0])
+                matrix[i, j] = self._operator_overlaps[i][j][1][0]
+
+        print(matrix)
+        exit()
+
+        import scipy
+        p, l, u = scipy.linalg.lu(matrix, permute_l=False, overwrite_a=False)
+        print(p)
+        print(l)
+        print(u)
+        exit()
+
+
+
+        self._self_similarity = 0
+        for a_orb in alpha_orbitals:
+            self._self_similarity += (a_orb * a_orb).integrate
+        for b_orb in beta_orbitals:
+            self._self_similarity += (b_orb * b_orb).integrate
+
+
+        print('jeje', self._self_similarity)
+        exit()
+
+        total_state = pd.Series(self._operator_overlaps, index=pg.op_labels)
+
+        super().__init__(group, total_state)
+
 
 
 if __name__ == '__main__':

@@ -53,7 +53,7 @@ class Reflection(Operation):
 
         return mesure_coor
 
-    def get_measure_func(self, op_function, self_similarity, orientation=None):
+    def get_overlap_func(self, op_function, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
@@ -62,7 +62,7 @@ class Reflection(Operation):
         fn_function_r = op_function.copy()
         fn_function_r.apply_linear_transformation(operation)
 
-        return (op_function*fn_function_r).integrate/self_similarity
+        return (op_function*fn_function_r).integrate
 
 
     @property

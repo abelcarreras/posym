@@ -17,8 +17,8 @@ class Identity(Operation):
 
         return np.array(self._measure_mode)
 
-    def get_measure_func(self, op_function, self_similarity, orientation=None):
-        return 1.0
+    def get_overlap_func(self, op_function, orientation=None):
+        return (op_function*op_function).integrate
 
     def get_measure_pos(self, coordinates, symbols, orientation=None):
         self._measure_coor = 0.0

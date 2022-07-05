@@ -78,7 +78,7 @@ class ImproperRotation(Operation):
 
         return measure_coor_total
 
-    def get_measure_func(self, op_function, self_similarity, orientation=None):
+    def get_overlap_func(self, op_function, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
@@ -91,7 +91,7 @@ class ImproperRotation(Operation):
             op_function_ir = op_function.copy()
             op_function_ir.apply_linear_transformation(operation)
 
-            measure_fn.append((op_function_ir*op_function).integrate/self_similarity)
+            measure_fn.append((op_function_ir*op_function).integrate)
 
         measure_coor_total = np.average(measure_fn)
 

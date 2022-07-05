@@ -46,14 +46,14 @@ class Inversion(Operation):
 
         return mesure_coor
 
-    def get_measure_func(self, op_function, self_similarity, orientation=None):
+    def get_overlap_func(self, op_function, orientation=None):
 
         operation = inversion()
 
         op_function_i = op_function.copy()
         op_function_i.apply_linear_transformation(operation)
 
-        return (op_function*op_function_i).integrate/self_similarity
+        return (op_function*op_function_i).integrate
 
     @property
     def operation_matrix_list(self):
