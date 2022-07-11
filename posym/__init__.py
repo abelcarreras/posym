@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.1.2'
+__version__ = '0.2.0'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
@@ -327,6 +327,8 @@ class SymmetryFunction(SymmetryBase):
 class SymmetryWaveFunction(SymmetryFunction):
     def __init__(self, group, alpha_orbitals, beta_orbitals, center=None, orientation_angles=None):
 
+        raise NotImplementedError()
+
         function = alpha_orbitals[0]
         symbols, coordinates = function.get_environment_centers()
 
@@ -383,8 +385,6 @@ class SymmetryWaveFunction(SymmetryFunction):
                 #print(self._operator_overlaps[i][j][0][0])
                 matrix[i, j] = self._operator_overlaps[i][j][1][0]
 
-        print(matrix)
-        exit()
 
         import scipy
         p, l, u = scipy.linalg.lu(matrix, permute_l=False, overwrite_a=False)
@@ -400,10 +400,6 @@ class SymmetryWaveFunction(SymmetryFunction):
             self._self_similarity += (a_orb * a_orb).integrate
         for b_orb in beta_orbitals:
             self._self_similarity += (b_orb * b_orb).integrate
-
-
-        print('jeje', self._self_similarity)
-        exit()
 
         total_state = pd.Series(self._operator_overlaps, index=pg.op_labels)
 
