@@ -354,8 +354,6 @@ class SymmetryWaveFunction(SymmetryBase):
         self._function = function
         self._symbols = symbols
 
-        self._coor_measures = []
-
         if orientation_angles is None:
             self._angles = self.get_orientation(pg)
         else:
@@ -459,6 +457,15 @@ class SymmetryWaveFunction(SymmetryBase):
                        )
         cache_orientation[hash_num] = res.x
         return cache_orientation[hash_num]
+
+    @property
+    def opt_coordinates(self):
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+        return rotmol.apply(self._coordinates)
+
+    @property
+    def orientation_angles(self):
+        return self._angles
 
 
 if __name__ == '__main__':

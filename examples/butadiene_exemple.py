@@ -30,7 +30,7 @@ qc_input = QchemInput(molecule_cis,
 
 # calculate and parse qchem output
 data_cis, ee_cis = get_output_from_qchem(qc_input,
-                                         read_fchk=True,
+                                         return_electronic_structure=True,
                                          processors=4,
                                          parser=basic_parser_qchem)
 
@@ -60,7 +60,7 @@ qc_input = QchemInput(molecule_trans,
 # calculate and parse qchem output
 
 data_trans, ee_trans = get_output_from_qchem(qc_input,
-                                             read_fchk=True,
+                                             return_electronic_structure=True,
                                              processors=4,
                                              parser=basic_parser_qchem,
                                              )
@@ -101,7 +101,7 @@ plt.contour(X, Y, Z, colors='k')
 plt.show()
 
 
-def get_wf_symm(orbitals_symm, alpha=(1,), beta=(1,)):
+def get_simple_wf_symm(orbitals_symm, alpha=(1,), beta=(1,)):
     total_sym = None
     for a, o in zip(alpha, orbitals_symm):
         if a == 1:
@@ -123,15 +123,15 @@ for i, orbital_coeff in enumerate(coefficients_cis['alpha']):
     cis_orbitals_sym.append(sym_orbital)
 
 
-cis_wf_0 = get_wf_symm(cis_orbitals_sym,
-                       alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-                       beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
-cis_wf_1 = get_wf_symm(cis_orbitals_sym,
-                       alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-                       beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
-cis_wf_2 = get_wf_symm(cis_orbitals_sym,
-                       alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
-                       beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
+cis_wf_0 = get_simple_wf_symm(cis_orbitals_sym,
+                              alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+                              beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
+cis_wf_1 = get_simple_wf_symm(cis_orbitals_sym,
+                              alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+                              beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
+cis_wf_2 = get_simple_wf_symm(cis_orbitals_sym,
+                              alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
+                              beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
 
 # print(cis_wf_0, cis_wf_1, cis_wf_2)
 
@@ -157,17 +157,15 @@ for i, orbital_coeff in enumerate(coefficients_trans['alpha']):
     print('Symmetry O{}: '.format(i+1), sym_orbital)
     trans_orbitals_sym.append(sym_orbital)
 
-trans_wf_0 = get_wf_symm(trans_orbitals_sym,
-                         alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-                         beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
-trans_wf_1 = get_wf_symm(trans_orbitals_sym,
-                         alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-                         beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
-trans_wf_2 = get_wf_symm(trans_orbitals_sym,
-                         alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
-                         beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
-
-# print(trans_wf_0, trans_wf_1, trans_wf_2)
+trans_wf_0 = get_simple_wf_symm(trans_orbitals_sym,
+                                alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+                                beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
+trans_wf_1 = get_simple_wf_symm(trans_orbitals_sym,
+                                alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+                                beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
+trans_wf_2 = get_simple_wf_symm(trans_orbitals_sym,
+                                alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
+                                beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
 
 trans_dm = SymmetryBase(group='C2h', rep='Bu') + \
            SymmetryBase(group='C2h', rep='Au')

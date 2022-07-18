@@ -95,21 +95,13 @@ class Rotation(Operation):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
-        measure_op = []
-        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
-            operation = rotation(angle, rotated_axis)
+        angle = 2 * np.pi / self._order * self._exp
+        operation = rotation(angle, rotated_axis)
 
-            fn_function_r = op_function1.copy()
-            fn_function_r.apply_linear_transformation(operation)
+        fn_function_r = op_function1.copy()
+        fn_function_r.apply_linear_transformation(operation)
 
-            measure_op.append((op_function2*fn_function_r).integrate)
-
-        measure_coor_total = np.average(measure_op)
-        #print(measure_op)
-        measure_coor_total = np.average(measure_op[0])
-
-        return measure_coor_total
-
+        return (op_function2*fn_function_r).integrate
 
     @property
     def axis(self):
