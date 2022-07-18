@@ -53,16 +53,16 @@ class Reflection(Operation):
 
         return mesure_coor
 
-    def get_overlap_func(self, op_function, orientation=None):
+    def get_overlap_func(self, op_function1, op_function2, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         operation = reflection(rotated_axis)
 
-        fn_function_r = op_function.copy()
+        fn_function_r = op_function1.copy()
         fn_function_r.apply_linear_transformation(operation)
 
-        return (op_function*fn_function_r).integrate
+        return (op_function2*fn_function_r).integrate
 
 
     @property
