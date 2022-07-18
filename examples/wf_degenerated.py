@@ -94,18 +94,16 @@ for i, s in enumerate([sym_orbital1, sym_orbital2, sym_orbital3, sym_orbital4, s
 
 print('\nWave function symmetry')
 
-wf = SymmetryWaveFunction('Td',
-                          alpha_orbitals=[orbital1, orbital2, orbital5],
-                          beta_orbitals=[orbital1, orbital2, orbital4],
-                          center=[0, 0, 0])
+wf_1 = SymmetryWaveFunction('Td',
+                            alpha_orbitals=[orbital1, orbital2, orbital5],
+                            beta_orbitals=[orbital1, orbital2, orbital4])
 
-print('Configuration 1: ', wf)
+print('Configuration 1: ', wf_1)
 
 
-wf = SymmetryWaveFunction('Td',
-                          alpha_orbitals=[orbital1, orbital2, orbital3],
-                          beta_orbitals=[orbital1, orbital2, orbital3],
-                          center=[0, 0, 0])
+wf_2 = SymmetryWaveFunction('Td',
+                            alpha_orbitals=[orbital1, orbital2, orbital3],
+                            beta_orbitals=[orbital1, orbital2, orbital3])
 
-print('Configuration 2: ', wf)
+print('Configuration 2: ', wf_2)
 

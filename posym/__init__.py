@@ -3,6 +3,7 @@ __version__ = '0.2.1'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
+from posym.basis import BasisFunction
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import numpy as np
@@ -327,16 +328,11 @@ class SymmetryFunction(SymmetryBase):
 class SymmetryWaveFunction(SymmetryBase):
     def __init__(self, group, alpha_orbitals, beta_orbitals, center=None, orientation_angles=None):
 
-        if len(alpha_orbitals) > 0:
-            function = alpha_orbitals[0]
-            for f in alpha_orbitals[1:]:
-                function = function + f
-            for f in beta_orbitals:
-                function = function + f
-        else:
-            function = beta_orbitals[0]
-            for f in beta_orbitals[1:]:
-                function = function + f
+        function = BasisFunction([], [])
+        for f in alpha_orbitals:
+            function = function + f
+        for f in beta_orbitals:
+            function = function + f
 
         symbols, coordinates = function.get_environment_centers()
 
@@ -386,11 +382,10 @@ class SymmetryWaveFunction(SymmetryBase):
                 operator_overlaps_total.append(overlap_row)
 
             operator_overlaps = []
-            n_op = len(operator_overlaps_total[0][0])
-            for k in range(n_op):
+            for k in range(pg.n_ir):
                 multi_over = []
-                l_k = len(operator_overlaps_total[0][0][k])
-                for m in range(l_k):
+                n_degenerate = len(operator_overlaps_total[0][0][k])
+                for m in range(n_degenerate):
                     matrix = np.zeros((len(orbitals), len(orbitals)))
                     for i in range(len(orbitals)):
                         for j in range(len(orbitals)):

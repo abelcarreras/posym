@@ -184,7 +184,7 @@ print('<o1|o2>: ', (o1*o2).integrate)
 
 Analyze symmetry of molecular orbitals
 --------------------------------------
-Get symmetry objects from PrimitiveGaussian/BasisFunction type objects
+Get symmetry of molecular orbitals defined as *PrimitiveGaussian/BasisFunction* type objects
 ```python
 from posym import SymmetryFunction
 
@@ -221,7 +221,6 @@ print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
 Combine with PyQchem to create useful automations
 -------------------------------------------------
 ```python
-
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.basic import basic_parser_qchem
 from posym import SymmetryFunction
@@ -273,11 +272,14 @@ for i, orbital_coeff in enumerate(mo_coefficients['alpha']):
 
 Compute the symmetry of wave functions with degenerate MO
 ---------------------------------------------------------
-Use *SymmetryWaveFunction* class oeto compute the full symmetry handling degenerated MO 
+Use *SymmetryWaveFunction* class to compute the full wave function symmetry
+from the occupied molecular orbitals defined as *BasisFunction* objects
 ```python
 from posym import SymmetryWaveFunction
-from posym.tools import build_orbital
+from posym.tools import build_orbital 
 
+
+# get orbitals from basis set and MO coefficients
 orbital1 = build_orbital(basis_set, coefficients['alpha'][0])  # A1
 orbital2 = build_orbital(basis_set, coefficients['alpha'][1])  # A1
 orbital3 = build_orbital(basis_set, coefficients['alpha'][2])  # T1
@@ -290,14 +292,14 @@ wf_sym = SymmetryWaveFunction('Td',
                               beta_orbitals=[orbital1, orbital2, orbital4],
                               center=[0, 0, 0])
 
-print('Configuration 1: ', wf_sym) # T1
+print('Configuration 1: ', wf_sym) # T1 + T2
 
 wf_sym = SymmetryWaveFunction('Td',
                               alpha_orbitals=[orbital1, orbital2, orbital3],
                               beta_orbitals=[orbital1, orbital2, orbital3],
                               center=[0, 0, 0])
 
-print('Configuration 2: ', wf_sym) # T2
+print('Configuration 2: ', wf_sym) # A1 + E
 
 ```
 
