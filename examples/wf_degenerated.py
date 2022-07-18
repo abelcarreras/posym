@@ -1,12 +1,12 @@
-# Example of methane excited states
+# Example of methane excited states constructed by CI of
+# a set of HF restricted molecular orbitals
 
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.parser_optimization import basic_optimization
 from pyqchem.parsers.parser_rasci import parser_rasci
 from pyqchem.file_io import write_to_fchk
 
-from posym import SymmetryFunction, SymmetryBase, SymmetryWaveFunction
-import posym.algebra as al
+from posym import SymmetryFunction, SymmetryWaveFunction
 import numpy as np
 from posym.tools import get_basis_set, build_orbital
 

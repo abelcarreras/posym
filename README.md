@@ -202,7 +202,7 @@ print('Symmetry O4: ', sym_o4)
 print('Symmetry O5: ', sym_o5)
 print('Symmetry O6: ', sym_o6)
 
-# Operate molecular orbitals symmetries to get the symmetry of wave functions
+# Operate molecular orbitals symmetries to get the symmetry of non-degenerate wave functions
 
 # restricted close shell
 sym_wf_gs = sym_o1*sym_o1 * sym_o2*sym_o2 * sym_o3*sym_o3 * sym_o4*sym_o4 * sym_o5*sym_o5
@@ -270,6 +270,37 @@ for i, orbital_coeff in enumerate(mo_coefficients['alpha']):
     
 
 ```
+
+Compute the symmetry of wave functions with degenerate MO
+---------------------------------------------------------
+Use *SymmetryWaveFunction* class oeto compute the full symmetry handling degenerated MO 
+```python
+from posym import SymmetryWaveFunction
+from posym.tools import build_orbital
+
+orbital1 = build_orbital(basis_set, coefficients['alpha'][0])  # A1
+orbital2 = build_orbital(basis_set, coefficients['alpha'][1])  # A1
+orbital3 = build_orbital(basis_set, coefficients['alpha'][2])  # T1
+orbital4 = build_orbital(basis_set, coefficients['alpha'][3])  # T1
+orbital5 = build_orbital(basis_set, coefficients['alpha'][4])  # T1
+
+
+wf_sym = SymmetryWaveFunction('Td',
+                              alpha_orbitals=[orbital1, orbital2, orbital5],
+                              beta_orbitals=[orbital1, orbital2, orbital4],
+                              center=[0, 0, 0])
+
+print('Configuration 1: ', wf_sym) # T1
+
+wf_sym = SymmetryWaveFunction('Td',
+                              alpha_orbitals=[orbital1, orbital2, orbital3],
+                              beta_orbitals=[orbital1, orbital2, orbital3],
+                              center=[0, 0, 0])
+
+print('Configuration 2: ', wf_sym) # T2
+
+```
+
 
 Try an [interactive example](https://colab.research.google.com/github/abelcarreras/posym) in Google Colab
 
