@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
@@ -417,6 +417,149 @@ class SymmetryWaveFunction(SymmetryBase):
             operator_overlaps_beta = get_overlaps(beta_orbitals)
             total_state = pd.Series(operator_overlaps_beta, index=pg.op_labels)
             super().__init__(group, total_state)
+
+    def get_orientation(self, pg):
+
+        hash_num = get_hash(self._coordinates, self._symbols, pg.label)
+        if hash_num in cache_orientation:
+            return cache_orientation[hash_num]
+
+        def optimization_function(angles):
+
+            rotmol = R.from_euler('zyx', angles, degrees=True)
+
+            coor_measures = []
+            for operation in pg.operations:
+                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                coor_measures.append(coor_m)
+
+            # definition group measure
+            return np.linalg.norm(coor_measures)
+
+        # preliminar scan
+        list_m = []
+        list_a = []
+        for i in np.arange(0, 180, 36):
+            for j in np.arange(0, 180, 36):
+                for k in np.arange(0, 180, 36):
+                    list_m.append(optimization_function([i, j, k]))
+                    list_a.append([i, j, k])
+
+        initial = np.array(list_a[np.nanargmin(list_m)])
+        res = minimize(optimization_function, initial, method='CG',
+                       # bounds=((0, 360), (0, 360), (0, 360)),
+                       # tol=1e-20
+                       )
+        cache_orientation[hash_num] = res.x
+        return cache_orientation[hash_num]
+
+    @property
+    def opt_coordinates(self):
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+        return rotmol.apply(self._coordinates)
+
+    @property
+    def orientation_angles(self):
+        return self._angles
+
+
+class SymmetryWaveFunctionCI(SymmetryBase):
+    def __init__(self, group, orbitals,
+                 configurations,
+                 center=None, orientation_angles=None):
+
+        function = BasisFunction([], [])
+        for f in orbitals:
+            function = function + f
+
+        symbols, coordinates = function.get_environment_centers()
+
+        if center is None:
+            # center = function.global_center()
+            center = np.average(coordinates, axis=0)
+            function = function.copy()
+            function.apply_translation(-np.array(center))
+            coordinates = np.array([c - center for c in coordinates])
+
+        pg = PointGroup(group)
+
+        self._coordinates = np.array(coordinates)
+
+        self._function = function
+        self._symbols = symbols
+
+        if orientation_angles is None:
+            self._angles = self.get_orientation(pg)
+        else:
+            self._angles = orientation_angles
+
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+        def set_linear_combination(overlaps_matrix, configurations):
+
+            def get_sub_matrix(occupations1, occupations2):
+                cmat = overlaps_matrix.copy()
+                n = len(occupations1)
+                for i, (c1, c2) in enumerate(zip(occupations1[::-1], occupations2[::-1])):
+                    if c1 == 0:
+                        cmat = np.delete(cmat, n - i - 1, 0)
+                    if c2 == 0:
+                        cmat = np.delete(cmat, n - i - 1, 1)
+                return cmat
+
+            overlap = 0
+            for i, conf1 in enumerate(configurations):
+                for j, conf2 in enumerate(configurations):
+                    new_matrix_alpha = get_sub_matrix(conf1['occupations']['alpha'], conf2['occupations']['alpha'])
+                    overlap_alpha = np.linalg.det(new_matrix_alpha)
+
+                    new_matrix_beta = get_sub_matrix(conf1['occupations']['beta'], conf2['occupations']['beta'])
+                    overlap_beta = np.linalg.det(new_matrix_beta)
+
+                    overlap += overlap_alpha * overlap_beta * conf1['amplitude']*conf2['amplitude']
+            return overlap
+
+        def get_overlaps(orbitals, configurations):
+
+            operator_overlaps_total = []
+            for i, a_orb in enumerate(orbitals):
+                overlap_row = []
+                for j, b_orb in enumerate(orbitals):
+                    self_similarity = (a_orb*a_orb).integrate * (b_orb*b_orb).integrate
+
+                    overlaps_list = []
+                    for operation in pg.operations:
+                        operations_dic = pg.get_all_operations()
+                        operator_overlaps = []
+                        for op in operations_dic[operation.label]:
+                            overlap = op.get_overlap_func(a_orb, b_orb, orientation=rotmol)
+                            operator_overlaps.append(overlap/self_similarity)
+
+                        operator_overlaps = np.array(operator_overlaps)
+                        # operator_overlaps = np.average(operator_overlaps, axis=0)
+                        overlaps_list.append(operator_overlaps)
+
+                    overlap_row.append(overlaps_list)
+                operator_overlaps_total.append(overlap_row)
+
+            operator_overlaps = []
+            for k in range(pg.n_ir):
+                multi_over = []
+                n_degenerate = len(operator_overlaps_total[0][0][k])
+                for m in range(n_degenerate):
+                    matrix = np.zeros((len(orbitals), len(orbitals)))
+                    for i in range(len(orbitals)):
+                        for j in range(len(orbitals)):
+                            matrix[i, j] = operator_overlaps_total[i][j][k][m]
+
+                    multi_over.append(set_linear_combination(matrix, configurations))
+                operator_overlaps.append(np.array(multi_over, dtype=float))
+
+            return operator_overlaps
+
+        operator_overlaps = get_overlaps(orbitals, configurations)
+        total_state = pd.Series(operator_overlaps, index=pg.op_labels)
+        super().__init__(group, total_state)
 
     def get_orientation(self, pg):
 
