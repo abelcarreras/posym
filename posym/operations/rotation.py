@@ -30,10 +30,10 @@ class Rotation(Operation):
         axis = np.round(self._axis, decimals=6)
         axis[axis == 0.] = 0.
 
-
         return hash((self._label,
                      np.array2string(axis),
-                     int(self._order)
+                     int(self._order),
+                     int(self._exp)
                      ))
 
     def __eq__(self, other):
@@ -112,6 +112,10 @@ class Rotation(Operation):
         return self._order
 
     @property
+    def exp(self):
+        return self._exp
+
+    @property
     def operation_matrix_list(self):
         return [rotation(angle, self._axis) for angle in
                 [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]]
@@ -123,6 +127,6 @@ class Rotation(Operation):
             op_list = []
             for op_mat in other.operation_matrix_list:
                 new_axis = np.dot(op_mat, self._axis)
-                op_list.append(Rotation(self._label, new_axis, self._order))
+                op_list.append(Rotation(self._label, new_axis, self._order, self._exp))
 
             return op_list

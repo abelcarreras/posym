@@ -70,7 +70,7 @@ class Operation:
         perm = get_permutation_simple(distance_table, symbols)
         permu_coor = operated_coor[list(perm)]
 
-        measure = np.average(np.linalg.norm(np.subtract(coordinates, permu_coor), axis=0))
+        measure = np.average(np.linalg.norm(np.subtract(coordinates, permu_coor), axis=1))
 
         return measure, list(perm)
 

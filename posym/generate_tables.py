@@ -92,11 +92,11 @@ def get_cnv(n):
             if data.startswith('E'):
                 ir_data_new[data] = pd.Series(list(ir_data_new[data]) + [0])
 
-    multiplicites = ir_data.multiplicities
+    multiplicities = ir_data.multiplicities
     if np.mod(n, 2) == 0:
-        multiplicites += [n//2, n//2]
+        multiplicities += [n//2, n//2]
     else:
-        multiplicites += [n]
+        multiplicities += [n]
 
     if n == 2:
         rotations = ['B2', 'B2', 'A1']
@@ -113,7 +113,7 @@ def get_cnv(n):
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicites)
+                     multiplicities=multiplicities)
 
 
 def get_cnh(n):
@@ -171,7 +171,7 @@ def get_cnh(n):
             ir_data_new[data] = pd.Series(row)
 
 
-        multiplicites = [1] + [2]*((n-1)//2) + [1, 1] + [2]*((n-1)//2) + [1]
+        multiplicities = [1] + [2]*((n-1)//2) + [1, 1] + [2]*((n-1)//2) + [1]
 
         if n == 2:
             rotations = ['Bu', 'Bu', 'Au']
@@ -187,7 +187,7 @@ def get_cnh(n):
         ir_data_new["A'"] = pd.Series(list(ir_data['A']) + [1])
         ir_data_new["A''"] = pd.Series(list(ir_data['A']) + [-1])
 
-        multiplicites = [1] + [2]*((n-1)//2) + [1] + [2]*((n-1)//2)
+        multiplicities = [1] + [2]*((n-1)//2) + [1] + [2]*((n-1)//2)
 
         operations_new += [Reflection(label='sh', axis=[0, 0, 1])]
 
@@ -237,7 +237,7 @@ def get_cnh(n):
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicites)
+                     multiplicities=multiplicities)
 
 def get_sn(n):
 
@@ -377,7 +377,7 @@ def get_dn(n):
     ir_data_new = {}
     ir_data_new['A1'] = pd.Series(list(ir_data['A']) + [ 1])
     ir_data_new['A2'] = pd.Series(list(ir_data['A']) + [-1])
-    operations_new += [Rotation(label="C2'", axis=[0, 1, 0])]
+    operations_new += [Rotation(label="C2'", axis=[0, 1, 0], order=2)]
 
     if 'B' in ir_data:
         ir_data_new['B1'] = pd.Series(list(ir_data['B']) + [ 1, -1])
@@ -386,7 +386,7 @@ def get_dn(n):
         ir_data_new['A1'] = pd.Series(list(ir_data_new['A1']) + [ 1])
         ir_data_new['A2'] = pd.Series(list(ir_data_new['A2']) + [-1])
 
-        operations_new += [Rotation(label="C2''", axis=[1, 0, 0])]
+        operations_new += [Rotation(label="C2''", axis=[1, 0, 0], order=2)]
 
     for data in ir_data.keys():
         if data.startswith('E'):
@@ -397,11 +397,11 @@ def get_dn(n):
             if data.startswith('E'):
                 ir_data_new[data] = pd.Series(list(ir_data_new[data]) + [0])
 
-    multiplicites = ir_data.multiplicities
+    multiplicities = ir_data.multiplicities
     if np.mod(n, 2) == 0:
-        multiplicites += [n//2, n//2]
+        multiplicities += [n//2, n//2]
     else:
-        multiplicites += [n]
+        multiplicities += [n]
 
     if n == 2:
         rotations = ['B2', 'B2', 'A1']
@@ -418,7 +418,7 @@ def get_dn(n):
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicites)
+                     multiplicities=multiplicities)
 
 
 def get_dnh(n):
@@ -506,9 +506,9 @@ def get_dnh(n):
                 ir_data_new[data] = pd.Series(row)
 
         #print(((n-1)//2))
-        multiplicites = [1] + [2]*((n-1)//2) + [1]  + [n//2, n//2] + [1] + [2]*((n-1)//2) + [1, n//2, n//2]
+        multiplicities = [1] + [2]*((n-1)//2) + [1]  + [n//2, n//2] + [1] + [2]*((n-1)//2) + [1, n//2, n//2]
 
-        print(multiplicites)
+        print(multiplicities)
         if n == 2:
             rotations = ['B3g', 'B2g', 'B1g']
             translations = ['B3u', 'B2u', 'B1u']
@@ -526,7 +526,7 @@ def get_dnh(n):
         ir_data_new["A2'"] = pd.Series(list(ir_data['A2']) + [1, -1])
         ir_data_new["A2''"] = pd.Series(list(ir_data['A2']) + [-1, 1])
 
-        multiplicites = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
+        multiplicities = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
 
         operations_new += [Reflection(label='sh', axis=[0, 0, 1]),
                            Reflection(label='sv', axis=[0, 1, 0])]
@@ -586,7 +586,7 @@ def get_dnh(n):
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicites)
+                     multiplicities=multiplicities)
 
 def get_dnd(n):
 
@@ -612,7 +612,7 @@ def get_dnd(n):
             if data.startswith('E'):
                 ir_data_new[data] = pd.Series(list(ir_data[data]) + [0, 0])
 
-        multiplicites = ir_data.multiplicities + [n, n]
+        multiplicities = ir_data.multiplicities + [n, n]
 
         if n == 2:
             rotations = ['E', 'E', 'A2']
@@ -631,7 +631,7 @@ def get_dnd(n):
         ir_data_new_u["A1u"] = pd.Series(list(ir_data['A1']) + [-1, -1])
         ir_data_new_u["A2u"] = pd.Series(list(ir_data['A2']) + [-1, 1])
 
-        multiplicites = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
+        multiplicities = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
 
         operations_new += [Inversion(label='i'),
                            Reflection(label='sd', axis=[1, 0, 0])]
@@ -692,7 +692,7 @@ def get_dnd(n):
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicites)
+                     multiplicities=multiplicities)
 
 
 def get_table_from_label(label):
