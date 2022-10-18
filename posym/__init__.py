@@ -212,6 +212,7 @@ class SymmetryModes(SymmetryBase):
                        # tol=1e-20
                        )
         cache_orientation[hash_num] = res.x
+        self._coor_measures = res.fun
         return cache_orientation[hash_num]
 
     @property
@@ -305,6 +306,7 @@ class SymmetryFunction(SymmetryBase):
                        # tol=1e-20
                        )
         cache_orientation[hash_num] = res.x
+        self._coor_measures = res.fun
         return cache_orientation[hash_num]
 
     @property

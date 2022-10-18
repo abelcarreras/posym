@@ -1,0 +1,1029 @@
+{
+    "name": "Squarate",
+    "coordinates": [
+        [
+            1.6311175104904723,
+            -1.6534535477017407,
+            0.00019070216908590137
+        ],
+        [
+            -1.6537831563348253,
+            -1.6307949981242966,
+            -0.00018246065095357586
+        ],
+        [
+            1.6538600722479675,
+            1.6308209489765877,
+            -0.0001760311621951888
+        ],
+        [
+            -1.6311958657657317,
+            1.6534861450202791,
+            0.0001857291179362651
+        ],
+        [
+            0.7401330713834263,
+            -0.7505310444857469,
+            8.080224959748064e-05
+        ],
+        [
+            -0.750419885512822,
+            -0.7402486701534703,
+            -9.062121071255398e-05
+        ],
+        [
+            0.7504785130602387,
+            0.7402085638097685,
+            -0.00010948153978428463
+        ],
+        [
+            -0.7401897780174291,
+            0.7504930866016761,
+            9.538120240148891e-05
+        ]
+    ],
+    "symbols": [
+        "O",
+        "O",
+        "O",
+        "O",
+        "C",
+        "C",
+        "C",
+        "C"
+    ],
+    "modes": [
+        {
+            "frequency": 81.77,
+            "frequency_units": "cm-1",
+            "force_constant": 0.0624,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 15.831,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.0,
+                    0.0,
+                    0.49
+                ],
+                [
+                    0.0,
+                    0.0,
+                    -0.49
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    -0.49
+                ],
+                [
+                    0.0,
+                    -0.0,
+                    0.49
+                ],
+                [
+                    -0.0,
+                    0.0,
+                    0.101
+                ],
+                [
+                    0.0,
+                    0.0,
+                    -0.101
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    -0.101
+                ],
+                [
+                    0.0,
+                    -0.0,
+                    0.101
+                ]
+            ]
+        },
+        {
+            "frequency": 293.35,
+            "frequency_units": "cm-1",
+            "force_constant": 0.6814,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 13.4388,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 27.775,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    0.0,
+                    -0.0,
+                    -0.3
+                ],
+                [
+                    0.0,
+                    0.0,
+                    -0.3
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    -0.3
+                ],
+                [
+                    -0.0,
+                    0.0,
+                    -0.3
+                ],
+                [
+                    0.0,
+                    -0.0,
+                    0.4
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.4
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    0.4
+                ],
+                [
+                    -0.0,
+                    0.0,
+                    0.4
+                ]
+            ]
+        },
+        {
+            "frequency": 330.58,
+            "frequency_units": "cm-1",
+            "force_constant": 1.0286,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 15.9748,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    0.355,
+                    0.35,
+                    0.0
+                ],
+                [
+                    -0.35,
+                    0.355,
+                    -0.0
+                ],
+                [
+                    0.35,
+                    -0.355,
+                    0.0
+                ],
+                [
+                    -0.355,
+                    -0.35,
+                    -0.0
+                ],
+                [
+                    0.025,
+                    0.025,
+                    -0.0
+                ],
+                [
+                    -0.025,
+                    0.025,
+                    0.0
+                ],
+                [
+                    0.025,
+                    -0.025,
+                    -0.0
+                ],
+                [
+                    -0.025,
+                    -0.025,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 376.25,
+            "frequency_units": "cm-1",
+            "force_constant": 1.2793,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 15.338,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 2.716,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    0.152,
+                    0.435,
+                    -0.0
+                ],
+                [
+                    0.135,
+                    -0.433,
+                    -0.0
+                ],
+                [
+                    0.135,
+                    -0.433,
+                    0.0
+                ],
+                [
+                    0.152,
+                    0.435,
+                    0.0
+                ],
+                [
+                    -0.19,
+                    0.066,
+                    0.0
+                ],
+                [
+                    -0.193,
+                    -0.068,
+                    0.0
+                ],
+                [
+                    -0.193,
+                    -0.068,
+                    0.0
+                ],
+                [
+                    -0.19,
+                    0.066,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 376.34,
+            "frequency_units": "cm-1",
+            "force_constant": 1.2798,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 15.3375,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 2.71,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.433,
+                    -0.135,
+                    -0.0
+                ],
+                [
+                    0.434,
+                    -0.152,
+                    0.0
+                ],
+                [
+                    0.435,
+                    -0.152,
+                    -0.0
+                ],
+                [
+                    -0.433,
+                    -0.136,
+                    0.0
+                ],
+                [
+                    -0.068,
+                    0.193,
+                    -0.0
+                ],
+                [
+                    0.066,
+                    0.19,
+                    0.0
+                ],
+                [
+                    0.066,
+                    0.19,
+                    -0.0
+                ],
+                [
+                    -0.068,
+                    0.193,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 668.51,
+            "frequency_units": "cm-1",
+            "force_constant": 3.2689,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.4149,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    0.0,
+                    -0.0,
+                    -0.164
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    0.158
+                ],
+                [
+                    -0.0,
+                    0.0,
+                    -0.158
+                ],
+                [
+                    0.0,
+                    -0.0,
+                    0.164
+                ],
+                [
+                    -0.0,
+                    0.0,
+                    0.481
+                ],
+                [
+                    0.0,
+                    0.0,
+                    -0.466
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.465
+                ],
+                [
+                    -0.0,
+                    0.0,
+                    -0.481
+                ]
+            ]
+        },
+        {
+            "frequency": 668.6,
+            "frequency_units": "cm-1",
+            "force_constant": 3.2699,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.4151,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.0,
+                    0.0,
+                    0.158
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    0.164
+                ],
+                [
+                    0.0,
+                    0.0,
+                    -0.164
+                ],
+                [
+                    0.0,
+                    -0.0,
+                    -0.159
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    -0.465
+                ],
+                [
+                    -0.0,
+                    0.0,
+                    -0.481
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.481
+                ],
+                [
+                    0.0,
+                    -0.0,
+                    0.465
+                ]
+            ]
+        },
+        {
+            "frequency": 685.23,
+            "frequency_units": "cm-1",
+            "force_constant": 4.0862,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 14.7707,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.292,
+                    0.296,
+                    -0.0
+                ],
+                [
+                    -0.296,
+                    -0.292,
+                    -0.0
+                ],
+                [
+                    0.297,
+                    0.292,
+                    -0.0
+                ],
+                [
+                    0.292,
+                    -0.296,
+                    -0.0
+                ],
+                [
+                    -0.194,
+                    0.197,
+                    0.0
+                ],
+                [
+                    -0.197,
+                    -0.194,
+                    0.0
+                ],
+                [
+                    0.197,
+                    0.194,
+                    -0.0
+                ],
+                [
+                    0.194,
+                    -0.197,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 761.1,
+            "frequency_units": "cm-1",
+            "force_constant": 4.1276,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.094,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.0,
+                    0.0,
+                    -0.077
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.077
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    0.077
+                ],
+                [
+                    0.0,
+                    -0.0,
+                    -0.077
+                ],
+                [
+                    -0.0,
+                    0.0,
+                    0.494
+                ],
+                [
+                    0.0,
+                    0.0,
+                    -0.494
+                ],
+                [
+                    -0.0,
+                    -0.0,
+                    -0.494
+                ],
+                [
+                    0.0,
+                    -0.0,
+                    0.494
+                ]
+            ]
+        },
+        {
+            "frequency": 794.82,
+            "frequency_units": "cm-1",
+            "force_constant": 5.5691,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 14.9621,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    0.302,
+                    -0.306,
+                    0.0
+                ],
+                [
+                    -0.307,
+                    -0.302,
+                    -0.0
+                ],
+                [
+                    0.307,
+                    0.302,
+                    -0.0
+                ],
+                [
+                    -0.302,
+                    0.307,
+                    0.0
+                ],
+                [
+                    0.178,
+                    -0.181,
+                    0.0
+                ],
+                [
+                    -0.181,
+                    -0.179,
+                    -0.0
+                ],
+                [
+                    0.181,
+                    0.178,
+                    -0.0
+                ],
+                [
+                    -0.179,
+                    0.181,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 898.81,
+            "frequency_units": "cm-1",
+            "force_constant": 5.9093,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.415,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    0.115,
+                    0.113,
+                    -0.0
+                ],
+                [
+                    0.113,
+                    -0.115,
+                    -0.0
+                ],
+                [
+                    -0.113,
+                    0.115,
+                    0.0
+                ],
+                [
+                    -0.115,
+                    -0.113,
+                    0.0
+                ],
+                [
+                    -0.337,
+                    -0.332,
+                    -0.0
+                ],
+                [
+                    -0.332,
+                    0.337,
+                    -0.0
+                ],
+                [
+                    0.332,
+                    -0.337,
+                    0.0
+                ],
+                [
+                    0.337,
+                    0.332,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 1194.37,
+            "frequency_units": "cm-1",
+            "force_constant": 10.8089,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.8602,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 3.928,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.186,
+                    0.091,
+                    -0.0
+                ],
+                [
+                    -0.215,
+                    -0.137,
+                    -0.0
+                ],
+                [
+                    -0.215,
+                    -0.137,
+                    0.0
+                ],
+                [
+                    -0.186,
+                    0.091,
+                    0.0
+                ],
+                [
+                    0.312,
+                    0.38,
+                    -0.0
+                ],
+                [
+                    0.222,
+                    -0.319,
+                    -0.0
+                ],
+                [
+                    0.222,
+                    -0.319,
+                    0.0
+                ],
+                [
+                    0.312,
+                    0.38,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 1194.39,
+            "frequency_units": "cm-1",
+            "force_constant": 10.81,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.8613,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 3.894,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.137,
+                    0.215,
+                    -0.0
+                ],
+                [
+                    0.091,
+                    0.186,
+                    0.0
+                ],
+                [
+                    0.091,
+                    0.186,
+                    -0.0
+                ],
+                [
+                    -0.137,
+                    0.215,
+                    0.0
+                ],
+                [
+                    -0.319,
+                    -0.222,
+                    -0.0
+                ],
+                [
+                    0.379,
+                    -0.311,
+                    0.0
+                ],
+                [
+                    0.38,
+                    -0.312,
+                    -0.0
+                ],
+                [
+                    -0.319,
+                    -0.222,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 1302.11,
+            "frequency_units": "cm-1",
+            "force_constant": 11.9989,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.0113,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.0,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.019,
+                    -0.019,
+                    -0.0
+                ],
+                [
+                    0.019,
+                    -0.019,
+                    0.0
+                ],
+                [
+                    -0.019,
+                    0.019,
+                    -0.0
+                ],
+                [
+                    0.019,
+                    0.019,
+                    0.0
+                ],
+                [
+                    0.356,
+                    0.351,
+                    -0.0
+                ],
+                [
+                    -0.351,
+                    0.356,
+                    0.0
+                ],
+                [
+                    0.35,
+                    -0.355,
+                    -0.0
+                ],
+                [
+                    -0.355,
+                    -0.351,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 1651.81,
+            "frequency_units": "cm-1",
+            "force_constant": 20.7942,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.9352,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 2237.041,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.138,
+                    0.145,
+                    -0.0
+                ],
+                [
+                    -0.195,
+                    -0.197,
+                    -0.0
+                ],
+                [
+                    -0.195,
+                    -0.197,
+                    0.0
+                ],
+                [
+                    -0.138,
+                    0.146,
+                    0.0
+                ],
+                [
+                    0.16,
+                    -0.336,
+                    0.0
+                ],
+                [
+                    0.284,
+                    0.404,
+                    0.0
+                ],
+                [
+                    0.285,
+                    0.405,
+                    -0.0
+                ],
+                [
+                    0.16,
+                    -0.336,
+                    -0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 1651.87,
+            "frequency_units": "cm-1",
+            "force_constant": 20.7948,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.9345,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 2238.185,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.197,
+                    0.195,
+                    -0.0
+                ],
+                [
+                    0.145,
+                    0.138,
+                    0.0
+                ],
+                [
+                    0.146,
+                    0.138,
+                    -0.0
+                ],
+                [
+                    -0.197,
+                    0.195,
+                    0.0
+                ],
+                [
+                    0.404,
+                    -0.284,
+                    0.0
+                ],
+                [
+                    -0.336,
+                    -0.16,
+                    -0.0
+                ],
+                [
+                    -0.336,
+                    -0.16,
+                    0.0
+                ],
+                [
+                    0.405,
+                    -0.284,
+                    -0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 1887.11,
+            "frequency_units": "cm-1",
+            "force_constant": 26.8478,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.7956,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.001,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    -0.157,
+                    0.159,
+                    -0.0
+                ],
+                [
+                    -0.159,
+                    -0.157,
+                    -0.0
+                ],
+                [
+                    0.159,
+                    0.157,
+                    -0.0
+                ],
+                [
+                    0.157,
+                    -0.159,
+                    -0.0
+                ],
+                [
+                    0.314,
+                    -0.319,
+                    0.0
+                ],
+                [
+                    0.319,
+                    0.314,
+                    0.0
+                ],
+                [
+                    -0.318,
+                    -0.314,
+                    0.0
+                ],
+                [
+                    -0.314,
+                    0.318,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "frequency": 2081.7,
+            "frequency_units": "cm-1",
+            "force_constant": 32.3121,
+            "force_constant_units": "mDyn/Angs",
+            "reduced_mass": 12.6554,
+            "reduced_mass_units": "AMU",
+            "ir_active": true,
+            "ir_intensity": 0.001,
+            "ir_intensity_units": "KM/mol",
+            "raman_active": true,
+            "displacement": [
+                [
+                    0.142,
+                    -0.144,
+                    0.0
+                ],
+                [
+                    -0.144,
+                    -0.142,
+                    -0.0
+                ],
+                [
+                    0.144,
+                    0.142,
+                    -0.0
+                ],
+                [
+                    -0.142,
+                    0.144,
+                    0.0
+                ],
+                [
+                    -0.321,
+                    0.325,
+                    -0.0
+                ],
+                [
+                    0.326,
+                    0.321,
+                    0.0
+                ],
+                [
+                    -0.325,
+                    -0.321,
+                    0.0
+                ],
+                [
+                    0.321,
+                    -0.325,
+                    -0.0
+                ]
+            ]
+        }
+    ]
+}
