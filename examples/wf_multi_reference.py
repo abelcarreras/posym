@@ -64,7 +64,6 @@ data_methane, ee_methane = get_output_from_qchem(qc_input,
                                                  )
 
 write_to_fchk(ee_methane, 'methane.fchk')
-overlap = np.round(np.array(ee_methane['overlap']), decimals=6)
 
 coefficients = ee_methane['coefficients']
 coordinates = ee_methane['structure'].get_coordinates()
@@ -77,7 +76,7 @@ for orbital_coefficients in coefficients['alpha']:
 
 for istate, state in enumerate(data_methane['excited_states']):
     print('\nState', istate + 1, '(', state['multiplicity'], ')')
-    print('Excitation energy: {:8.2f}'.format(state['excitation_energy']))
+    print('Excitation energy: {:8.4f}'.format(state['excitation_energy']))
 
     for configuration in state['configurations']:
         print('amplitude: {:12.8f} '.format(configuration['amplitude']), configuration['occupations'])
