@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
