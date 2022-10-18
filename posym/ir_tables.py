@@ -54,27 +54,20 @@ class CharTable(pd.DataFrame):
         if 'all_operations' in self.attrs:
             return self.attrs['all_operations']
 
-        total_op = list(self.operations)
-        for op1 in self.operations:
-            for op2 in self.operations:
-                opt_list = op1 * op2
-                for op in opt_list:
-                    if op not in total_op:
-                        total_op.append(op)
+        def do_loop(opt_list, opi, operations):
+            for op in operations:
+                op_p = op * opi
+                op_p = op_p[0]
+                if not op_p in opt_list:
+                    opt_list.append(op_p)
+                    do_loop(opt_list, op_p, operations)
 
-        repeat = True
-        while repeat is True:
-            repeat = False
-            for op1 in tuple(total_op):
-                for op2 in tuple(total_op):
-                    opt_list = op1 * op2
-                    for op in opt_list:
-                        if op not in total_op:
-                            total_op.append(op)
-                            repeat = True
+        opt_list = []
+        for op in self.operations:
+            do_loop(opt_list, op, self.operations)
 
         operation_dict = {}
-        for op in total_op:
+        for op in opt_list:
             if not op.label in operation_dict:
                 operation_dict[op.label] = [op]
             else:
@@ -257,10 +250,12 @@ ir_table_list = [
 if __name__ == '__main__':
 
 
-    for pg in  ir_table_list[14:]:
+    for pg in ir_table_list[4:5]:
         print(pg.name)
         print(pg)
         print(len(pg.get_all_operations()))
+        for op in pg.get_all_operations():
+            print(len(pg.get_all_operations()[op]), op)
 
     exit()
 
