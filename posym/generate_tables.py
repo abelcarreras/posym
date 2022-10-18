@@ -608,7 +608,7 @@ def get_dnd(n):
         ir_data_new['B1'] = pd.Series(list(ir_data['B']) + [ 1, -1])
         ir_data_new['B2'] = pd.Series(list(ir_data['B']) + [-1,  1])
 
-        operations_new += [Rotation(label="C2'", axis=[np.sin(np.pi/n), np.cos(np.pi/n), 0], order=2),
+        operations_new += [Rotation(label="C2'", axis=[np.sin(np.pi/(2*n)), np.cos(np.pi/(2*n)), 0], order=2),
                            Reflection(label='sd', axis=[0, 1, 0])]
 
         for data in ir_data.keys():
