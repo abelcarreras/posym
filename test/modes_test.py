@@ -14,13 +14,13 @@ class ModesTest(unittest.TestCase):
 
 def make_test_function(filename, group):
     def test(self):
-        with open(os.path.join(dir_path, filename), 'r') as openfile:
+        with open(os.path.join(dir_path, 'molecules', filename), 'r') as openfile:
             # Reading from json file
             json_object = json.load(openfile)
 
-        molecule_coor = np.array(json_object['coordinates'])
-        molecule_symbols = np.array(json_object['symbols'])
-        modes = [np.array(m['displacement']) for m in json_object['modes']]
+        molecule_coor = json_object['coordinates']
+        molecule_symbols = json_object['symbols']
+        modes = [m['displacement'] for m in json_object['modes']]
         freqs = [m['frequency'] for m in json_object['modes']]
 
         sm = SymmetryModes(group=group,
@@ -57,7 +57,7 @@ def make_test_function(filename, group):
     return test
 
 
-for j, filename in enumerate(os.listdir()):
+for j, filename in enumerate(os.listdir(os.path.join(dir_path, 'molecules'))):
 
     if filename.endswith('json'):
         group = filename.split('_')[0]
