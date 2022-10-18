@@ -361,7 +361,8 @@ def get_dn(n):
 
         return CharTable('D2',
                          [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
-                          Rotation(label="C2'", axis=[0, 1, 0]), Reflection(label="C2''", axis=[1, 0, 0])],
+                          Rotation(label="C2'", axis=[1, 0, 0], order=2),
+                          Rotation(label="C2''", axis=[0, 1, 0], order=2)],
                          {'A1': pd.Series([+1, +1, +1, +1]),
                           'B1': pd.Series([+1, +1, -1, -1]),
                           'B2': pd.Series([+1, -1, -1, +1]),
@@ -386,7 +387,7 @@ def get_dn(n):
         ir_data_new['A1'] = pd.Series(list(ir_data_new['A1']) + [ 1])
         ir_data_new['A2'] = pd.Series(list(ir_data_new['A2']) + [-1])
 
-        operations_new += [Rotation(label="C2''", axis=[1, 0, 0], order=2)]
+        operations_new += [Rotation(label="C2''", axis=[np.sin(np.pi/n), np.cos(np.pi/n), 0], order=2)]
 
     for data in ir_data.keys():
         if data.startswith('E'):
@@ -431,9 +432,9 @@ def get_dnh(n):
     if n == 2:
         return CharTable('D2h',
                          [Identity(label='E'), Rotation(label='C2', axis=[0, 0, 1], order=2),
-                          Rotation(label="C2'", axis=[0, 1, 0]), Rotation(label="C2''", axis=[1, 0, 0]),
+                          Rotation(label="C2'", axis=[0, 1, 0], order=2), Rotation(label="C2''", axis=[1, 0, 0], order=2),
                           Inversion(label='i'), Reflection(label='sh', axis=[0, 0, 1]),
-                          Reflection(label='sv', axis=[0, 1, 0]), Reflection(label='sd', axis=[1, 0, 0])],
+                          Reflection(label='sv', axis=[1, 0, 0]), Reflection(label='sd', axis=[0, 1, 0])],
                          {'Ag': pd.Series( [+1, +1, +1, +1, +1, +1, +1, +1]),
                           'B1g': pd.Series([+1, +1, -1, -1, +1, +1, -1, -1]),
                           'B2g': pd.Series([+1, -1, -1, +1, +1, -1, +1, -1]),
@@ -464,7 +465,8 @@ def get_dnh(n):
         ir_data_new_u['B2u'] = pd.Series(list(ir_data['B2']) + [-1, -1*l,   1*l, -1*l])
 
         operations_new += [Inversion(label='i'), Reflection(label='sh', axis=[0, 0, 1]),
-                           Reflection(label='s_v', axis=[0, 1, 0]), Reflection(label='sd', axis=[1, 0, 0])]
+                           Reflection(label='s_v', axis=[0, 1, 0]),
+                           Reflection(label='sd', axis=[np.sin(np.pi/n), np.cos(np.pi/n), 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -508,7 +510,7 @@ def get_dnh(n):
         #print(((n-1)//2))
         multiplicities = [1] + [2]*((n-1)//2) + [1]  + [n//2, n//2] + [1] + [2]*((n-1)//2) + [1, n//2, n//2]
 
-        print(multiplicities)
+        # print(multiplicities)
         if n == 2:
             rotations = ['B3g', 'B2g', 'B1g']
             translations = ['B3u', 'B2u', 'B1u']
@@ -529,7 +531,7 @@ def get_dnh(n):
         multiplicities = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
 
         operations_new += [Reflection(label='sh', axis=[0, 0, 1]),
-                           Reflection(label='sv', axis=[0, 1, 0])]
+                           Reflection(label='sv', axis=[1, 0, 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -606,7 +608,8 @@ def get_dnd(n):
         ir_data_new['B1'] = pd.Series(list(ir_data['B']) + [ 1, -1])
         ir_data_new['B2'] = pd.Series(list(ir_data['B']) + [-1,  1])
 
-        operations_new += [Rotation(label="C2'", axis=[1, 0, 0], order=2), Reflection(label='sd', axis=[1, 0, 0])]
+        operations_new += [Rotation(label="C2'", axis=[np.sin(np.pi/n), np.cos(np.pi/n), 0], order=2),
+                           Reflection(label='sd', axis=[0, 1, 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -633,8 +636,7 @@ def get_dnd(n):
 
         multiplicities = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
 
-        operations_new += [Inversion(label='i'),
-                           Reflection(label='sd', axis=[1, 0, 0])]
+        operations_new += [Inversion(label='i'), Reflection(label='sd', axis=[0, 1, 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
