@@ -128,10 +128,74 @@ class SymmetryBase():
             raise Exception('Symmetry operation not possible')
 
 
-class SymmetryModes(SymmetryBase):
+class SymmetryMoleculeBase(SymmetryBase):
+    def __init__(self, group, coordinates, symbols, total_state, orientation_angles=(0.0, 0.0, 0.0)):
+
+        self._coordinates = np.array(coordinates)
+        self._symbols = symbols
+        self._angles = orientation_angles
+        self._pg = PointGroup(group)
+
+        super().__init__(group, total_state)
+
+    def get_orientation(self):
+
+        hash_num = get_hash(self._coordinates, self._symbols, self._pg.label)
+        if hash_num in cache_orientation:
+            return cache_orientation[hash_num]
+
+        def optimization_function(angles):
+
+            rotmol = R.from_euler('zyx', angles, degrees=True)
+
+            coor_measures = []
+            for operation in self._pg.operations:
+                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                coor_measures.append(coor_m)
+
+            # definition group measure
+            return np.linalg.norm(coor_measures)
+
+        # preliminar scan
+        list_m = []
+        list_a = []
+        for i in np.arange(0, 180, 36):
+            for j in np.arange(0, 180, 36):
+                for k in np.arange(0, 180, 36):
+                    list_m.append(optimization_function([i, j, k]))
+                    list_a.append([i, j, k])
+
+        initial = np.array(list_a[np.nanargmin(list_m)])
+        res = minimize(optimization_function, initial, method='CG',
+                       # bounds=((0, 360), (0, 360), (0, 360)),
+                       # tol=1e-20
+                       )
+        cache_orientation[hash_num] = res.x
+        self._coor_measures = res.fun
+        return cache_orientation[hash_num]
+
+    @property
+    def get_measure_pos(self):
+        try:
+            return np.product(self._coor_measures)
+        except:
+            self.get_orientation()
+            return np.product(self._coor_measures)
+
+    @property
+    def opt_coordinates(self):
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+        return rotmol.apply(self._coordinates)
+
+    @property
+    def orientation_angles(self):
+        return self._angles
+
+
+class SymmetryModes(SymmetryMoleculeBase):
     def __init__(self, group, coordinates, modes, symbols, orientation_angles=None):
 
-        pg = PointGroup(group)
+        self._pg = PointGroup(group)
 
         # set coordinates at geometrical center
         self._coordinates = np.array([c - np.average(coordinates, axis=0) for c in coordinates])
@@ -139,19 +203,18 @@ class SymmetryModes(SymmetryBase):
         self._modes = modes
         self._symbols = symbols
 
-        self._coor_measures = []
         self._mode_measures = []
 
         if orientation_angles is None:
-            self._angles = self.get_orientation(pg)
+            self._angles = self.get_orientation()
         else:
             self._angles = orientation_angles
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
-        operations_dic = pg.get_all_operations()
+        operations_dic = self._pg.get_all_operations()
 
-        for operation in pg.operations:
+        for operation in self._pg.operations:
             mode_measures = []
             for op in operations_dic[operation.label]:
                 mode_m = op.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
@@ -166,70 +229,16 @@ class SymmetryModes(SymmetryBase):
             reshaped_modes_measures.append([k[:, m] for k in self._mode_measures])
 
         self._mode_measures = reshaped_modes_measures
+        total_state = pd.Series(np.sum(self._mode_measures, axis=0).tolist(), index=self._pg.op_labels)
 
-        # De-normalization
-        # self._mode_measures = np.dot(pg.trans_matrix, np.dot(pg.trans_matrix_inv_norm, self._mode_measures))
-
-        total_state = pd.Series(np.sum(self._mode_measures, axis=0).tolist(), index=pg.op_labels)
-
-        super().__init__(group, total_state)
+        super().__init__(group, coordinates, symbols, total_state, orientation_angles)
 
     def get_state_mode(self, n):
-
         return SymmetryBase(group=self._group, rep=pd.Series(self._mode_measures[n],
                                                              index=self._pg.op_labels))
 
-    def get_orientation(self, pg):
 
-        hash_num = get_hash(self._coordinates, self._symbols, pg.label)
-        if hash_num in cache_orientation:
-            return cache_orientation[hash_num]
-
-        def optimization_function(angles):
-
-            rotmol = R.from_euler('zyx', angles, degrees=True)
-
-            coor_measures = []
-            for operation in pg.operations:
-                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
-                coor_measures.append(coor_m)
-
-            # definition group measure
-            return np.linalg.norm(coor_measures)
-
-        # preliminar scan
-        list_m = []
-        list_a = []
-        for i in np.arange(0, 180, 36):
-            for j in np.arange(0, 180, 36):
-                for k in np.arange(0, 180, 36):
-                    list_m.append(optimization_function([i, j, k]))
-                    list_a.append([i, j, k])
-
-        initial = np.array(list_a[np.nanargmin(list_m)])
-        res = minimize(optimization_function, initial, method='CG',
-                       # bounds=((0, 360), (0, 360), (0, 360)),
-                       # tol=1e-20
-                       )
-        cache_orientation[hash_num] = res.x
-        self._coor_measures = res.fun
-        return cache_orientation[hash_num]
-
-    @property
-    def get_measure_pos(self):
-        return np.product(self._coor_measures)
-
-    @property
-    def opt_coordinates(self):
-        rotmol = R.from_euler('zyx', self._angles, degrees=True)
-        return rotmol.apply(self._coordinates)
-
-    @property
-    def orientation_angles(self):
-        return self._angles
-
-
-class SymmetryFunction(SymmetryBase):
+class SymmetryFunction(SymmetryMoleculeBase):
     def __init__(self, group, function, orientation_angles=None, center=None):
 
         symbols, coordinates = function.get_environment_centers()
@@ -241,18 +250,16 @@ class SymmetryFunction(SymmetryBase):
             function.apply_translation(-np.array(center))
             coordinates = np.array([c - center for c in coordinates])
 
-        pg = PointGroup(group)
-
+        self._pg = PointGroup(group)
         self._coordinates = np.array(coordinates)
 
         self._function = function
         self._symbols = symbols
 
-        self._coor_measures = []
         self._operator_measures = []
 
         if orientation_angles is None:
-            self._angles = self.get_orientation(pg)
+            self._angles = self.get_orientation()
         else:
             self._angles = orientation_angles
 
@@ -260,8 +267,8 @@ class SymmetryFunction(SymmetryBase):
 
         self._self_similarity = (self._function * self._function).integrate
 
-        for operation in pg.operations:
-            operations_dic = pg.get_all_operations()
+        for operation in self._pg.operations:
+            operations_dic = self._pg.get_all_operations()
             operator_measures = []
             for op in operations_dic[operation.label]:
                 overlap = op.get_overlap_func(self._function, self._function, orientation=rotmol)
@@ -269,65 +276,16 @@ class SymmetryFunction(SymmetryBase):
 
             self._operator_measures.append(np.array(operator_measures))
 
-        total_state = pd.Series(self._operator_measures, index=pg.op_labels)
-
-        super().__init__(group, total_state)
-
-    def get_orientation(self, pg):
-
-        hash_num = get_hash(self._coordinates, self._symbols, pg.label)
-        if hash_num in cache_orientation:
-            return cache_orientation[hash_num]
-
-        def optimization_function(angles):
-
-            rotmol = R.from_euler('zyx', angles, degrees=True)
-
-            coor_measures = []
-            for operation in pg.operations:
-                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
-                coor_measures.append(coor_m)
-
-            # definition group measure
-            return np.linalg.norm(coor_measures)
-
-        # preliminar scan
-        list_m = []
-        list_a = []
-        for i in np.arange(0, 180, 36):
-            for j in np.arange(0, 180, 36):
-                for k in np.arange(0, 180, 36):
-                    list_m.append(optimization_function([i, j, k]))
-                    list_a.append([i, j, k])
-
-        initial = np.array(list_a[np.nanargmin(list_m)])
-        res = minimize(optimization_function, initial, method='CG',
-                       # bounds=((0, 360), (0, 360), (0, 360)),
-                       # tol=1e-20
-                       )
-        cache_orientation[hash_num] = res.x
-        self._coor_measures = res.fun
-        return cache_orientation[hash_num]
+        total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
+        print(total_state)
+        super().__init__(group, coordinates, symbols, total_state, orientation_angles)
 
     @property
     def self_similarity(self):
         return self._self_similarity
 
-    @property
-    def get_measure_pos(self):
-        return np.product(self._coor_measures)
 
-    @property
-    def opt_coordinates(self):
-        rotmol = R.from_euler('zyx', self._angles, degrees=True)
-        return rotmol.apply(self._coordinates)
-
-    @property
-    def orientation_angles(self):
-        return self._angles
-
-
-class SymmetryWaveFunction(SymmetryBase):
+class SymmetryWaveFunction(SymmetryMoleculeBase):
     def __init__(self, group, alpha_orbitals, beta_orbitals, center=None, orientation_angles=None):
 
         function = BasisFunction([], [])
@@ -345,7 +303,7 @@ class SymmetryWaveFunction(SymmetryBase):
             function.apply_translation(-np.array(center))
             coordinates = np.array([c - center for c in coordinates])
 
-        pg = PointGroup(group)
+        self._pg = PointGroup(group)
 
         self._coordinates = np.array(coordinates)
 
@@ -353,7 +311,7 @@ class SymmetryWaveFunction(SymmetryBase):
         self._symbols = symbols
 
         if orientation_angles is None:
-            self._angles = self.get_orientation(pg)
+            self._angles = self.get_orientation()
         else:
             self._angles = orientation_angles
 
@@ -368,8 +326,8 @@ class SymmetryWaveFunction(SymmetryBase):
                     self_similarity = (a_orb*a_orb).integrate * (b_orb*b_orb).integrate
 
                     overlaps_list = []
-                    for operation in pg.operations:
-                        operations_dic = pg.get_all_operations()
+                    for operation in self._pg.operations:
+                        operations_dic = self._pg.get_all_operations()
                         operator_overlaps = []
                         for op in operations_dic[operation.label]:
                             overlap = op.get_overlap_func(a_orb, b_orb, orientation=rotmol)
@@ -384,7 +342,7 @@ class SymmetryWaveFunction(SymmetryBase):
                 operator_overlaps_total.append(overlap_row)
 
             operator_overlaps = []
-            for k in range(pg.n_ir):
+            for k in range(self._pg.n_ir):
                 multi_over = []
                 n_degenerate = len(operator_overlaps_total[0][0][k])
                 for m in range(n_degenerate):
@@ -403,69 +361,25 @@ class SymmetryWaveFunction(SymmetryBase):
             operator_overlaps_alpha = get_overlaps(alpha_orbitals)
             operator_overlaps_beta = get_overlaps(beta_orbitals)
 
-            total_state = pd.Series(operator_overlaps_alpha, index=pg.op_labels) * \
-                          pd.Series(operator_overlaps_beta, index=pg.op_labels)
+            total_state = pd.Series(operator_overlaps_alpha, index=self._pg.op_labels) * \
+                          pd.Series(operator_overlaps_beta, index=self._pg.op_labels)
 
-            super().__init__(group, total_state)
+            super().__init__(group, coordinates, symbols, total_state, orientation_angles)
 
         elif len(alpha_orbitals) > 0:
 
             operator_overlaps_alpha = get_overlaps(alpha_orbitals)
-            total_state = pd.Series(operator_overlaps_alpha, index=pg.op_labels)
-            super().__init__(group, total_state)
+            total_state = pd.Series(operator_overlaps_alpha, index=self._pg.op_labels)
+            super().__init__(group, coordinates, symbols, total_state, orientation_angles)
 
         elif len(beta_orbitals) > 0:
 
             operator_overlaps_beta = get_overlaps(beta_orbitals)
-            total_state = pd.Series(operator_overlaps_beta, index=pg.op_labels)
-            super().__init__(group, total_state)
-
-    def get_orientation(self, pg):
-
-        hash_num = get_hash(self._coordinates, self._symbols, pg.label)
-        if hash_num in cache_orientation:
-            return cache_orientation[hash_num]
-
-        def optimization_function(angles):
-
-            rotmol = R.from_euler('zyx', angles, degrees=True)
-
-            coor_measures = []
-            for operation in pg.operations:
-                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
-                coor_measures.append(coor_m)
-
-            # definition group measure
-            return np.linalg.norm(coor_measures)
-
-        # preliminar scan
-        list_m = []
-        list_a = []
-        for i in np.arange(0, 180, 36):
-            for j in np.arange(0, 180, 36):
-                for k in np.arange(0, 180, 36):
-                    list_m.append(optimization_function([i, j, k]))
-                    list_a.append([i, j, k])
-
-        initial = np.array(list_a[np.nanargmin(list_m)])
-        res = minimize(optimization_function, initial, method='CG',
-                       # bounds=((0, 360), (0, 360), (0, 360)),
-                       # tol=1e-20
-                       )
-        cache_orientation[hash_num] = res.x
-        return cache_orientation[hash_num]
-
-    @property
-    def opt_coordinates(self):
-        rotmol = R.from_euler('zyx', self._angles, degrees=True)
-        return rotmol.apply(self._coordinates)
-
-    @property
-    def orientation_angles(self):
-        return self._angles
+            total_state = pd.Series(operator_overlaps_beta, index=self._pg.op_labels)
+            super().__init__(group, coordinates, symbols, total_state, orientation_angles)
 
 
-class SymmetryWaveFunctionCI(SymmetryBase):
+class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
     def __init__(self, group, orbitals,
                  configurations,
                  center=None, orientation_angles=None):
@@ -483,7 +397,7 @@ class SymmetryWaveFunctionCI(SymmetryBase):
             function.apply_translation(-np.array(center))
             coordinates = np.array([c - center for c in coordinates])
 
-        pg = PointGroup(group)
+        self._pg = PointGroup(group)
 
         self._coordinates = np.array(coordinates)
 
@@ -491,7 +405,7 @@ class SymmetryWaveFunctionCI(SymmetryBase):
         self._symbols = symbols
 
         if orientation_angles is None:
-            self._angles = self.get_orientation(pg)
+            self._angles = self.get_orientation()
         else:
             self._angles = orientation_angles
 
@@ -530,8 +444,8 @@ class SymmetryWaveFunctionCI(SymmetryBase):
                     self_similarity = (a_orb*a_orb).integrate * (b_orb*b_orb).integrate
 
                     overlaps_list = []
-                    for operation in pg.operations:
-                        operations_dic = pg.get_all_operations()
+                    for operation in self._pg.operations:
+                        operations_dic = self._pg.get_all_operations()
                         operator_overlaps = []
                         for op in operations_dic[operation.label]:
                             overlap = op.get_overlap_func(a_orb, b_orb, orientation=rotmol)
@@ -545,7 +459,7 @@ class SymmetryWaveFunctionCI(SymmetryBase):
                 operator_overlaps_total.append(overlap_row)
 
             operator_overlaps = []
-            for k in range(pg.n_ir):
+            for k in range(self._pg.n_ir):
                 multi_over = []
                 n_degenerate = len(operator_overlaps_total[0][0][k])
                 for m in range(n_degenerate):
@@ -560,52 +474,8 @@ class SymmetryWaveFunctionCI(SymmetryBase):
             return operator_overlaps
 
         operator_overlaps = get_overlaps(orbitals, configurations)
-        total_state = pd.Series(operator_overlaps, index=pg.op_labels)
-        super().__init__(group, total_state)
-
-    def get_orientation(self, pg):
-
-        hash_num = get_hash(self._coordinates, self._symbols, pg.label)
-        if hash_num in cache_orientation:
-            return cache_orientation[hash_num]
-
-        def optimization_function(angles):
-
-            rotmol = R.from_euler('zyx', angles, degrees=True)
-
-            coor_measures = []
-            for operation in pg.operations:
-                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
-                coor_measures.append(coor_m)
-
-            # definition group measure
-            return np.linalg.norm(coor_measures)
-
-        # preliminar scan
-        list_m = []
-        list_a = []
-        for i in np.arange(0, 180, 36):
-            for j in np.arange(0, 180, 36):
-                for k in np.arange(0, 180, 36):
-                    list_m.append(optimization_function([i, j, k]))
-                    list_a.append([i, j, k])
-
-        initial = np.array(list_a[np.nanargmin(list_m)])
-        res = minimize(optimization_function, initial, method='CG',
-                       # bounds=((0, 360), (0, 360), (0, 360)),
-                       # tol=1e-20
-                       )
-        cache_orientation[hash_num] = res.x
-        return cache_orientation[hash_num]
-
-    @property
-    def opt_coordinates(self):
-        rotmol = R.from_euler('zyx', self._angles, degrees=True)
-        return rotmol.apply(self._coordinates)
-
-    @property
-    def orientation_angles(self):
-        return self._angles
+        total_state = pd.Series(operator_overlaps, index=self._pg.op_labels)
+        super().__init__(group, coordinates, symbols, total_state, orientation_angles)
 
 
 if __name__ == '__main__':
