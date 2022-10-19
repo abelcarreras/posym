@@ -178,7 +178,6 @@ class SymmetryMoleculeBase(SymmetryBase):
                        # tol=1e-20
                        )
         cache_orientation[hash_num] = res.x
-        self._coor_measures = res.fun
         return cache_orientation[hash_num]
 
     @property
@@ -195,10 +194,8 @@ class SymmetryMoleculeBase(SymmetryBase):
             # definition group measure
             return np.linalg.norm(coor_measures)
 
-        if not '_coor_measures' in self.__dict__.keys():
-            self._coor_measures = get_measure_pos_total(self._angles)
-
-        return np.product(self._coor_measures)
+        coor_measures = get_measure_pos_total(self._angles)
+        return np.product(coor_measures)
 
     @property
     def opt_coordinates(self):

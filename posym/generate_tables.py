@@ -465,8 +465,8 @@ def get_dnh(n):
         ir_data_new_u['B2u'] = pd.Series(list(ir_data['B2']) + [-1, -1*l,   1*l, -1*l])
 
         operations_new += [Inversion(label='i'), Reflection(label='sh', axis=[0, 0, 1]),
-                           Reflection(label='s_v', axis=[0, 1, 0]),
-                           Reflection(label='sd', axis=[np.sin(np.pi/n), np.cos(np.pi/n), 0])]
+                           Reflection(label='s_v', axis=[np.sin(np.pi/n), np.cos(np.pi/n), 0]),
+                           Reflection(label='sd', axis=[0, 1, 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
@@ -636,7 +636,7 @@ def get_dnd(n):
 
         multiplicities = [1] + [2]*((n-1)//2) + [n, 1] + [2]*((n-1)//2) + [n]
 
-        operations_new += [Inversion(label='i'), Reflection(label='sd', axis=[0, 1, 0])]
+        operations_new += [Inversion(label='i'), Reflection(label='sd', axis=[np.cos(np.pi/(2*n)), np.sin(np.pi/(2*n)), 0])]
 
         for data in ir_data.keys():
             if data.startswith('E'):
