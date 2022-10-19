@@ -4,11 +4,9 @@ from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.parser_optimization import basic_optimization
 from pyqchem.parsers.parser_rasci import parser_rasci
 from pyqchem.file_io import write_to_fchk
-
 from posym import SymmetryWaveFunctionCI
 from posym.tools import get_basis_set, build_orbital
 import posym.algebra as al
-import numpy as np
 
 
 methane = Structure(coordinates=[[ 0.0000000000,  0.0000000000,  0.0000000000],

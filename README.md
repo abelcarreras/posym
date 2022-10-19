@@ -220,6 +220,9 @@ print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
 
 Combine with PyQchem to create useful automations
 -------------------------------------------------
+PyQchem (https://github.com/abelcarreras/PyQchem) is a Python interface 
+for Q-Chem (https://www.q-chem.com). PyQchem can be used to obtain 
+wave functions and normal modes in Python objects that can be directly used in Posym. 
 ```python
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.basic import basic_parser_qchem
@@ -228,36 +231,36 @@ from posym import SymmetryFunction
 from posym.tools import get_basis_set, build_orbital 
 
 # define molecules
-butadiene_cis = Structure(coordinates=[[ -1.07076839,   -2.13175980,    0.03234382],
-                                       [ -0.53741536,   -3.05918866,    0.04995793],
-                                       [ -2.14073783,   -2.12969357,    0.04016267],
-                                       [ -0.39112115,   -0.95974916,    0.00012984],
-                                       [  0.67884827,   -0.96181542,   -0.00769025],
-                                       [ -1.15875076,    0.37505495,   -0.02522296],
-                                       [ -0.62213437,    1.30041753,   -0.05065831],
-                                       [ -2.51391203,    0.37767199,   -0.01531698],
-                                       [ -3.04726506,    1.30510083,   -0.03293196],
-                                       [ -3.05052841,   -0.54769055,    0.01011971]],
-                          symbols=['C', 'H', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'H'])
+butadiene = Structure(coordinates=[[ -1.07076839,   -2.13175980,    0.03234382],
+                                   [ -0.53741536,   -3.05918866,    0.04995793],
+                                   [ -2.14073783,   -2.12969357,    0.04016267],
+                                   [ -0.39112115,   -0.95974916,    0.00012984],
+                                   [  0.67884827,   -0.96181542,   -0.00769025],
+                                   [ -1.15875076,    0.37505495,   -0.02522296],
+                                   [ -0.62213437,    1.30041753,   -0.05065831],
+                                   [ -2.51391203,    0.37767199,   -0.01531698],
+                                   [ -3.04726506,    1.30510083,   -0.03293196],
+                                   [ -3.05052841,   -0.54769055,    0.01011971]],
+                      symbols=['C', 'H', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'H'])
 
 
 # create qchem input
-qc_input = QchemInput(butadiene_cis,
+qc_input = QchemInput(butadiene,
                       jobtype='sp',
                       exchange='hf',
                       basis='sto-3g',
                       )
 
 # calculate and parse qchem output
-data_cis, ee_cis = get_output_from_qchem(qc_input,
-                                         read_fchk=True,
-                                         processors=4,
-                                         parser=basic_parser_qchem)
+data, ee = get_output_from_qchem(qc_input,
+                                 read_fchk=True,
+                                 processors=4,
+                                 parser=basic_parser_qchem)
 
 # extract required information from Q-Chem calculation
-coordinates = ee_cis['structure'].get_coordinates()
-mo_coefficients = ee_cis['coefficients']
-basis = ee_cis['basis']
+coordinates = ee['structure'].get_coordinates()
+mo_coefficients = ee['coefficients']
+basis = ee['basis']
 
 # print results
 print('Molecular orbitals (alpha) symmetry')
@@ -270,10 +273,10 @@ for i, orbital_coeff in enumerate(mo_coefficients['alpha']):
 
 ```
 
-Compute the symmetry of wave functions with degenerate MO
----------------------------------------------------------
-Use *SymmetryWaveFunction* class to compute the full wave function symmetry
-from the occupied molecular orbitals defined as *BasisFunction* objects
+Compute the symmetry of wave functions defined as a Slater determinant
+----------------------------------------------------------------------
+Use *SymmetryWaveFunction* class to compute the wave function symmetry
+from a set of occupied molecular orbitals defined as *BasisFunction* objects
 ```python
 from posym import SymmetryWaveFunction
 from posym.tools import build_orbital 
@@ -303,6 +306,29 @@ print('Configuration 2: ', wf_sym) # A1 + E
 
 ```
 
+Compute the symmetry of multi-reference wave functions
+------------------------------------------------------
+Use *SymmetryWaveFunctionCI* class to compute a multi-reference wave function
+(defined as a liner combination of Slater determinants) symmetry from a set of 
+occupied molecular orbitals defined as *BasisFunction* objects and a *configurations* dictionary.
+```python
+from posym import SymmetryWaveFunctionCI
+
+configurations = [{'amplitude': -0.03216, 'occupations': {'alpha': [1, 1, 0, 0, 1], 'beta': [1, 1, 1, 0, 0]}},
+                  {'amplitude':  0.70637, 'occupations': {'alpha': [1, 1, 0, 1, 0], 'beta': [1, 1, 1, 0, 0]}},
+                  {'amplitude':  0.03216, 'occupations': {'alpha': [1, 1, 1, 0, 0], 'beta': [1, 1, 0, 0, 1]}},
+                  {'amplitude': -0.70637, 'occupations': {'alpha': [1, 1, 1, 0, 0], 'beta': [1, 1, 0, 1, 0]}}]
+
+
+wf_sym = SymmetryWaveFunctionCI('Td',
+                                orbitals=[orbital1, orbital2, orbital3, orbital4, orbital5],
+                                configurations=configurations,
+                                center=[0, 0, 0])
+
+print('State 1: ', wf_sym) # T1
+
+
+```
 
 Try an [interactive example](https://colab.research.google.com/github/abelcarreras/posym) in Google Colab
 
