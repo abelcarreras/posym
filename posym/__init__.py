@@ -129,12 +129,19 @@ class SymmetryBase():
 
 
 class SymmetryMoleculeBase(SymmetryBase):
-    def __init__(self, group, coordinates, symbols, total_state, orientation_angles=(0.0, 0.0, 0.0)):
+    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None):
 
         self._coordinates = np.array(coordinates)
         self._symbols = symbols
-        self._angles = orientation_angles
         self._pg = PointGroup(group)
+
+        if orientation_angles is None:
+            self._angles = self.get_orientation()
+        else:
+            self._angles = orientation_angles
+
+        if total_state is None:
+            total_state = self._pg.ir_labels[0]
 
         super().__init__(group, total_state)
 
@@ -175,12 +182,23 @@ class SymmetryMoleculeBase(SymmetryBase):
         return cache_orientation[hash_num]
 
     @property
-    def get_measure_pos(self):
-        try:
-            return np.product(self._coor_measures)
-        except:
-            self.get_orientation()
-            return np.product(self._coor_measures)
+    def measure_pos(self):
+        def get_measure_pos_total(angles):
+
+            rotmol = R.from_euler('zyx', angles, degrees=True)
+
+            coor_measures = []
+            for operation in self._pg.operations:
+                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                coor_measures.append(coor_m)
+
+            # definition group measure
+            return np.linalg.norm(coor_measures)
+
+        if not '_coor_measures' in self.__dict__.keys():
+            self._coor_measures = get_measure_pos_total(self._angles)
+
+        return np.product(self._coor_measures)
 
     @property
     def opt_coordinates(self):

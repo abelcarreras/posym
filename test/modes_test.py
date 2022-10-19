@@ -36,7 +36,7 @@ def make_test_function(filename, group):
                 prod_list.append(np.prod(a))
             return np.sum(prod_list)
 
-        pos_measure = sm.get_measure_pos
+        pos_measure = sm.measure_pos
         print('fun: ', pos_measure)
         total_loc = []
         for i in range(len(modes)):
