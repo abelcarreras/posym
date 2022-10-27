@@ -33,6 +33,12 @@ else:
                           include_dirs=include_dirs_numpy,
                           sources=['c/integrals.c'])
 
+permutations = Extension('posym.permutations',
+                         extra_compile_args=['-std=c99'],
+                         include_dirs=include_dirs_numpy,
+                         sources=['c/permutations.c'])
+
+
 setup(name='posym',
       version=get_version_number(),
       description='posym module',
@@ -45,4 +51,4 @@ setup(name='posym',
                 'posym.operations'],
       install_requires=['numpy', 'scipy', 'pandas', 'PyYaml'],
       license='MIT License',
-      ext_modules=[integrals])
+      ext_modules=[integrals, permutations])

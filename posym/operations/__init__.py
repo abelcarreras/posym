@@ -1,7 +1,8 @@
 import numpy as np
+from posym.permutations import get_cross_distance_table, get_permutation_simple
 
 
-def get_cross_distance_table(coordinates_1, coordinates_2):
+def get_cross_distance_table_py(coordinates_1, coordinates_2):
 
     coordinates_1 = np.array(coordinates_1)
     coordinates_2 = np.array(coordinates_2)
@@ -15,7 +16,7 @@ def get_cross_distance_table(coordinates_1, coordinates_2):
     return distances
 
 
-def get_permutation_simple(distance_table, symbols):
+def get_permutation_simple_py(distance_table, symbols):
 
     def evaluation(i, j, row1, row2):
         from scipy.stats import norm
@@ -66,6 +67,7 @@ class Operation:
     def get_permutation(self, operation, coordinates, symbols):
         operated_coor = np.dot(operation, coordinates.T).T
 
+        symbols = [int.from_bytes(num.encode(), 'big') for num in symbols]
         distance_table = get_cross_distance_table(coordinates, operated_coor)
         perm = get_permutation_simple(distance_table, symbols)
         permu_coor = operated_coor[list(perm)]

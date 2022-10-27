@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.2.4'
+__version__ = '0.2.5'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
@@ -166,9 +166,9 @@ class SymmetryMoleculeBase(SymmetryBase):
         # preliminar scan
         list_m = []
         list_a = []
-        for i in np.arange(0, 180, 36):
-            for j in np.arange(0, 180, 36):
-                for k in np.arange(0, 180, 36):
+        for i in np.arange(0, 180, 10):
+            for j in np.arange(0, 180, 10):
+                for k in np.arange(0, 180, 10):
                     list_m.append(optimization_function([i, j, k]))
                     list_a.append([i, j, k])
 
@@ -571,6 +571,8 @@ if __name__ == '__main__':
                     list_m.append(optimization_function([i, j, k]))
                     list_a.append([i, j, k])
 
+        print(np.sort(list_m))
+        exit()
         print('------')
         initial = np.array(list_a[np.nanargmin(list_m)])
         #initial = [143.63674808,  -4.31338625,  70.70307201]
