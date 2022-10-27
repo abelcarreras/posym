@@ -9,7 +9,7 @@
 #endif
 
 // Support functions
-int evaluationFast(int i, int j, double* row1, double* row2);
+double evaluationFast(int i, int j, double* row1, double* row2);
 void exchangeRows(int i, int j, double* matrix, int n, int m);
 void exchangePos(int i, int j, int* vector);
 void inversePerm(int* vector, int n);
@@ -141,7 +141,7 @@ static PyObject* getCrossDistanceTable(PyObject* self, PyObject *arg, PyObject *
     return(PyArray_Return(diffCoor_obj));
 }
 
-int evaluationFast(int i, int j, double* row1, double* row2)
+double evaluationFast(int i, int j, double* row1, double* row2)
 {
         double off_diagonal = pow(row1[j] - row2[i], 2);
         return pow(row1[i], 2) + pow(row2[j], 2) + off_diagonal;
@@ -168,7 +168,8 @@ void exchangePos(int i, int j, int* vector)
 
 void inversePerm(int* vector, int n)
 {
-    int vectorTemp[n];
+
+    int * vectorTemp = (int*) malloc(n * sizeof(int));
 
     int k;
     for (int i=0; i<n; i++){
@@ -176,6 +177,7 @@ void inversePerm(int* vector, int n)
         vectorTemp[k] = i;
     }
     for (int i=0; i<n; i++) vector[i] = vectorTemp[i];
+    free(vectorTemp);
 
 }
 
