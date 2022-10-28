@@ -31,7 +31,7 @@ for x_dist in scan_range:
                           sym_ignore=True,
                           )
 
-    parsed_data, ee = get_output_from_qchem(qc_input, parser=basic_frequencies, read_fchk=True)
+    parsed_data, ee = get_output_from_qchem(qc_input, parser=basic_frequencies, return_electronic_structure=True)
 
     molecule_coor = np.array(ee['structure'].get_coordinates())
     molecule_symbols = np.array(ee['structure'].get_symbols())
@@ -53,7 +53,7 @@ for x_dist in scan_range:
 
     print('sm', sm.get_state_mode(m))
 
-    print(sm.get_measure_pos)
+    print(sm.measure_pos)
     for i in range(len(modes)):
         print('m {}:'.format(i + 1), sm.get_state_mode(i))
     print('----------------------\n')

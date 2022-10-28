@@ -69,7 +69,7 @@ for molecule, group in zip([h2o2_mol, sh6_mol, water_mol, dichloro_mol, methane_
 
     print(molecule)
     parsed_data, ee = get_output_from_qchem(qc_input, parser=basic_frequencies,
-                                            read_fchk=True, processors=6)
+                                            return_electronic_structure=True, processors=6)
 
     molecule_coor = np.array(ee['structure'].get_coordinates())
     molecule_symbols = np.array(ee['structure'].get_symbols())
