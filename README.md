@@ -16,9 +16,11 @@ vibrational normal modes and molecular orbitals respectively.
 Features
 --------
 - Use as simple calculator for irreducible representations supporting direct sum and product
-- Handles pseudosymmetry
-- Determine point symmetry from normal modes 
-- Determine point symmetry functions defined in gaussian basis
+- Determine symmetry of: 
+  - normal modes 
+  - functions defined in gaussian basis (molecular orbitals, electronic densities, operators)
+  - wave functions defined as a slater determinant
+  - wave functions defined as linear combination of slater determinants (Multi-reference/CI)
 - Compatibility with PyQchem (http://www.github.com/abelcarreras/pyqchem)
 
 Requisites
@@ -223,7 +225,7 @@ Combine with PyQchem to create useful automations
 -------------------------------------------------
 PyQchem (https://github.com/abelcarreras/PyQchem) is a Python interface 
 for Q-Chem (https://www.q-chem.com). PyQchem can be used to obtain 
-wave functions and normal modes in Python objects that can be directly used in Posym. 
+wave functions and normal modes as Python objects that can be directly used in Posym. 
 ```python
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.basic import basic_parser_qchem
@@ -260,13 +262,13 @@ data, ee = get_output_from_qchem(qc_input,
 
 # extract required information from Q-Chem calculation
 coordinates = ee['structure'].get_coordinates()
-mo_coefficients = ee['coefficients']
+mo_coefficients = ee['coefficients']['alpha']
 basis = ee['basis']
 
 # print results
 print('Molecular orbitals (alpha) symmetry')
 basis_set = get_basis_set(coordinates, basis)
-for i, orbital_coeff in enumerate(mo_coefficients['alpha']):
+for i, orbital_coeff in enumerate(mo_coefficients):
     orbital = build_orbital(basis_set, orbital_coeff)
     sym_orbital = SymmetryFunction('c2v', orbital)
     print('Symmetry O{}: '.format(i+1), sym_orbital)
@@ -276,7 +278,7 @@ for i, orbital_coeff in enumerate(mo_coefficients['alpha']):
 
 Compute the symmetry of wave functions defined as a Slater determinant
 ----------------------------------------------------------------------
-Use *SymmetryWaveFunction* class to compute the wave function symmetry
+Use *SymmetryWaveFunction* class to determine the symmetry of a wave function
 from a set of occupied molecular orbitals defined as *BasisFunction* objects
 ```python
 from posym import SymmetryWaveFunction
@@ -309,8 +311,8 @@ print('Configuration 2: ', wf_sym) # A1 + E
 
 Compute the symmetry of multi-reference wave functions
 ------------------------------------------------------
-Use *SymmetryWaveFunctionCI* class to compute a multi-reference wave function
-(defined as a liner combination of Slater determinants) symmetry from a set of 
+Use *SymmetryWaveFunctionCI* class to determine the symmetry of multi-reference wave function
+(defined as a liner combination of Slater determinants) from a set of 
 occupied molecular orbitals defined as *BasisFunction* objects and a *configurations* dictionary.
 ```python
 from posym import SymmetryWaveFunctionCI
