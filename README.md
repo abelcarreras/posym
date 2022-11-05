@@ -6,12 +6,10 @@
 PoSym
 =====
 
-A simple point symmetry analysis tool written in python.  
-This tool is mainly designed for theoretical chemistry but 
-can be used in general for other objects by defining subclasses 
-of the `SymmetryBase` class. At this point `SymmetryModes` and 
-`SymmetryFunction` subclasses are defined for the analysis of 
-vibrational normal modes and molecular orbitals respectively.
+A point symmetry analysis tool written in python designed for theoretical chemistry.
+This tool makes use of continuous symmetry ideas to provide a robust implementation
+to compute the symmetry of different objects. This library is designed to be easily
+extendable to other objects by subclassing the `SymmetryBase` class.
 
 Features
 --------
@@ -32,7 +30,8 @@ Requisites
 
 Use as a simple symmetry calculation
 ------------------------------------
-posym allows to create symmetry python objects that can be operated using usual operators
+Posym allows to create basic continuous symmetry python objects that can be operated using 
+direct sum (+) and direct product (*).
 ```python
 from posym import PointGroup, SymmetryBase
 
@@ -50,7 +49,7 @@ print('e*e + a1:', e * (e + a1))
 
 Determine the symmetry of normal modes
 --------------------------------------
-Symmetry objects can be obtained from normal modes
+Symmetry objects can be obtained from normal modes using `SymmetryModes`.
 ```python
 from posym import SymmetryModes
 
@@ -84,7 +83,7 @@ print('Total symmetry: ', sym_modes_gs)
 
 Define basis set functions in gaussian basis
 --------------------------------------------
-define basis function as linear combination of gaussian that act as normal python functions 
+Define basis function as linear combination of gaussian that act as normal python functions 
 ```python
 from posym.basis import PrimitiveGaussian, BasisFunction
 
@@ -187,7 +186,7 @@ print('<o1|o2>: ', (o1*o2).integrate)
 
 Analyze symmetry of molecular orbitals
 --------------------------------------
-Get symmetry of molecular orbitals defined as *PrimitiveGaussian/BasisFunction* type objects
+Get symmetry of molecular orbitals defined as `PrimitiveGaussian/BasisFunction` type objects
 ```python
 from posym import SymmetryFunction
 
@@ -279,7 +278,7 @@ for i, orbital_coeff in enumerate(mo_coefficients):
 Compute the symmetry of wave functions defined as a Slater determinant
 ----------------------------------------------------------------------
 Use *SymmetryWaveFunction* class to determine the symmetry of a wave function
-from a set of occupied molecular orbitals defined as *BasisFunction* objects
+from a set of occupied molecular orbitals defined as `BasisFunction` objects
 ```python
 from posym import SymmetryWaveFunction
 from posym.tools import build_orbital 
@@ -311,9 +310,9 @@ print('Configuration 2: ', wf_sym) # A1 + E
 
 Compute the symmetry of multi-reference wave functions
 ------------------------------------------------------
-Use *SymmetryWaveFunctionCI* class to determine the symmetry of multi-reference wave function
+Use `SymmetryWaveFunctionCI` class to determine the symmetry of multi-reference wave function
 (defined as a liner combination of Slater determinants) from a set of 
-occupied molecular orbitals defined as *BasisFunction* objects and a *configurations* dictionary.
+occupied molecular orbitals defined as `BasisFunction` objects and a *configurations* dictionary.
 ```python
 from posym import SymmetryWaveFunctionCI
 
