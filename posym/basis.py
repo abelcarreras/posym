@@ -375,13 +375,19 @@ class BasisFunction:
         return sum([coef * prim.integrate for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
 
     def get_environment_centers(self):
+        """
+        Get an estimation of the molecular geometry by checking the centers of gaussian functions.
+        Different environments (atom types) are distinguished as different gaussian exponents
+        :return: symbols (environments types) and coordinates (gaussian centers)
+        """
+
         unique_center = np.unique(np.array([p.center for p in self.primitive_gaussians]), axis=0)
         data_dict = {}
         coor_dict = {}
 
         for i, center in enumerate(unique_center):
             data = np.where((np.array([p.center for p in self.primitive_gaussians] == center).all(axis=1)))
-            key = tuple(np.array([p.shape for p in self.primitive_gaussians])[data])
+            key = tuple(np.array([p.alpha for p in self.primitive_gaussians])[data])
             if key in data_dict:
                 data_dict[key].append(i)
                 coor_dict[key].append(center)
