@@ -1,3 +1,5 @@
+# example of calculation of the symmetry of normal modes
+# using PyQchem to automize its calculations
 from pyqchem import get_output_from_qchem, Structure, QchemInput
 from pyqchem.parsers.parser_frequencies import basic_frequencies
 from pyqchem.parsers.parser_optimization import basic_optimization

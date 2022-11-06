@@ -8,7 +8,7 @@ from posym import SymmetryWaveFunctionCI, SymmetryFunction
 from posym.tools import get_basis_set, build_orbital
 import posym.algebra as al
 
-
+# define molecular structure
 methane = Structure(coordinates=[[ 0.0000000000,  0.0000000000,  0.0000000000],
                                  [ 0.5541000000,  0.7996000000,  0.4965000000],
                                  [ 0.6833000000, -0.8134000000, -0.2536000000],
@@ -16,7 +16,7 @@ methane = Structure(coordinates=[[ 0.0000000000,  0.0000000000,  0.0000000000],
                                  [-0.4593000000,  0.3874000000, -0.9121000000]],
                     symbols=['C', 'H', 'H', 'H', 'H'])
 
-
+# optimize geometry using HF
 qc_input = QchemInput(methane,
                       jobtype='opt',
                       exchange='hf',
@@ -32,6 +32,7 @@ data_methane = get_output_from_qchem(qc_input,
                                      parser=basic_optimization,
                                      )
 
+# Use RAS-CI method to calculate the a CI wave function
 qc_input = QchemInput(data_methane['optimized_molecule'],
                       jobtype='sp',
                       exchange='hf',
@@ -61,14 +62,17 @@ data_methane, ee_methane = get_output_from_qchem(qc_input,
                                                  parser=parser_rasci
                                                  )
 
+# store fchk to visualize orbitals
 write_to_fchk(ee_methane, 'methane.fchk')
 
+# read electronic structure information
 coefficients = ee_methane['coefficients']
 coordinates = ee_methane['structure'].get_coordinates()
 basis = ee_methane['basis']
 
 basis_set = get_basis_set(coordinates, basis)
 
+# build molecular orbitals
 print('Molecular Orbitals')
 for i, mo_coeff in enumerate(ee_methane['coefficients']['alpha']):
     mo_orbital = build_orbital(basis_set, mo_coeff)
@@ -78,6 +82,7 @@ orbitals = []
 for orbital_coefficients in coefficients['alpha']:
     orbitals.append(build_orbital(basis_set, orbital_coefficients))
 
+# print excited states configurations and compute the symmetry of the full multi-configurational wave function
 for istate, state in enumerate(data_methane['excited_states']):
     print('\nState', istate + 1, '(', state['multiplicity'], ')')
     print('Excitation energy: {:8.4f}'.format(state['excitation_energy']))

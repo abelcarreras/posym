@@ -1,12 +1,15 @@
-# Simple single point calculation
+# Example of a simple wave function analysis of the butadiene molecule
+# This example makes use of pyQChem to automatize the calculation of the wave function
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.basic import basic_parser_qchem
 from posym import SymmetryFunction, SymmetryBase
+from posym.tools import get_basis_set, build_orbital
 import posym.algebra as al
 import numpy as np
 import matplotlib.pyplot as plt
 
 
+# define structure of cis-butadinen
 molecule_cis = Structure(coordinates=[[ -1.07076839,   -2.13175980,    0.03234382],
                                       [ -0.53741536,   -3.05918866,    0.04995793],
                                       [ -2.14073783,   -2.12969357,    0.04016267],
@@ -20,7 +23,7 @@ molecule_cis = Structure(coordinates=[[ -1.07076839,   -2.13175980,    0.0323438
                          symbols=['C', 'H', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'H'])
 
 
-# create qchem input
+# create Q-Chem input
 qc_input = QchemInput(molecule_cis,
                       jobtype='sp',
                       exchange='hf',
@@ -28,13 +31,13 @@ qc_input = QchemInput(molecule_cis,
                       #sym_ignore=True
                       )
 
-# calculate and parse qchem output
+# Calculate and parse the output
 data_cis, ee_cis = get_output_from_qchem(qc_input,
                                          return_electronic_structure=True,
                                          processors=4,
                                          parser=basic_parser_qchem)
 
-
+# define structure of trans-butadinen
 molecule_trans = Structure(coordinates=[[ -1.06908233,   -2.13352097,   -0.00725330],
                                         [ -0.53502155,   -3.05996561,   -0.04439369],
                                         [ -2.13778918,   -2.13379901,    0.04533562],
@@ -49,7 +52,7 @@ molecule_trans = Structure(coordinates=[[ -1.06908233,   -2.13352097,   -0.00725
 
 
 
-# create qchem input
+# create Q-Chem input
 qc_input = QchemInput(molecule_trans,
                       jobtype='sp',
                       exchange='hf',
@@ -57,44 +60,42 @@ qc_input = QchemInput(molecule_trans,
                       sym_ignore=True
                       )
 
-# calculate and parse qchem output
-
+# calculate and parse output
 data_trans, ee_trans = get_output_from_qchem(qc_input,
                                              return_electronic_structure=True,
                                              processors=4,
                                              parser=basic_parser_qchem,
                                              )
 
+# read electronic structure data
 coordinates_cis = ee_cis['structure'].get_coordinates()
 coordinates_trans = ee_trans['structure'].get_coordinates()
 
 coefficients_cis = ee_cis['coefficients']
 coefficients_trans = ee_trans['coefficients']
 
-basis = ee_trans['basis']
+# extract the basis set info
+basis_set_trans = get_basis_set(coordinates_trans, ee_trans['basis'])
+basis_set_cis = get_basis_set(coordinates_cis, ee_trans['basis'])
 
-from posym.tools import get_basis_set, build_orbital
+# build 16th molecular orbital for test using PoSym helper functions
+o15_cis = build_orbital(basis_set_cis, coefficients_cis['alpha'][15])
+o15_trans = build_orbital(basis_set_trans, coefficients_trans['alpha'][15])
 
-basis_set_trans = get_basis_set(coordinates_trans, basis)
-basis_set_cis = get_basis_set(coordinates_cis, basis)
-
-
-o1_cis = build_orbital(basis_set_cis, coefficients_cis['alpha'][15])
-o1_trans = build_orbital(basis_set_trans, coefficients_trans['alpha'][15])
-
+# plot orbitals (contour) using matplotlib
 x = np.linspace(-5, 5, 50)
 y = np.linspace(-5, 5, 50)
 
 X, Y = np.meshgrid(x, y)
 
-Z = o1_cis(X, Y, np.zeros_like(X))
+Z = o15_cis(X, Y, np.zeros_like(X))
 plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
 plt.figure()
 plt.contour(X, Y, Z, colors='k')
 plt.show()
 
 
-Z = o1_trans(X, Y, np.zeros_like(X))
+Z = o15_trans(X, Y, np.zeros_like(X))
 plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
 plt.figure()
 plt.contour(X, Y, Z, colors='k')
@@ -102,6 +103,13 @@ plt.show()
 
 
 def get_simple_wf_symm(orbitals_symm, alpha=(1,), beta=(1,)):
+    """
+    generate simple wave function symmetry by product of molecular orbitals symmetry
+    :param orbitals_symm: list of orbital symmetries
+    :param alpha: alpha orbitals occupation
+    :param beta: beta orbitals occupation
+    :return: symmetry
+    """
     total_sym = None
     for a, o in zip(alpha, orbitals_symm):
         if a == 1:
@@ -114,6 +122,7 @@ def get_simple_wf_symm(orbitals_symm, alpha=(1,), beta=(1,)):
     return total_sym
 
 
+# compute and list symmetry of molecular orbitals (CIS molecule)
 print('\nCIS\n----')
 cis_orbitals_sym = []
 for i, orbital_coeff in enumerate(coefficients_cis['alpha']):
@@ -123,6 +132,7 @@ for i, orbital_coeff in enumerate(coefficients_cis['alpha']):
     cis_orbitals_sym.append(sym_orbital)
 
 
+# construct symmetry of wave functions of example (simple) excited states
 cis_wf_0 = get_simple_wf_symm(cis_orbitals_sym,
                               alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
                               beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
@@ -133,11 +143,11 @@ cis_wf_2 = get_simple_wf_symm(cis_orbitals_sym,
                               alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
                               beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
 
-# print(cis_wf_0, cis_wf_1, cis_wf_2)
-
+# generate symmetry of dipole moment operator for C2v group
 cis_dm = SymmetryBase(group='C2v', rep='B1') + \
          SymmetryBase(group='C2v', rep='B2') + \
          SymmetryBase(group='C2v', rep='A1')
+
 
 def check_transition(transtion):
     if al.dot(transtion, SymmetryBase(group='C2v', rep='A1')) > 0.1:
@@ -145,10 +155,11 @@ def check_transition(transtion):
     else:
         return 'Forbidden'
 
+# check the symmetry of electronic transition and check if allowed according to symmetry rules
 print('wf_0 -> wf_1: ', cis_wf_0 * cis_dm * cis_wf_1, check_transition(cis_wf_0 * cis_dm * cis_wf_1))
 print('wf_0 -> wf_2: ', cis_wf_0 * cis_dm * cis_wf_2, check_transition(cis_wf_0 * cis_dm * cis_wf_2))
 
-
+# compute and list symmetry of molecular orbitals (TRANS molecule)
 print('\nTRANS\n----')
 trans_orbitals_sym = []
 for i, orbital_coeff in enumerate(coefficients_trans['alpha']):
@@ -157,6 +168,7 @@ for i, orbital_coeff in enumerate(coefficients_trans['alpha']):
     print('Symmetry O{}: '.format(i+1), sym_orbital)
     trans_orbitals_sym.append(sym_orbital)
 
+# construct symmetry of wave functions of example (simple) excited states
 trans_wf_0 = get_simple_wf_symm(trans_orbitals_sym,
                                 alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
                                 beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
@@ -167,6 +179,7 @@ trans_wf_2 = get_simple_wf_symm(trans_orbitals_sym,
                                 alpha=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
                                 beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
 
+# generate symmetry of dipole moment operator for C2h group
 trans_dm = SymmetryBase(group='C2h', rep='Bu') + \
            SymmetryBase(group='C2h', rep='Au')
 
@@ -177,6 +190,6 @@ def check_transition(transition):
     else:
         return 'Forbidden'
 
-
+# check the symmetry of electronic transition and check if allowed according to symmetry rules
 print('wf_0 -> wf_1: ', trans_wf_0 * trans_dm * trans_wf_1, check_transition(trans_wf_0 * trans_dm * trans_wf_1))
 print('wf_0 -> wf_2: ', trans_wf_0 * trans_dm * trans_wf_2, check_transition(trans_wf_0 * trans_dm * trans_wf_2))

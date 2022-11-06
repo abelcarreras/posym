@@ -277,7 +277,7 @@ for i, orbital_coeff in enumerate(mo_coefficients):
 
 Compute the symmetry of wave functions defined as a Slater determinant
 ----------------------------------------------------------------------
-Use *SymmetryWaveFunction* class to determine the symmetry of a wave function
+Use `SymmetryWaveFunction` class to determine the symmetry of a wave function
 from a set of occupied molecular orbitals defined as `BasisFunction` objects
 ```python
 from posym import SymmetryWaveFunction

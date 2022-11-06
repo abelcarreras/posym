@@ -1,13 +1,16 @@
 from posym import PointGroup, SymmetryBase
 
+# Print symmetry IR table of C2h group
 pg = PointGroup(group='C2h')
 print('\nTest Point group table')
 print(pg)
 
+# define symmetry objects of particular IR in the C2h group
 bu = SymmetryBase(group='C2h', rep='Bu')
 bg = SymmetryBase('C2h', 'Bg')
 ag = SymmetryBase('C2h', 'Ag')
 
+# symmetry operation using symmetry objects
 print('\nTest symmetry object operation')
 print('bu * bg:', 2 * bu * bg)
 
@@ -16,6 +19,7 @@ state1 = (bu + bg) * (bu + bu + ag)
 
 print('\nTest symmetry object representation')
 
+# example with Td
 pg = PointGroup(group='Td')
 print(pg)
 
@@ -38,6 +42,7 @@ a2 = SymmetryBase('C2v', 'A2')
 
 print(a1 * a2 + b1)
 
+# Example of convenient operators on symmetry objects
 from posym.algebra import dot, norm
 
 print('\nTest dot product')

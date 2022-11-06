@@ -1,3 +1,4 @@
+# check the continuous symmetry of the normal modes of distorted H2O molecule
 from pyqchem import get_output_from_qchem, Structure, QchemInput
 from pyqchem.parsers.parser_frequencies import basic_frequencies
 from posym import PointGroup, SymmetryModes
