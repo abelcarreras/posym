@@ -29,7 +29,6 @@ for operation in sm.get_oriented_operations():
     print('Operation object: ', operation)
     try:
         print('Axis:', operation.axis)
-
     except AttributeError:
         pass
 
