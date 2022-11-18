@@ -25,6 +25,9 @@ class Identity(Operation):
 
         return self._measure_coor
 
+    def apply_rotation(self, orientation):
+        pass
+
     @property
     def operation_matrix_list(self):
         return [np.identity(3)]

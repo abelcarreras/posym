@@ -129,21 +129,32 @@ class SymmetryBase():
 
 
 class SymmetryMoleculeBase(SymmetryBase):
-    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None):
+    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None):
 
-        self._coordinates = np.array(coordinates)
-        self._symbols = symbols
-        self._pg = PointGroup(group)
-
-        if orientation_angles is None:
-            self._angles = self.get_orientation()
-        else:
-            self._angles = orientation_angles
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         if total_state is None:
             total_state = self._pg.ir_labels[0]
 
         super().__init__(group, total_state)
+
+    def _setup_structure(self, coordinates, symbols, group, center, orientation_angles):
+
+        self._coordinates = np.array(coordinates)
+        self._symbols = symbols
+        self._pg = PointGroup(group)
+
+        if '_center' not in self.__dir__():
+            self._center = center
+            if self._center is None:
+                self._center = np.average(self._coordinates, axis=0)
+
+            self._coordinates = np.array([c - self._center for c in self._coordinates])
+
+        if orientation_angles is None:
+            self._angles = self.get_orientation()
+        else:
+            self._angles = orientation_angles
 
     def get_orientation(self):
 
@@ -180,6 +191,20 @@ class SymmetryMoleculeBase(SymmetryBase):
         cache_orientation[hash_num] = res.x
         return cache_orientation[hash_num]
 
+    def get_oriented_operations(self):
+        import copy
+        rotmol = R.from_euler('zyx', self.orientation_angles, degrees=True).inv()
+
+        operations_list = []
+        operations_dic = self._pg.get_all_operations()
+        for operation in self._pg.operations:
+            for operation in operations_dic[operation.label]:
+                operation = copy.deepcopy(operation)
+                operation.apply_rotation(rotmol)
+                operations_list.append(operation)
+
+        return operations_list
+
     @property
     def measure_pos(self):
         def get_measure_pos_total(angles):
@@ -206,29 +231,22 @@ class SymmetryMoleculeBase(SymmetryBase):
     def orientation_angles(self):
         return self._angles
 
+    @property
+    def center(self):
+        return self._center
+
 
 class SymmetryModes(SymmetryMoleculeBase):
     def __init__(self, group, coordinates, modes, symbols, orientation_angles=None):
 
-        self._pg = PointGroup(group)
-
-        # set coordinates at geometrical center
-        self._coordinates = np.array([c - np.average(coordinates, axis=0) for c in coordinates])
+        self._setup_structure(coordinates, symbols, group, None, orientation_angles)
 
         self._modes = modes
-        self._symbols = symbols
-
-        self._mode_measures = []
-
-        if orientation_angles is None:
-            self._angles = self.get_orientation()
-        else:
-            self._angles = orientation_angles
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
-
         operations_dic = self._pg.get_all_operations()
 
+        self._mode_measures = []
         for operation in self._pg.operations:
             mode_measures = []
             for op in operations_dic[operation.label]:
@@ -246,7 +264,7 @@ class SymmetryModes(SymmetryMoleculeBase):
         self._mode_measures = reshaped_modes_measures
         total_state = pd.Series(np.sum(self._mode_measures, axis=0).tolist(), index=self._pg.op_labels)
 
-        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles)
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
 
     def get_state_mode(self, n):
         return SymmetryBase(group=self._group, rep=pd.Series(self._mode_measures[n],
@@ -258,25 +276,13 @@ class SymmetryFunction(SymmetryMoleculeBase):
 
         symbols, coordinates = function.get_environment_centers()
 
-        if center is None:
-            # center = function.global_center()
-            center = np.average(coordinates, axis=0)
-            function = function.copy()
-            function.apply_translation(-np.array(center))
-            coordinates = np.array([c - center for c in coordinates])
-
-        self._pg = PointGroup(group)
-        self._coordinates = np.array(coordinates)
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         self._function = function
-        self._symbols = symbols
+        function = function.copy()
+        function.apply_translation(-np.array(self._center))
 
         self._operator_measures = []
-
-        if orientation_angles is None:
-            self._angles = self.get_orientation()
-        else:
-            self._angles = orientation_angles
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
@@ -292,7 +298,7 @@ class SymmetryFunction(SymmetryMoleculeBase):
             self._operator_measures.append(np.array(operator_measures))
 
         total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
-        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles)
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
 
     @property
     def self_similarity(self):
@@ -310,24 +316,11 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
 
         symbols, coordinates = function.get_environment_centers()
 
-        if center is None:
-            # center = function.global_center()
-            center = np.average(coordinates, axis=0)
-            function = function.copy()
-            function.apply_translation(-np.array(center))
-            coordinates = np.array([c - center for c in coordinates])
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
-        self._pg = PointGroup(group)
-
-        self._coordinates = np.array(coordinates)
+        function.apply_translation(-np.array(self._center))
 
         self._function = function
-        self._symbols = symbols
-
-        if orientation_angles is None:
-            self._angles = self.get_orientation()
-        else:
-            self._angles = orientation_angles
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
@@ -378,19 +371,19 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
             total_state = pd.Series(operator_overlaps_alpha, index=self._pg.op_labels) * \
                           pd.Series(operator_overlaps_beta, index=self._pg.op_labels)
 
-            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles)
+            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
 
         elif len(alpha_orbitals) > 0:
 
             operator_overlaps_alpha = get_overlaps(alpha_orbitals)
             total_state = pd.Series(operator_overlaps_alpha, index=self._pg.op_labels)
-            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles)
+            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
 
         elif len(beta_orbitals) > 0:
 
             operator_overlaps_beta = get_overlaps(beta_orbitals)
             total_state = pd.Series(operator_overlaps_beta, index=self._pg.op_labels)
-            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles)
+            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
 
 
 class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
@@ -404,19 +397,12 @@ class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
 
         symbols, coordinates = function.get_environment_centers()
 
-        if center is None:
-            # center = function.global_center()
-            center = np.average(coordinates, axis=0)
-            function = function.copy()
-            function.apply_translation(-np.array(center))
-            coordinates = np.array([c - center for c in coordinates])
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
-        self._pg = PointGroup(group)
-
-        self._coordinates = np.array(coordinates)
+        function = function.copy()
+        function.apply_translation(-np.array(self._center))
 
         self._function = function
-        self._symbols = symbols
 
         if orientation_angles is None:
             self._angles = self.get_orientation()
@@ -489,7 +475,7 @@ class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
 
         operator_overlaps = get_overlaps(orbitals, configurations)
         total_state = pd.Series(operator_overlaps, index=self._pg.op_labels)
-        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles)
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, center=[0, 0, 0])
 
 
 if __name__ == '__main__':

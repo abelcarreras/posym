@@ -103,6 +103,9 @@ class Rotation(Operation):
 
         return (op_function2*fn_function_r).integrate
 
+    def apply_rotation(self, orientation):
+        self._axis = orientation.apply(self._axis)
+
     @property
     def axis(self):
         return self._axis

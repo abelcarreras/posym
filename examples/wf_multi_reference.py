@@ -90,7 +90,7 @@ for istate, state in enumerate(data_methane['excited_states']):
     for configuration in state['configurations']:
         print('amplitude: {:12.8f} '.format(configuration['amplitude']), configuration['occupations'])
 
-    wf = SymmetryWaveFunctionCI('S4',
+    wf = SymmetryWaveFunctionCI('Td',
                                 orbitals=orbitals,
                                 configurations=state['configurations'],
                                 center=[0, 0, 0])

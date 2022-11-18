@@ -1,6 +1,7 @@
 import numpy as np
 from posym.operations import Operation
 from posym.tools import standardize_vector
+from scipy.spatial.transform import Rotation as R
 
 
 def reflection(reflection_axis):
@@ -64,6 +65,8 @@ class Reflection(Operation):
 
         return (op_function2*fn_function_r).integrate
 
+    def apply_rotation(self, orientation):
+        self._axis = orientation.apply(self._axis)
 
     @property
     def axis(self):

@@ -93,6 +93,9 @@ class ImproperRotation(Operation):
 
         return (op_function2*op_function_ir).integrate
 
+    def apply_rotation(self, orientation):
+        self._axis = orientation.apply(self._axis)
+
     @property
     def axis(self):
         return self._axis

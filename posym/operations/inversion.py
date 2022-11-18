@@ -55,6 +55,9 @@ class Inversion(Operation):
 
         return (op_function2*op_function_i).integrate
 
+    def apply_rotation(self, orientation):
+        pass
+
     @property
     def operation_matrix_list(self):
         return [inversion()]
