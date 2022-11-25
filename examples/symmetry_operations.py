@@ -27,8 +27,10 @@ print('Group orientation Euler angles zyx (deg): ', sm.orientation_angles)
 print('\nOperations list\n---------------')
 for operation in sm.get_oriented_operations():
     print('Operation object: ', operation)
+    print('label:', operation.label)
     try:
         print('Axis:', operation.axis)
+        print('Order:', operation.order)
     except AttributeError:
         pass
 
