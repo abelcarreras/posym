@@ -46,8 +46,20 @@ class CharTable(pd.DataFrame):
         self.attrs['operations'] = operations
 
     def __str__(self):
-        formated_data = {k: "{:,.4f}".format for k in self.T.columns}
-        return self.T.to_string(formatters=formated_data)
+
+        table = self.copy()
+        new_index = []
+        for op_label, m in zip(table.index, table.attrs['multiplicities']):
+            if m > 1:
+                new_index.append('{}{}'.format(m, op_label))
+            else:
+                new_index.append('{}'.format(op_label))
+
+        table.index = new_index
+        formatted_data = {k: "{:,.4f}".format for k in table.T.columns}
+        # formatted_data = {k: "{:}".format for k in table.T.columns}  # no format
+
+        return table.T.to_string(formatters=formatted_data)
 
     def get_all_operations(self):
 

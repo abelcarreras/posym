@@ -29,8 +29,8 @@ for operation in sm.get_oriented_operations():
     print('Operation object: ', operation)
     print('label:', operation.label)
     try:
-        print('Axis:', operation.axis)
         print('Order:', operation.order)
+        print('Axis:', operation.axis)
     except AttributeError:
         pass
 
