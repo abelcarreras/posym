@@ -57,15 +57,17 @@ qc_input = QchemInput(molecule_trans,
                       jobtype='sp',
                       exchange='hf',
                       basis='sto-3g',
-                      sym_ignore=True
+                      sym_tol=4,
                       )
 
 # calculate and parse output
 data_trans, ee_trans = get_output_from_qchem(qc_input,
+                                             # force_recalculation=True,
                                              return_electronic_structure=True,
                                              processors=4,
                                              parser=basic_parser_qchem,
                                              )
+
 
 # read electronic structure data
 coordinates_cis = ee_cis['structure'].get_coordinates()
@@ -78,13 +80,13 @@ coefficients_trans = ee_trans['coefficients']
 basis_set_trans = get_basis_set(coordinates_trans, ee_trans['basis'])
 basis_set_cis = get_basis_set(coordinates_cis, ee_trans['basis'])
 
-# build 16th molecular orbital for test using PoSym helper functions
+# build 16th and 13th molecular orbital for test using PoSym helper functions
 o15_cis = build_orbital(basis_set_cis, coefficients_cis['alpha'][15])
-o15_trans = build_orbital(basis_set_trans, coefficients_trans['alpha'][15])
+o12_trans = build_orbital(basis_set_trans, coefficients_trans['alpha'][12])
 
 # plot orbitals (contour) using matplotlib
-x = np.linspace(-5, 5, 50)
-y = np.linspace(-5, 5, 50)
+x = np.linspace(-6, 6, 50)
+y = np.linspace(-6, 6, 50)
 
 X, Y = np.meshgrid(x, y)
 
@@ -95,7 +97,7 @@ plt.contour(X, Y, Z, colors='k')
 plt.show()
 
 
-Z = o15_trans(X, Y, np.zeros_like(X))
+Z = o12_trans(X, Y, np.zeros_like(X))
 plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
 plt.figure()
 plt.contour(X, Y, Z, colors='k')
@@ -127,6 +129,7 @@ print('\nCIS\n----')
 cis_orbitals_sym = []
 for i, orbital_coeff in enumerate(coefficients_cis['alpha']):
     orbital = build_orbital(basis_set_cis, orbital_coeff)
+    orbital.apply_translation([1, 0, 0])
     sym_orbital = SymmetryFunction('c2v', orbital)
     print('Symmetry O{}: '.format(i+1), sym_orbital)
     cis_orbitals_sym.append(sym_orbital)

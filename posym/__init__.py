@@ -278,9 +278,8 @@ class SymmetryFunction(SymmetryMoleculeBase):
 
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
-        self._function = function
-        function = function.copy()
-        function.apply_translation(-np.array(self._center))
+        self._function = function.copy()
+        self._function.apply_translation(-np.array(self._center))
 
         self._operator_measures = []
 
@@ -318,6 +317,7 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
 
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
+        function = function.copy()
         function.apply_translation(-np.array(self._center))
 
         self._function = function
