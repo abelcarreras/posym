@@ -44,8 +44,9 @@ a2 = SymmetryBase(group='Td', rep='A2')
 e = SymmetryBase(group='Td', rep='E')
 t1 = SymmetryBase(group='Td', rep='T1')
 
-print('e*e + a1:', e * (e + a1))
-
+print('t1 * t1:', t1 * t1)
+print('t1 * e:', t1 * e)
+print('e * (e + a1):', e * (e + a1))
 ```
 
 Determine the symmetry of normal modes
