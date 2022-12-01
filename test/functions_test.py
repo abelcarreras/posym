@@ -1,4 +1,4 @@
-from posym import SymmetryFunction, SymmetryBase
+from posym import SymmetryFunction, SymmetryBase, SymmetryWaveFunction
 from posym.basis import PrimitiveGaussian, BasisFunction
 import posym.algebra as al
 import unittest
@@ -148,6 +148,26 @@ class OperationsTest(unittest.TestCase):
         sym_wf_excited_2 = sym_o1 * sym_o1 * sym_o2 * sym_o2 * sym_o3 * sym_o3 * sym_o4 * sym_o4 * sym_o6 * sym_o6
         print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
 
-        self.assertAlmostEqual(al.dot(sym_wf_gs, a1), 1, places=5)
-        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2), 1, places=5)
-        self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=5)
+        self.assertAlmostEqual(al.dot(sym_wf_gs, a1), 1, places=4)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2), 1, places=4)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=4)
+
+        # apply rotation
+        random_axis = np.random.random(3)
+        for o in self._orbitals:
+            o.apply_rotation(np.pi, random_axis)
+
+        sym_wf_excited_1 = SymmetryWaveFunction('c2v',
+                                                [o1, o2, o3, o4, o5],
+                                                [o1, o2, o3, o4, o6])
+
+        print(sym_wf_excited_1.center)
+        print('Symmetry WF (excited state 1): ', sym_wf_excited_1)
+
+        sym_wf_excited_2 = SymmetryWaveFunction('c2v',
+                                                [o1, o2, o3, o4, o6],
+                                                [o1, o2, o3, o4, o6])
+        print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
+
+        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2) + al.dot(sym_wf_excited_1, b1), 1, places=4)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=4)
