@@ -312,6 +312,13 @@ class PrimitiveGaussian:
         return self
 
     def apply_rotation(self, angle, axis):
+        """
+        apply a rotation with respect to an axis to the function
+
+        :param angle: angle in Radians
+        :param axis: rotation axis
+        :return:
+        """
         from scipy.spatial.transform import Rotation as R
 
         rotation_vector = angle * np.array(axis) / np.linalg.norm(axis)
@@ -360,6 +367,12 @@ class BasisFunction:
         return self
 
     def apply_rotation(self, angle, axis):
+        """
+        apply a rotation with respect to an axis to the function
+        :param angle: angle in Radians
+        :param axis: the axis
+        :return:
+        """
         primitive_gaussians = deepcopy(self.primitive_gaussians)
         for primitive in primitive_gaussians:
             primitive.apply_rotation(angle, axis)
