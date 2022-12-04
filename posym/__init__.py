@@ -307,6 +307,10 @@ class SymmetryFunction(SymmetryMoleculeBase):
 class SymmetryWaveFunction(SymmetryMoleculeBase):
     def __init__(self, group, alpha_orbitals, beta_orbitals, center=None, orientation_angles=None):
 
+        # generate copy to not modify original orbitals
+        alpha_orbitals = [f.copy() for f in alpha_orbitals]
+        beta_orbitals = [f.copy() for f in beta_orbitals]
+
         function = BasisFunction([], [])
         for f in alpha_orbitals:
             function = function + f
@@ -317,10 +321,9 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
 
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
-        function = function.copy()
-        function.apply_translation(-np.array(self._center))
-
-        self._function = function
+        data_set = set(list(alpha_orbitals) + list(beta_orbitals))
+        for f in data_set:
+            f.apply_translation(-np.array(self._center))
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
@@ -391,6 +394,9 @@ class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
                  configurations,
                  center=None, orientation_angles=None):
 
+        # generate copy to not modify original orbitals
+        orbitals = [f.copy() for f in orbitals]
+
         function = BasisFunction([], [])
         for f in orbitals:
             function = function + f
@@ -399,15 +405,8 @@ class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
 
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
-        function = function.copy()
-        function.apply_translation(-np.array(self._center))
-
-        self._function = function
-
-        if orientation_angles is None:
-            self._angles = self.get_orientation()
-        else:
-            self._angles = orientation_angles
+        for f in orbitals:
+            f.apply_translation(-np.array(self._center))
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 

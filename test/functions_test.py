@@ -1,4 +1,4 @@
-from posym import SymmetryFunction, SymmetryBase, SymmetryWaveFunction
+from posym import SymmetryFunction, SymmetryBase, SymmetryWaveFunction, SymmetryWaveFunctionCI
 from posym.basis import PrimitiveGaussian, BasisFunction
 import posym.algebra as al
 import unittest
@@ -152,11 +152,14 @@ class OperationsTest(unittest.TestCase):
         self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2), 1, places=4)
         self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=4)
 
-        # apply rotation
+        # apply translation & rotation
+        random_displacement = np.random.random(3)
         random_axis = np.random.random(3)
         for o in self._orbitals:
+            o.apply_translation(random_displacement)
             o.apply_rotation(np.pi, random_axis)
 
+        print('SymmetryWaveFunction')
         sym_wf_excited_1 = SymmetryWaveFunction('c2v',
                                                 [o1, o2, o3, o4, o5],
                                                 [o1, o2, o3, o4, o6])
@@ -168,6 +171,22 @@ class OperationsTest(unittest.TestCase):
                                                 [o1, o2, o3, o4, o6],
                                                 [o1, o2, o3, o4, o6])
         print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
+
+        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2) + al.dot(sym_wf_excited_1, b1), 1, places=4)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=4)
+
+        configurations_1 = [{'amplitude': 1.0, 'occupations': {'alpha': [1, 1, 1, 1, 1, 0],
+                                                               'beta': [1, 1, 1, 1, 0, 1]}}]
+
+        configurations_2 = [{'amplitude': 1.0, 'occupations': {'alpha': [1, 1, 1, 1, 0, 1],
+                                                               'beta': [1, 1, 1, 1, 0, 1]}}]
+
+        print('SymmetryWaveFunctionCI')
+        sym_wf_excited_1 = SymmetryWaveFunctionCI('c2v', self._orbitals, configurations=configurations_1)
+        sym_wf_excited_2 = SymmetryWaveFunctionCI('c2v', self._orbitals, configurations=configurations_2)
+        print('Symmetry WF (excited state 1): ', sym_wf_excited_1)
+        print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
+        print(sym_wf_excited_1.center)
 
         self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2) + al.dot(sym_wf_excited_1, b1), 1, places=4)
         self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=4)
