@@ -39,35 +39,22 @@ class Rotation(Operation):
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-
     def get_measure(self, coordinates, modes, symbols, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
-        #print(self._measure_mode)
-
         measure_mode = []
-
-        # print('llñ', list(np.linspace(2*np.pi/self._order, 2*np.pi, self._order)))
         # for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
 
             operation = rotation(angle, rotated_axis)
-            # operated_coor = np.dot(operation, coordinates.T).T
-
             mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
 
             measure_mode_list = []
             for mode in modes:
-
-                # operated_mode = np.dot(operation, prepare_vector(coordinates, mode).T).T - operated_coor
                 operated_mode = np.dot(operation, np.array(mode).T).T
-
-                norm = np.linalg.norm(mode)
-
                 permu_mode = np.array(operated_mode)[permu]
-
-                measure_mode_list.append(np.trace(np.dot(mode, permu_mode.T))/norm)
+                measure_mode_list.append(np.trace(np.dot(mode, permu_mode.T))/np.linalg.norm(mode))
 
             measure_mode.append(measure_mode_list)
 
