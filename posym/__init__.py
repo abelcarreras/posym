@@ -256,13 +256,21 @@ class SymmetryModes(SymmetryMoleculeBase):
             mode_measures = np.array(mode_measures)
             self._mode_measures.append(mode_measures)
 
+        mode_measures_total = []
+        for op in self._mode_measures:
+            op_list = []
+            for m in op:
+                op_list.append(sum(m))
+            mode_measures_total.append(op_list)
+
         # reshape mode measures
         reshaped_modes_measures = []
         for m in range(len(self._mode_measures[0].T)):
             reshaped_modes_measures.append([k[:, m] for k in self._mode_measures])
 
         self._mode_measures = reshaped_modes_measures
-        total_state = pd.Series(np.sum(self._mode_measures, axis=0).tolist(), index=self._pg.op_labels)
+
+        total_state = pd.Series(mode_measures_total, index=self._pg.op_labels)
 
         super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
 
