@@ -137,8 +137,8 @@ ir_table_list = [
                'E': pd.Series([+2, -1, +2]),
                'T': pd.Series([+3,  0, -1])
                },
-              rotations=['T', 'T', 'T'],
-              translations=['T', 'T', 'T'],
+              rotations=['T'],
+              translations=['T'],
               multiplicities=[1, 8, 3]),
 
     CharTable('Td',
@@ -152,8 +152,8 @@ ir_table_list = [
                'T1': pd.Series([+3,  0, -1, +1, -1]),
                'T2': pd.Series([+3,  0, -1, -1, +1])
                },
-              rotations=['T1', 'T1', 'T1'],
-              translations=['T2', 'T2', 'T2'],
+              rotations=['T1'],
+              translations=['T2'],
               multiplicities=[1, 8, 3, 6, 6]),
 
     CharTable('Th',
@@ -169,8 +169,8 @@ ir_table_list = [
                'Eu': pd.Series([+2, -1, +2, -2, +1, -2]),
                'Tu': pd.Series([+3,  0, -1, -3,  0, +1])
                },
-              rotations=['Tg', 'Tg', 'Tg'],
-              translations=['Tu', 'Tu', 'Tu'],
+              rotations=['Tg'],
+              translations=['Tu'],
               multiplicities=[1, 8, 3, 1, 8, 3]),
 
     CharTable('O',
@@ -185,8 +185,8 @@ ir_table_list = [
                'T1': pd.Series([+3,  0, -1, +1, -1]),
                'T2': pd.Series([+3,  0, -1, -1, +1])
                },
-              rotations=['T1', 'T1', 'T1'],
-              translations=['T1', 'T1', 'T1'],
+              rotations=['T1'],
+              translations=['T1'],
               multiplicities=[1, 8, 3, 6, 6]),
 
     CharTable('Oh',
@@ -212,8 +212,8 @@ ir_table_list = [
                'T1u': pd.Series([+3,  0, -1, +1, -1, -3,  0, +1, -1, +1]),
                'T2u': pd.Series([+3,  0, -1, -1, +1, -3,  0, +1, +1, -1]),
                },
-              rotations=['T1g', 'T1g', 'T1g'],
-              translations=['T1u', 'T1u', 'T1u'],
+              rotations=['T1g'],
+              translations=['T1u'],
               multiplicities=[1, 8, 3, 6, 6, 1, 8, 3, 6, 6]),
 
     CharTable('I',
@@ -228,8 +228,8 @@ ir_table_list = [
                'G' : pd.Series([+4, -1, -1, +1,  0]),
                'H' : pd.Series([+5,  0,  0, -1, +1])
                },
-              rotations=['T1', 'T1', 'T1'],
-              translations=['T1', 'T1', 'T1'],
+              rotations=['T1'],
+              translations=['T1'],
               multiplicities=[1, 12, 12, 20, 15]),
 
     CharTable('Ih',
@@ -254,8 +254,8 @@ ir_table_list = [
                'Gu' : pd.Series([+4, -1, -1, +1,  0, -4, +1, +1, -1,  0]),
                'Hu' : pd.Series([+5,  0,  0, -1, +1, -5,  0,  0, +1, -1]),
                },
-              rotations=['T1g', 'T1g', 'T1g'],
-              translations=['T1u', 'T1u', 'T1u'],
+              rotations=['T1g'],
+              translations=['T1u'],
               multiplicities=[1, 12, 12, 20, 15, 1, 12, 12, 20, 15]),
 ]
 

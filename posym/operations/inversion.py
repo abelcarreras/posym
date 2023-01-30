@@ -22,7 +22,7 @@ class Inversion(Operation):
 
 
 
-    def get_measure(self, coordinates, modes, symbols, orientation=None):
+    def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
 
         operation = inversion()
         operated_coor = np.dot(operation, coordinates.T).T
@@ -38,6 +38,27 @@ class Inversion(Operation):
             measure_mode.append(np.trace(np.dot(mode, permu_mode.T))/norm)
 
         return np.array(measure_mode)
+
+    def get_measure_atom(self, coordinates, symbols, orientation=None):
+
+        operation = inversion()
+        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
+
+        return np.sum(measure_atoms)
+
+    def get_measure_xyz(self, orientation=None):
+
+        operation = inversion()
+        # mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        #permu_mask = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
+
+        measure_mode = []
+        for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
+            operated_axis = np.dot(operation, axis)
+            measure_mode.append(np.dot(axis, operated_axis))
+
+        return np.sum(measure_mode)
 
     def get_measure_pos(self, coordinates, symbols, orientation=None):
 

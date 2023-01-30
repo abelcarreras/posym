@@ -45,11 +45,11 @@ def get_cn(n):
         rotations = ['B', 'B', 'A']
         translations = ['B', 'B', 'A']
     elif n == 3 or n == 4:
-        rotations = ['E', 'E', 'A']
-        translations = ['E', 'E', 'A']
+        rotations = [ 'E', 'A']
+        translations = ['E', 'A']
     else:
-        rotations = ['E1', 'E1', 'A']
-        translations = ['E1', 'E1', 'A']
+        rotations = ['E1', 'A']
+        translations = ['E1', 'A']
 
     name = 'C{}'.format(n)
     #return name, operations, ir_data, rotations, translations, multiplicity
@@ -99,14 +99,14 @@ def get_cnv(n):
         multiplicities += [n]
 
     if n == 2:
-        rotations = ['B2', 'B2', 'A1']
+        rotations = ['B1', 'B2', 'A2']
         translations = ['B1', 'B2', 'A1']
     elif n == 3 or n == 4:
-        rotations = ['E', 'E', 'A2']
-        translations = ['E', 'E', 'A1']
+        rotations = ['E', 'A2']
+        translations = ['E', 'A1']
     else:
-        rotations = ['E1', 'E1', 'A2']
-        translations = ['E1', 'E1', 'A1']
+        rotations = ['E1', 'A2']
+        translations = ['E1', 'A1']
 
     return CharTable('C{}v'.format(n),
                      operations_new,
@@ -177,11 +177,11 @@ def get_cnh(n):
             rotations = ['Bu', 'Bu', 'Au']
             translations = ['Bg', 'Bg', 'Ag']
         elif  n == 4:
-            rotations = ['Eu', 'Eu', 'Au']
-            translations = ['Eg', 'Eg', 'Ag']
+            rotations = ['Eu', 'Au']
+            translations = ['Eg', 'Ag']
         else:
-            rotations = ['E1u', 'E1u', 'Au']
-            translations = ['E1g', 'E1g', 'Ag']
+            rotations = ['E1u', 'Au']
+            translations = ['E1g', 'Ag']
     else:
 
         ir_data_new["A'"] = pd.Series(list(ir_data['A']) + [1])
@@ -226,11 +226,11 @@ def get_cnh(n):
             rotations = ["A'", "A'", "A''"]
             translations = ["A''", "A''", "A'"]
         elif n == 3:
-            rotations = ["E'", "E'", "A''"]
-            translations = ["E''", "E''", "A'"]
+            rotations = ["E'", "A''"]
+            translations = ["E''", "A'"]
         else:
-            rotations = ["E1'", "E1'", "A''"]
-            translations = ["E1''", "E1''", "A'"]
+            rotations = ["E1'", "A''"]
+            translations = ["E1''", "A'"]
 
     return CharTable('C{}h'.format(n),
                      operations_new,
@@ -273,11 +273,11 @@ def get_sn(n):
             ir_data.update({label: pd.Series([2] + [real_radical((i+1)*(k+1), n) for k in range(ndim-1)])})
 
         if n == 4:
-            rotations = ['E', 'E', 'A']
-            translations = ['E', 'E', 'B']
+            rotations = ['E', 'A']
+            translations = ['E', 'B']
         else:
-            rotations = ['E1', 'E1', 'A']
-            translations = ['E{}'.format(l//2), 'E{}'.format(l//2), 'B']
+            rotations = ['E1', 'A']
+            translations = ['E{}'.format(l//2), 'B']
 
     else:
 
@@ -338,11 +338,11 @@ def get_sn(n):
             rotations = ['Ag', 'Ag', 'Ag']
             translations = ['Au', 'Au', 'Au']
         elif n == 6:
-            rotations = ['Eg', 'Eg', 'Ag']
-            translations = ['Eu', 'Eu', 'Au']
+            rotations = ['Eg', 'Ag']
+            translations = ['Eu', 'Au']
         else:
-            rotations = ['E1g', 'E1g', 'Ag']
-            translations = ['E1u', 'E1u', 'Au']
+            rotations = ['E1g', 'Ag']
+            translations = ['E1u', 'Au']
 
     return CharTable('S{}'.format(n),
                      operations,
@@ -408,11 +408,11 @@ def get_dn(n):
         rotations = ['B2', 'B2', 'A1']
         translations = ['B1', 'B2', 'A1']
     elif n == 3 or n == 4:
-        rotations = ['E', 'E', 'A2']
-        translations = ['E', 'E', 'A2']
+        rotations = ['E', 'A2']
+        translations = ['E', 'A2']
     else:
-        rotations = ['E1', 'E1', 'A2']
-        translations = ['E1', 'E1', 'A2']
+        rotations = ['E1', 'A2']
+        translations = ['E1', 'A2']
 
     return CharTable('D{}'.format(n),
                      operations_new,
@@ -515,11 +515,11 @@ def get_dnh(n):
             rotations = ['B3g', 'B2g', 'B1g']
             translations = ['B3u', 'B2u', 'B1u']
         elif  n == 4:
-            rotations = ['Eg', 'Eg', 'A2g']
-            translations = ['Eu', 'Eu', 'A2u']
+            rotations = ['Eg', 'A2g']
+            translations = ['Eu', 'A2u']
         else:
-            rotations = ['E1g', 'E1g', 'A2g']
-            translations = ['E1u', 'E1u', 'A2u']
+            rotations = ['E1g', 'A2g']
+            translations = ['E1u', 'A2u']
     else:
 
         ir_data_new["A1'"] = pd.Series(list(ir_data['A1']) + [1, 1])
@@ -577,11 +577,11 @@ def get_dnh(n):
             rotations = ["A1''", "A2''", "A2'"]
             translations = ["A1'", "A2'", "A2''"]
         elif n == 3:
-            rotations = ["E''", "E''", "A2'"]
-            translations = ["E'", "E'", "A2''"]
+            rotations = ["E''", "A2'"]
+            translations = ["E'", "A2''"]
         else:
-            rotations = ["E1''", "E1''", "A2'"]
-            translations = ["E1'", "E1'", "A2''"]
+            rotations = ["E1''", "A2'"]
+            translations = ["E1'", "A2''"]
 
     return CharTable('D{}h'.format(n),
                      operations_new,
@@ -618,11 +618,11 @@ def get_dnd(n):
         multiplicities = ir_data.multiplicities + [n, n]
 
         if n == 2:
-            rotations = ['E', 'E', 'A2']
-            translations = ['E', 'E', 'B2']
+            rotations = ['E', 'A2']
+            translations = ['E', 'B2']
         else:
-            rotations = ['E{}'.format(n-1), 'E{}'.format(n-1), 'A2']
-            translations = ['E1', 'E1', 'B2']
+            rotations = ['E{}'.format(n-1), 'A2']
+            translations = ['E1', 'B2']
     else:
         ir_data = get_dn(n)
         operations_new = ir_data.operations
@@ -683,11 +683,11 @@ def get_dnd(n):
             rotations = ["A1g", "A2g", "A2g"]
             translations = ["A1'", "A2'", "A2''"]
         elif n == 3:
-            rotations = ["Eg", "Eg", "A2g"]
-            translations = ["Eu", "Eu", "A2u"]
+            rotations = ["Eg", "A2g"]
+            translations = ["Eu", "A2u"]
         else:
-            rotations = ["E1g", "E1g", "A2g"]
-            translations = ["E1u", "E1u", "A2u"]
+            rotations = ["E1g", "A2g"]
+            translations = ["E1u", "A2u"]
 
     return CharTable('D{}d'.format(n),
                      operations_new,

@@ -12,10 +12,16 @@ class Identity(Operation):
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-    def get_measure(self, coordinates, modes, symbols, orientation=None):
+    def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
         self._measure_mode = [1.0] * len(modes)
 
         return np.array(self._measure_mode)
+
+    def get_measure_atom(self, coordinates, symbols, orientation=None):
+        return len(coordinates)
+
+    def get_measure_xyz(self, orientation=None):
+        return 3
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
         return (op_function1*op_function2).integrate

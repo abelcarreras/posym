@@ -39,7 +39,7 @@ class Rotation(Operation):
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-    def get_measure(self, coordinates, modes, symbols, orientation=None):
+    def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
@@ -61,6 +61,39 @@ class Rotation(Operation):
         measure_mode_total = np.average(measure_mode, axis=0)
 
         return measure_mode_total
+
+    def get_measure_atom(self, coordinates, symbols, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+
+        angle = 2 * np.pi / self._order * self._exp
+        operation = rotation(angle, rotated_axis)
+
+        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
+
+        return np.sum(measure_atoms)
+
+    def get_measure_xyz(self, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+
+        measure_mode = []
+        # for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+
+            operation = rotation(angle, rotated_axis)
+
+            measure_mode_list = []
+            for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
+                operated_axis = np.dot(operation, axis)
+                measure_mode_list.append(np.dot(axis, operated_axis))
+
+            measure_mode.append(measure_mode_list)
+
+        measure_mode_total = np.average(measure_mode, axis=0)
+
+        return np.sum(measure_mode_total)
 
     def get_measure_pos(self, coordinates, symbols, orientation=None):
 

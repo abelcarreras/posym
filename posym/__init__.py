@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.2.7'
+__version__ = '0.3.0'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
@@ -250,7 +250,7 @@ class SymmetryModes(SymmetryMoleculeBase):
         for operation in self._pg.operations:
             mode_measures = []
             for op in operations_dic[operation.label]:
-                mode_m = op.get_measure(self._coordinates, self._modes, self._symbols, orientation=rotmol)
+                mode_m = op.get_measure_modes(self._coordinates, self._modes, self._symbols, orientation=rotmol)
                 mode_measures.append(mode_m)
 
             mode_measures = np.array(mode_measures)
@@ -269,6 +269,41 @@ class SymmetryModes(SymmetryMoleculeBase):
     def get_state_mode(self, n):
         return SymmetryBase(group=self._group, rep=pd.Series(self._mode_measures[n],
                                                              index=self._pg.op_labels))
+
+
+class SymmetryModesFull(SymmetryMoleculeBase):
+    def __init__(self, group, coordinates, symbols, orientation_angles=None):
+
+        self._setup_structure(coordinates, symbols, group, None, orientation_angles)
+
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+        operations_dic = self._pg.get_all_operations()
+
+        trans_rots = []
+        for label in self._pg.ir_table.rotations + self._pg.ir_table.translations:
+            trans_rots.append(self._pg.ir_table[label].values)
+
+        trans_rots = np.sum(trans_rots, axis=0)
+
+        self._mode_measures = []
+        for operation in self._pg.operations:
+            mode_measures = []
+            for op in operations_dic[operation.label]:
+                measure_xyz = op.get_measure_xyz(orientation=rotmol)
+                measure_atom = op.get_measure_atom(self._coordinates, self._symbols, orientation=rotmol)
+
+                mode_measures.append(measure_xyz * measure_atom)
+
+            mode_measures = np.array(mode_measures)
+
+            self._mode_measures.append(mode_measures)
+
+        self._mode_measures = np.array(self._mode_measures, dtype=object).flatten() - trans_rots
+
+        total_state = pd.Series(self._mode_measures, index=self._pg.op_labels)
+
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
+
 
 
 class SymmetryFunction(SymmetryMoleculeBase):
@@ -482,34 +517,33 @@ if __name__ == '__main__':
     from pyqchem import get_output_from_qchem, Structure
     from pyqchem.tools import get_geometry_from_pubchem
 
+
     coordinates = [[ 0.000000000+00,  0.000000000+00,  2.40297090e-01],
                    [-1.43261539e+00, -1.75444785e-16, -9.61188362e-01],
                    [ 1.43261539e+00,  1.75444785e-16, -9.61188362e-01]]
 
     symbols = ['O', 'H', 'H']
 
-    coordinates = [[0, 0, 0],
+    coordinates_ = [[0, 0, 0],
                    [ np.sqrt(8/9), 0, -1/3],
                    [-np.sqrt(2/9), np.sqrt(2/3), -1/3],
                    [-np.sqrt(2/9), -np.sqrt(2/3), -1/3],
                    [0, 0, 1]]
 
-    #coordinates = [[ 0.0000000000,    0.0000000000,    0.0000000000],
-    #               [ 0.5541000000,    0.7996000000,    0.4965000000],
-    #               [ 0.6833000000,   -0.8134000000,   -0.2536000000],
-    #               [-0.7782000000,   -0.3735000000,    0.6692000000],
-    #               [-0.4593000000,    0.3874000000,   -0.9121000000]]
-
-    coordinates = [[-3.11301739e-06,  1.12541091e-05, -7.97835696e-06],
+    coordinates_ = [[-3.11301739e-06,  1.12541091e-05, -7.97835696e-06],
                    [-6.58614327e-02, -7.77865103e-01, -7.63860353e-01],
                    [-3.64119514e-02,  9.82136003e-01, -4.76386979e-01],
                    [-8.37587195e-01, -9.93456888e-02,  6.93899368e-01],
                    [ 9.39879258e-01, -1.04992740e-01,  5.46395830e-01]]
 
-    symbols = ['C', 'H', 'H', 'H', 'H']
+    symbols_ = ['C', 'H', 'H', 'H', 'H']
 
+    sm = SymmetryModesFull('c2v', coordinates, symbols)
+    print(sm.get_point_group())
+    print(sm)
+    exit()
 
-    if True:
+    if False:
         #mol = get_geometry_from_pubchem('methane')
         from pyqchem.file_io import read_structure_from_xyz
 
@@ -523,6 +557,15 @@ if __name__ == '__main__':
     from posym.operations.reflection import Reflection, reflection
     from posym.operations.irotation import ImproperRotation
     from posym.operations import get_permutation_simple, get_cross_distance_table
+
+    coordinates = np.array(coordinates)
+    operation = Rotation(label='C2', axis=[0, 0, 1], order=2)
+    operation = Reflection(label='C2', axis=[0, 0, 1])
+
+    a = operation.get_measure_xyz(coordinates, symbols)
+    print(a)
+
+    exit()
 
     import matplotlib.pyplot as plt
 

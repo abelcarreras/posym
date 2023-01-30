@@ -1,4 +1,4 @@
-from posym import SymmetryModes
+from posym import SymmetryModes, SymmetryModesFull
 from posym import algebra as al
 import unittest
 import numpy as np
@@ -29,6 +29,10 @@ def make_test_function(filename, group):
                            symbols=molecule_symbols,
                            )
 
+        sm_xyz = SymmetryModesFull(group=group,
+                                   coordinates=molecule_coor,
+                                   symbols=molecule_symbols)
+
         def localization(measure_list):
             import itertools
             prod_list = []
@@ -44,13 +48,17 @@ def make_test_function(filename, group):
             total_loc.append(localization(sm.get_state_mode(i).get_ir_representation().values))
 
         max_loc = np.max(np.abs(total_loc))
+        norm_diff = np.abs(np.subtract(sm.get_ir_representation().values, sm_xyz.get_ir_representation().values))
 
         print('Total: ', sm)
+        print('Total XYZ: ', sm_xyz)
         print('Norm: ', al.norm(sm), len(molecule_symbols) * 3 - 6)
         print('Dot: ', al.dot(sm, sm))
         print('angles: ', sm.orientation_angles)
         print('loc: ', max_loc)
+        print('norm_diff:', np.min(norm_diff))
 
+        self.assertLess(np.min(norm_diff), 1e-2) # check sm == sm_xyz
         self.assertLess(max_loc, 1e-2)
         self.assertLess(pos_measure, 1e-2)
 
