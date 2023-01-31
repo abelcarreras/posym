@@ -72,9 +72,6 @@ class SymmetryBase():
 
         str = ''
         for i, r in enumerate(ir_rep):
-            #ir_norm = self._pg.ir_table[ir_labels[i]]['E']
-            #r *= ir_norm
-            #print('>> ', np.add.reduce(np.square(ir_rep[:i])), 'r:', r)
             if np.add.reduce(np.square(ir_rep[:i])) > 0 and r > 0:
                     str += ' + '
             elif r < 0:
@@ -92,16 +89,16 @@ class SymmetryBase():
 
         ir_labels = self.get_ir_representation().index
 
-        str = ''
+        txt = ''
         for i, r in enumerate(ir_rep):
-            #print('>> ', np.add.reduce(ir_rep[:i]**2), 'r:', r)
+            # print('>> ', np.add.reduce(ir_rep[:i]**2), 'r:', r)
             if np.add.reduce(np.square(ir_rep[:i])) > 0 and r > 0 and len(ir_rep[:i]) > 0:
-                str += '+'
+                txt += '+'
             if r == 1:
-                str += ir_labels[i]
+                txt += ir_labels[i]
             elif r > 0:
-                str += '{}{}'.format(r, ir_labels[i])
-        return str
+                txt += '{}{}'.format(r, ir_labels[i])
+        return txt
 
     def __add__(self, other):
 
@@ -174,7 +171,7 @@ class SymmetryMoleculeBase(SymmetryBase):
             # definition group measure
             return np.linalg.norm(coor_measures)
 
-        # preliminar scan
+        # preliminary scan
         list_m = []
         list_a = []
         for i in np.arange(0, 180, 10):
@@ -184,11 +181,11 @@ class SymmetryMoleculeBase(SymmetryBase):
                     list_a.append([i, j, k])
 
         initial = np.array(list_a[np.nanargmin(list_m)])
-        res = minimize(optimization_function, initial, method='CG',
+        result = minimize(optimization_function, initial, method='CG',
                        # bounds=((0, 360), (0, 360), (0, 360)),
                        # tol=1e-20
                        )
-        cache_orientation[hash_num] = res.x
+        cache_orientation[hash_num] = result.x
         return cache_orientation[hash_num]
 
     def get_oriented_operations(self):
@@ -303,13 +300,10 @@ class SymmetryModesFull(SymmetryMoleculeBase):
                 mode_measures.append(measure_xyz * measure_atom)
 
             mode_measures = np.array(mode_measures)
-
             self._mode_measures.append(mode_measures)
 
         self._mode_measures = np.array(self._mode_measures, dtype=object).flatten() - trans_rots
-
         total_state = pd.Series(self._mode_measures, index=self._pg.op_labels)
-
         super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
 
 
@@ -324,12 +318,11 @@ class SymmetryFunction(SymmetryMoleculeBase):
         self._function = function.copy()
         self._function.apply_translation(-np.array(self._center))
 
-        self._operator_measures = []
-
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
         self._self_similarity = (self._function * self._function).integrate
 
+        self._operator_measures = []
         for operation in self._pg.operations:
             operations_dic = self._pg.get_all_operations()
             operator_measures = []
@@ -382,9 +375,9 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
                     for operation in self._pg.operations:
                         operations_dic = self._pg.get_all_operations()
                         operator_overlaps = []
+
                         for op in operations_dic[operation.label]:
                             overlap = op.get_overlap_func(a_orb, b_orb, orientation=rotmol)
-
                             operator_overlaps.append(overlap/self_similarity)
 
                         operator_overlaps = np.array(operator_overlaps)
@@ -445,7 +438,6 @@ class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
             function = function + f
 
         symbols, coordinates = function.get_environment_centers()
-
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         for f in orbitals:
