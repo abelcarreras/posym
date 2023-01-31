@@ -1,5 +1,5 @@
 import numpy as np
-from posym.permutations import get_cross_distance_table, get_permutation_simple
+from posym.permutations import get_cross_distance_table, get_permutation_simple  # noqa
 
 
 def get_cross_distance_table_py(coordinates_1, coordinates_2):
