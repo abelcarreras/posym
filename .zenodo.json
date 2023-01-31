@@ -21,11 +21,9 @@
         }
       ]
     },
-    "version": "v0.2.5",
     "keywords": [
       "symmetry, Python, normal modes, wave function, molecular orbitals, chemistry"
     ],
-    "publication_date": "2022-10-28",
     "creators": [
       {
         "orcid": "0000-0001-5529-2440",
@@ -37,17 +35,5 @@
     "resource_type": {
       "type": "software",
       "title": "Software"
-    },
-    "related_identifiers": [
-      {
-        "scheme": "url",
-        "identifier": "https://github.com/abelcarreras/posym/tree/v0.2.5",
-        "relation": "isSupplementTo"
-      },
-      {
-        "scheme": "doi",
-        "identifier": "10.5281/zenodo.7261325",
-        "relation": "isVersionOf"
-      }
-    ]
+    }
 }
