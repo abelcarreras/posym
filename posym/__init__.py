@@ -132,6 +132,19 @@ class SymmetryMoleculeBase(SymmetryBase):
 
         if total_state is None:
             total_state = self._pg.ir_labels[0]
+            self._operator_measures = []
+            for operation in self._pg.operations:
+                operations_dic = self._pg.get_all_operations()
+                operator_measures = []
+                for op in operations_dic[operation.label]:
+                    overlap = op.get_measure_pos(np.array(coordinates), symbols, orientation=orientation_angles)
+                    geom_center = np.average(coordinates, axis=0)
+                    measure_norm = np.average(np.linalg.norm(np.subtract(coordinates, geom_center), axis=1))
+                    operator_measures.append(1-overlap/measure_norm)
+
+                self._operator_measures.append(np.array(operator_measures))
+
+            total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
 
         super().__init__(group, total_state)
 
@@ -214,7 +227,10 @@ class SymmetryMoleculeBase(SymmetryBase):
                 coor_measures.append(coor_m)
 
             # definition group measure
-            return np.linalg.norm(coor_measures)
+            geom_center = np.average(self._coordinates, axis=0)
+            measure_norm = np.average(np.linalg.norm(np.subtract(self._coordinates, geom_center), axis=1))
+
+            return np.linalg.norm(coor_measures)/measure_norm
 
         coor_measures = get_measure_pos_total(self._angles)
         return np.product(coor_measures)
@@ -541,7 +557,12 @@ if __name__ == '__main__':
     sm = SymmetryModesFull('c2v', coordinates, symbols)
     print(sm.get_point_group())
     print(sm)
+    mb = SymmetryMoleculeBase('c2v', coordinates, symbols)
+    from posym.algebra import norm
+    print('Coor measure: ', mb, '(', norm(mb), ')')
+
     exit()
+
 
     if False:
         #mol = get_geometry_from_pubchem('methane')
