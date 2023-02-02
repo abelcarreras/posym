@@ -131,7 +131,6 @@ class SymmetryMoleculeBase(SymmetryBase):
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         if total_state is None:
-            total_state = self._pg.ir_labels[0]
             self._operator_measures = []
             for operation in self._pg.operations:
                 operations_dic = self._pg.get_all_operations()
