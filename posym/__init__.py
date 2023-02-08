@@ -131,12 +131,13 @@ class SymmetryMoleculeBase(SymmetryBase):
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         if total_state is None:
+            rotmol = R.from_euler('zyx', self._angles, degrees=True).inv()
             self._operator_measures = []
             for operation in self._pg.operations:
                 operations_dic = self._pg.get_all_operations()
                 operator_measures = []
                 for op in operations_dic[operation.label]:
-                    overlap = op.get_measure_pos(np.array(coordinates), symbols, orientation=orientation_angles)
+                    overlap = op.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
                     geom_center = np.average(coordinates, axis=0)
                     measure_norm = np.average(np.linalg.norm(np.subtract(coordinates, geom_center), axis=1))
                     operator_measures.append(1-overlap/measure_norm)
@@ -322,7 +323,6 @@ class SymmetryModesFull(SymmetryMoleculeBase):
         super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
 
 
-
 class SymmetryFunction(SymmetryMoleculeBase):
     def __init__(self, group, function, orientation_angles=None, center=None):
 
@@ -425,19 +425,19 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
             total_state = pd.Series(operator_overlaps_alpha, index=self._pg.op_labels) * \
                           pd.Series(operator_overlaps_beta, index=self._pg.op_labels)
 
-            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
+            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
         elif len(alpha_orbitals) > 0:
 
             operator_overlaps_alpha = get_overlaps(alpha_orbitals)
             total_state = pd.Series(operator_overlaps_alpha, index=self._pg.op_labels)
-            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
+            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
         elif len(beta_orbitals) > 0:
 
             operator_overlaps_beta = get_overlaps(beta_orbitals)
             total_state = pd.Series(operator_overlaps_beta, index=self._pg.op_labels)
-            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
+            super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
 
 class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
