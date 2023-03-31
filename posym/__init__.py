@@ -131,15 +131,17 @@ class SymmetryMoleculeBase(SymmetryBase):
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         if total_state is None:
-            rotmol = R.from_euler('zyx', self._angles, degrees=True).inv()
+            rotmol = R.from_euler('zyx', self._angles, degrees=True)
+            geom_center = np.average(coordinates, axis=0)
+            centered_coor = np.subtract(coordinates, geom_center)
+
             self._operator_measures = []
             for operation in self._pg.operations:
                 operations_dic = self._pg.get_all_operations()
                 operator_measures = []
                 for op in operations_dic[operation.label]:
-                    overlap = op.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
-                    geom_center = np.average(coordinates, axis=0)
-                    measure_norm = np.average(np.linalg.norm(np.subtract(coordinates, geom_center), axis=1))
+                    overlap = op.get_measure_pos(centered_coor, symbols, orientation=rotmol)
+                    measure_norm = np.average(np.linalg.norm(centered_coor, axis=1))
                     operator_measures.append(1-overlap/measure_norm)
 
                 self._operator_measures.append(np.array(operator_measures))

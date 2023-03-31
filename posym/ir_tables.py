@@ -311,6 +311,6 @@ if __name__ == '__main__':
     print(0, 1, 0)
     exit()
 
-    #[Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
+    # [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
     # Rotation(label='C2', axis=[np.sqrt(8 / 9), 0, -1 / 3], order=2),
     # ImproperRotation(label='S4', axis=[np.sqrt(8 / 9), 0, -1 / 3], order=4),

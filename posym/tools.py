@@ -1,12 +1,11 @@
-from itertools import combinations
 from copy import deepcopy
 import numpy as np
 from posym.basis import BasisFunction, PrimitiveGaussian
 
 
-def list_round(list, decimals=2):
+def list_round(elements_list, decimals=2):
     r_list = []
-    for element in list:
+    for element in elements_list:
         if abs(np.round(element) - element) < 10**(-decimals):
             r_list.append(int(np.round(element)))
         else:

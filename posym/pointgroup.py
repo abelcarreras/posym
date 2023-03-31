@@ -2,7 +2,7 @@ import numpy as np
 from posym.generate_tables import get_table_from_label
 
 
-class PointGroup():
+class PointGroup:
     """
     Basic class to basically handle IR-table.
 
