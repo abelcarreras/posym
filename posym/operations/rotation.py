@@ -107,9 +107,7 @@ class Rotation(Operation):
             mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
             measure_coor.append(mesure_coor)
 
-        measure_coor_total = np.average(measure_coor)
-
-        return measure_coor_total
+        return np.average(measure_coor)
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 

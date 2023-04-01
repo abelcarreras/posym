@@ -219,23 +219,21 @@ class SymmetryMoleculeBase(SymmetryBase):
 
     @property
     def measure_pos(self):
-        def get_measure_pos_total(angles):
 
-            rotmol = R.from_euler('zyx', angles, degrees=True)
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
-            coor_measures = []
-            for operation in self._pg.operations:
-                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
-                coor_measures.append(coor_m)
+        coor_measures = []
+        for operation in self._pg.operations:
+            coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+            coor_measures.append(coor_m)
 
-            # definition group measure
-            geom_center = np.average(self._coordinates, axis=0)
-            measure_norm = np.average(np.linalg.norm(np.subtract(self._coordinates, geom_center), axis=1))
+        # definition group measure
+        geom_center = np.average(self._coordinates, axis=0)
+        measure_norm = np.average(np.linalg.norm(np.subtract(self._coordinates, geom_center), axis=1))
 
-            return np.linalg.norm(coor_measures)/measure_norm
+        print(coor_measures)
 
-        coor_measures = get_measure_pos_total(self._angles)
-        return np.product(coor_measures)
+        return np.linalg.norm(coor_measures)/measure_norm
 
     @property
     def opt_coordinates(self):
