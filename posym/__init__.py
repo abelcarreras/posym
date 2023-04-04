@@ -248,9 +248,7 @@ class SymmetryMoleculeBase(SymmetryBase):
                 coor_m = sub_operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
                 coor_measures.append(coor_m)
 
-        # print('vals posym:', coor_measures)
-        # return np.average(1-np.array(coor_measures))
-        return 100*(1-np.average(coor_measures))
+        return 1-np.average(coor_measures)
 
     @property
     def opt_coordinates(self):

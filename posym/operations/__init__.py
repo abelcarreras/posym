@@ -110,6 +110,7 @@ class Operation:
         permu_coor = operated_coor[list(perm)]
 
         measure = np.einsum('ij, ij -> ', coordinates, permu_coor)
+        # measure = np.trace(np.dot(coordinates, permu_coor.T))
 
         return measure, list(perm)
 
