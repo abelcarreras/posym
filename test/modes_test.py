@@ -60,7 +60,7 @@ def make_test_function(filename, group):
 
         self.assertLess(np.min(norm_diff), 1e-2) # check sm == sm_xyz
         self.assertLess(max_loc, 1e-2)
-        self.assertLess(pos_measure, 1e-2)
+        self.assertGreater(pos_measure, 0.99)
 
     return test
 

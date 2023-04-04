@@ -3,7 +3,7 @@ from posym import SymmetryMoleculeBase
 import numpy as np
 
 
-sh6_coor = [[ 0.16290727, -0.36340852,  0.00000000],
+sh6_coor = [[ 0.16290727, -0.36340852,  1.00000000],
             [ 1.47290727, -0.36340852,  0.00000000],
             [ 0.16290727,  0.94659148,  0.00000000],
             [ 0.16290727, -0.36340852,  1.31000000],
@@ -17,13 +17,16 @@ group = 'Oh'
 print('\nPoint Group: {}'.format(group))
 
 sm = SymmetryMoleculeBase(group=group, coordinates=sh6_coor, symbols=sh6_sym)
-
+print(sm.measure_pos)
+exit()
 
 print(sm.get_point_group())
 print('Group measure: ', sm.measure_pos)
 print('Symmetry center: ', sm.center)
 print('Group orientation Euler angles zyx (deg): ', sm.orientation_angles)
 
+print(len(sm.get_oriented_operations()))
+exit()
 print('\nOperations list\n---------------')
 for operation in sm.get_oriented_operations():
     print('Operation object: ', operation)

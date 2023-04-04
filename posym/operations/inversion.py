@@ -60,10 +60,13 @@ class Inversion(Operation):
 
         return np.sum(measure_mode)
 
-    def get_measure_pos(self, coordinates, symbols, orientation=None):
+    def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         operation = inversion()
         mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+
+        if normalized:
+            mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
         return mesure_coor
 

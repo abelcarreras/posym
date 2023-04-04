@@ -67,12 +67,15 @@ class Reflection(Operation):
 
         return np.sum(measure_mode)
 
-    def get_measure_pos(self, coordinates, symbols, orientation=None):
+    def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         operation = reflection(rotated_axis)
         mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+
+        if normalized:
+            mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
         return mesure_coor
 

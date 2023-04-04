@@ -27,8 +27,8 @@ class PointGroup:
     def __str__(self):
         return '{}\n{}'.format(self._table.name, self._table)
 
-    def get_all_operations(self):
-        return self._table.get_all_operations()
+    def get_sub_operations(self, label):
+        return self._table.get_all_operations()[label]
 
     @property
     def group(self):

@@ -26,10 +26,11 @@ class Identity(Operation):
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
         return (op_function1*op_function2).integrate
 
-    def get_measure_pos(self, coordinates, symbols, orientation=None):
-        self._measure_coor = 0.0
-
-        return self._measure_coor
+    def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
+        if normalized:
+            return 1.0
+        else:
+            return np.einsum('ij, ij -> ', coordinates, coordinates)
 
     def apply_rotation(self, orientation):
         pass

@@ -126,9 +126,10 @@ class SymmetryBase():
 
 
 class SymmetryMoleculeBase(SymmetryBase):
-    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None):
+    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None,
+                 fast_optimization=True):
 
-        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles, fast_optimization=fast_optimization)
 
         if total_state is None:
             rotmol = R.from_euler('zyx', self._angles, degrees=True)
@@ -137,12 +138,10 @@ class SymmetryMoleculeBase(SymmetryBase):
 
             self._operator_measures = []
             for operation in self._pg.operations:
-                operations_dic = self._pg.get_all_operations()
                 operator_measures = []
-                for op in operations_dic[operation.label]:
+                for op in self._pg.get_sub_operations(operation.label):
                     overlap = op.get_measure_pos(centered_coor, symbols, orientation=rotmol)
-                    measure_norm = np.average(np.linalg.norm(centered_coor, axis=1))
-                    operator_measures.append(1-overlap/measure_norm)
+                    operator_measures.append(overlap)
 
                 self._operator_measures.append(np.array(operator_measures))
 
@@ -150,7 +149,7 @@ class SymmetryMoleculeBase(SymmetryBase):
 
         super().__init__(group, total_state)
 
-    def _setup_structure(self, coordinates, symbols, group, center, orientation_angles):
+    def _setup_structure(self, coordinates, symbols, group, center, orientation_angles, fast_optimization=True):
 
         self._coordinates = np.array(coordinates)
         self._symbols = symbols
@@ -164,27 +163,49 @@ class SymmetryMoleculeBase(SymmetryBase):
             self._coordinates = np.array([c - self._center for c in self._coordinates])
 
         if orientation_angles is None:
-            self._angles = self.get_orientation()
+            self._angles = self.get_orientation(fast_optimization=fast_optimization)
         else:
             self._angles = orientation_angles
 
-    def get_orientation(self):
+    def get_orientation(self, fast_optimization=True):
+        """
+        get orientation angles for optimum orientation.
+        Use full=False to orient perfect symmetric molecules. Use full=True to orient quasi symmetric molecules
+
+        :param fast_optimization: if True use only a subset of symmetry elements (for exact symmetry objets)
+        :return:
+        """
 
         hash_num = get_hash(self._coordinates, self._symbols, self._pg.label)
         if hash_num in cache_orientation:
             return cache_orientation[hash_num]
 
-        def optimization_function(angles):
+        def optimization_function_simple(angles):
 
             rotmol = R.from_euler('zyx', angles, degrees=True)
 
             coor_measures = []
             for operation in self._pg.operations:
-                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol, normalized=False)
                 coor_measures.append(coor_m)
 
             # definition group measure
-            return np.linalg.norm(coor_measures)
+            return -np.linalg.norm(coor_measures)
+
+        def optimization_function_full(angles):
+
+            rotmol = R.from_euler('zyx', angles, degrees=True)
+
+            coor_measures = []
+            for operation in self._pg.operations:
+                for sub_operation in self._pg.get_sub_operations(operation.label):
+                    coor_m = sub_operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol, normalized=False)
+                    coor_measures.append(coor_m)
+
+            # definition group measure
+            return -np.linalg.norm(coor_measures)
+
+        optimization_function = optimization_function_simple if fast_optimization else optimization_function_full
 
         # preliminary scan
         list_m = []
@@ -205,15 +226,14 @@ class SymmetryMoleculeBase(SymmetryBase):
 
     def get_oriented_operations(self):
         import copy
-        rotmol = R.from_euler('zyx', self.orientation_angles, degrees=True).inv()
+        rotmol = R.from_euler('zyx', self.orientation_angles, degrees=True)
 
         operations_list = []
-        operations_dic = self._pg.get_all_operations()
         for operation in self._pg.operations:
-            for operation in operations_dic[operation.label]:
-                operation = copy.deepcopy(operation)
-                operation.apply_rotation(rotmol)
-                operations_list.append(operation)
+            for sub_operation in self._pg.get_sub_operations(operation.label):
+                sub_operation = copy.deepcopy(sub_operation)
+                sub_operation.apply_rotation(rotmol)
+                operations_list.append(sub_operation)
 
         return operations_list
 
@@ -224,16 +244,13 @@ class SymmetryMoleculeBase(SymmetryBase):
 
         coor_measures = []
         for operation in self._pg.operations:
-            coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
-            coor_measures.append(coor_m)
+            for sub_operation in self._pg.get_sub_operations(operation.label):
+                coor_m = sub_operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                coor_measures.append(coor_m)
 
-        # definition group measure
-        geom_center = np.average(self._coordinates, axis=0)
-        measure_norm = np.average(np.linalg.norm(np.subtract(self._coordinates, geom_center), axis=1))
-
-        print(coor_measures)
-
-        return np.linalg.norm(coor_measures)/measure_norm
+        # print('vals posym:', coor_measures)
+        # return np.average(1-np.array(coor_measures))
+        return 100*(1-np.average(coor_measures))
 
     @property
     def opt_coordinates(self):
@@ -257,12 +274,11 @@ class SymmetryModes(SymmetryMoleculeBase):
         self._modes = modes
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
-        operations_dic = self._pg.get_all_operations()
 
         self._mode_measures = []
         for operation in self._pg.operations:
             mode_measures = []
-            for op in operations_dic[operation.label]:
+            for op in self._pg.get_sub_operations(operation.label):
                 mode_m = op.get_measure_modes(self._coordinates, self._modes, self._symbols, orientation=rotmol)
                 mode_measures.append(mode_m)
 
@@ -298,7 +314,6 @@ class SymmetryModesFull(SymmetryMoleculeBase):
         self._setup_structure(coordinates, symbols, group, None, orientation_angles)
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
-        operations_dic = self._pg.get_all_operations()
 
         trans_rots = []
         for label in self._pg.ir_table.rotations + self._pg.ir_table.translations:
@@ -309,7 +324,7 @@ class SymmetryModesFull(SymmetryMoleculeBase):
         self._mode_measures = []
         for operation in self._pg.operations:
             mode_measures = []
-            for op in operations_dic[operation.label]:
+            for op in self._pg.get_sub_operations(operation.label):
                 measure_xyz = op.get_measure_xyz(orientation=rotmol)
                 measure_atom = op.get_measure_atom(self._coordinates, self._symbols, orientation=rotmol)
 
@@ -339,9 +354,8 @@ class SymmetryFunction(SymmetryMoleculeBase):
 
         self._operator_measures = []
         for operation in self._pg.operations:
-            operations_dic = self._pg.get_all_operations()
             operator_measures = []
-            for op in operations_dic[operation.label]:
+            for op in self._pg.get_sub_operations(operation.label):
                 overlap = op.get_overlap_func(self._function, self._function, orientation=rotmol)
                 operator_measures.append(overlap/self._self_similarity)
 
@@ -388,10 +402,8 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
 
                     overlaps_list = []
                     for operation in self._pg.operations:
-                        operations_dic = self._pg.get_all_operations()
                         operator_overlaps = []
-
-                        for op in operations_dic[operation.label]:
+                        for op in self._pg.get_sub_operations(operation.label):
                             overlap = op.get_overlap_func(a_orb, b_orb, orientation=rotmol)
                             operator_overlaps.append(overlap/self_similarity)
 
@@ -494,9 +506,8 @@ class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
 
                     overlaps_list = []
                     for operation in self._pg.operations:
-                        operations_dic = self._pg.get_all_operations()
                         operator_overlaps = []
-                        for op in operations_dic[operation.label]:
+                        for op in self._pg.get_sub_operations(operation.label):
                             overlap = op.get_overlap_func(a_orb, b_orb, orientation=rotmol)
                             operator_overlaps.append(overlap/self_similarity)
 

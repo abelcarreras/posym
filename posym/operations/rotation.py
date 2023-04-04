@@ -95,7 +95,7 @@ class Rotation(Operation):
 
         return np.sum(measure_mode_total)
 
-    def get_measure_pos(self, coordinates, symbols, orientation=None):
+    def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
@@ -107,7 +107,12 @@ class Rotation(Operation):
             mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
             measure_coor.append(mesure_coor)
 
-        return np.average(measure_coor)
+        measure_coor_total = np.average(measure_coor)
+
+        if normalized:
+            measure_coor_total /= np.einsum('ij, ij -> ', coordinates, coordinates)
+
+        return measure_coor_total
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 

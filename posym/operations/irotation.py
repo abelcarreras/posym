@@ -96,7 +96,7 @@ class ImproperRotation(Operation):
 
         return np.sum(measure_mode_total)
 
-    def get_measure_pos(self, coordinates, symbols, orientation=None):
+    def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
@@ -112,6 +112,9 @@ class ImproperRotation(Operation):
             measure_coor.append(mesure_coor)
 
         measure_coor_total = np.average(measure_coor)
+
+        if normalized:
+            mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
         return measure_coor_total
 
