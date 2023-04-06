@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
@@ -210,7 +210,7 @@ class SymmetryMoleculeBase(SymmetryBase):
 
         # preliminary scan
         guess_angles = ref_value = None
-        for angles in itertools.product(np.arange(0, 180, 10), np.arange(0, 180, 10), np.arange(0, 180, 10)):
+        for angles in itertools.product(np.arange(-90, 100, 10), np.arange(-90, 100, 10), np.arange(-90, 100, 10)):
             value = optimization_function(angles)
             if ref_value is None or value < ref_value:
                 ref_value = value
@@ -235,17 +235,25 @@ class SymmetryMoleculeBase(SymmetryBase):
         return operations_list
 
     @property
+    def measure(self):
+        return 100*(1-self.get_ir_representation().values[0])
+
+    @property
     def measure_pos(self):
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
-        coor_measures = []
+        operator_measures = []
         for operation in self._pg.operations:
-            for sub_operation in self._pg.get_sub_operations(operation.label):
-                coor_m = sub_operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
-                coor_measures.append(coor_m)
+            sub_operator_measures = []
+            for op in self._pg.get_sub_operations(operation.label):
+                overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                sub_operator_measures.append(overlap)
+            operator_measures.append(np.average(sub_operator_measures))
 
-        return 1-np.average(coor_measures)
+        ir_rep = np.dot(self._pg.trans_matrix_inv, operator_measures)
+
+        return 100 * (1 - ir_rep[0])
 
     @property
     def opt_coordinates(self):
