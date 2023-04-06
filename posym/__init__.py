@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
@@ -191,7 +191,7 @@ class SymmetryMoleculeBase(SymmetryBase):
                 coor_measures.append(coor_m)
 
             # definition group measure
-            return -np.linalg.norm(coor_measures)
+            return -np.sum(coor_measures)
 
         def optimization_function_full(angles):
 
@@ -204,7 +204,7 @@ class SymmetryMoleculeBase(SymmetryBase):
                     coor_measures.append(coor_m)
 
             # definition group measure
-            return -np.linalg.norm(coor_measures)
+            return -np.sum(coor_measures)
 
         optimization_function = optimization_function_simple if fast_optimization else optimization_function_full
 
