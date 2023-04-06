@@ -129,9 +129,9 @@ class OperationsTest(unittest.TestCase):
 
         self.assertAlmostEqual(al.dot(sym_o1, a1), 1, places=5)
         self.assertAlmostEqual(al.dot(sym_o2, a1), 1, places=5)
-        self.assertAlmostEqual(al.dot(sym_o3, b1), 1, places=5)
+        self.assertAlmostEqual(al.dot(sym_o3, b2), 1, places=5)
         self.assertAlmostEqual(al.dot(sym_o4, a1), 1, places=5)
-        self.assertAlmostEqual(al.dot(sym_o5, b2), 1, places=5)
+        self.assertAlmostEqual(al.dot(sym_o5, b1), 1, places=5)
         self.assertAlmostEqual(al.dot(sym_o6, a1), 1, places=5)
 
         # Operate molecular orbitals symmetries to get the symmetry of non-degenerate wave functions
@@ -149,7 +149,7 @@ class OperationsTest(unittest.TestCase):
         print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
 
         self.assertAlmostEqual(al.dot(sym_wf_gs, a1), 1, places=4)
-        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2), 1, places=4)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b1), 1, places=4)
         self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=4)
 
         # apply translation & rotation
