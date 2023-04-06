@@ -5,9 +5,10 @@ from posym.tools import list_round
 from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from scipy.spatial.transform import Rotation as R
-from scipy.optimize import minimize
+from scipy.optimize import minimize, basinhopping
 import numpy as np
 import pandas as pd
+import itertools
 
 cache_orientation = {}
 def get_hash(coordinates, symbols, group):
@@ -208,19 +209,15 @@ class SymmetryMoleculeBase(SymmetryBase):
         optimization_function = optimization_function_simple if fast_optimization else optimization_function_full
 
         # preliminary scan
-        list_m = []
-        list_a = []
-        for i in np.arange(0, 180, 10):
-            for j in np.arange(0, 180, 10):
-                for k in np.arange(0, 180, 10):
-                    list_m.append(optimization_function([i, j, k]))
-                    list_a.append([i, j, k])
+        guess_angles = ref_value = None
+        for angles in itertools.product(np.arange(0, 180, 10), np.arange(0, 180, 10), np.arange(0, 180, 10)):
+            value = optimization_function(angles)
+            if ref_value is None or value < ref_value:
+                ref_value = value
+                guess_angles = angles
 
-        initial = np.array(list_a[np.nanargmin(list_m)])
-        result = minimize(optimization_function, initial, method='CG',
-                       # bounds=((0, 360), (0, 360), (0, 360)),
-                       # tol=1e-20
-                       )
+        result = minimize(optimization_function, guess_angles, method='CG',)
+
         cache_orientation[hash_num] = result.x
         return cache_orientation[hash_num]
 
