@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.5.1'
+__version__ = '0.5.2'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
@@ -182,6 +182,10 @@ class SymmetryMoleculeBase(SymmetryBase):
             return cache_orientation[hash_num]
 
         def optimization_function_simple(angles):
+            """
+            This function uses only one operation of each type (described in the IR table).
+            This approach works well when the molecule has a symmetry close to the group
+            """
 
             rotmol = R.from_euler('zyx', angles, degrees=True)
 
@@ -190,22 +194,28 @@ class SymmetryMoleculeBase(SymmetryBase):
                 coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol, normalized=False)
                 coor_measures.append(coor_m)
 
-            # definition group measure
-            return -np.sum(coor_measures)
+            # get most symmetric IR value
+            return -np.dot(coor_measures, self._pg.trans_matrix_inv[0])
 
         def optimization_function_full(angles):
+            """
+            This function uses all operations of the group and averages the overlap of equivalent operations
+            """
 
             rotmol = R.from_euler('zyx', angles, degrees=True)
 
-            coor_measures = []
+            operator_measures = []
             for operation in self._pg.operations:
-                for sub_operation in self._pg.get_sub_operations(operation.label):
-                    coor_m = sub_operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol, normalized=False)
-                    coor_measures.append(coor_m)
+                sub_operator_measures = []
+                for op in self._pg.get_sub_operations(operation.label):
+                    overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                    sub_operator_measures.append(overlap)
+                operator_measures.append(np.average(sub_operator_measures))
 
-            # definition group measure
-            return -np.sum(coor_measures)
+            # get most symmetric IR value
+            return -np.dot(operator_measures, self._pg.trans_matrix_inv[0])
 
+        # define if use simple function (faster) or full (slower)
         optimization_function = optimization_function_simple if fast_optimization else optimization_function_full
 
         # preliminary scan
@@ -251,9 +261,10 @@ class SymmetryMoleculeBase(SymmetryBase):
                 sub_operator_measures.append(overlap)
             operator_measures.append(np.average(sub_operator_measures))
 
-        ir_rep = np.dot(self._pg.trans_matrix_inv, operator_measures)
+        # get most symmetric IR value
+        ir_rep_diff = np.dot(operator_measures, self._pg.trans_matrix_inv[0])
 
-        return 100 * (1 - ir_rep[0])
+        return 100 * (1 - ir_rep_diff)
 
     @property
     def opt_coordinates(self):
