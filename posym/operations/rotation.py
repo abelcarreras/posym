@@ -48,7 +48,7 @@ class Rotation(Operation):
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
 
             operation = rotation(angle, rotated_axis)
-            mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+            permu = self.get_permutation(operation, coordinates, symbols)
 
             measure_mode_list = []
             for mode in modes:
@@ -69,7 +69,7 @@ class Rotation(Operation):
         angle = 2 * np.pi / self._order * self._exp
         operation = rotation(angle, rotated_axis)
 
-        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        permu = self.get_permutation(operation, coordinates, symbols)
         measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
 
         return np.sum(measure_atoms)
@@ -104,7 +104,7 @@ class Rotation(Operation):
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
             operation = rotation(angle, rotated_axis)
 
-            mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+            mesure_coor, permu = self.get_permutation(operation, coordinates, symbols, return_dot=True)
             measure_coor.append(mesure_coor)
 
         measure_coor_total = np.average(measure_coor)

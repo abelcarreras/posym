@@ -33,7 +33,7 @@ class Reflection(Operation):
         operation = reflection(rotated_axis)
 
         measure_mode = []
-        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        permu = self.get_permutation(operation, coordinates, symbols)
 
         for i, mode in enumerate(modes):
 
@@ -50,7 +50,7 @@ class Reflection(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         operation = reflection(rotated_axis)
 
-        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        permu = self.get_permutation(operation, coordinates, symbols)
         measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
 
         return np.sum(measure_atoms)
@@ -72,7 +72,7 @@ class Reflection(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         operation = reflection(rotated_axis)
-        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols, return_dot=True)
 
         if normalized:
             mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)

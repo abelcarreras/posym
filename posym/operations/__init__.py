@@ -100,7 +100,7 @@ class Operation:
     def __init__(self, label):
         self._label = label
 
-    def get_permutation(self, operation, coordinates, symbols):
+    def get_permutation(self, operation, coordinates, symbols, return_dot=False):
         operated_coor = np.dot(operation, coordinates.T).T
 
         symbols = [int.from_bytes(num.encode(), 'big') for num in symbols]
@@ -109,10 +109,12 @@ class Operation:
         perm = get_permutation_hungarian(distance_table, symbols)
         permu_coor = operated_coor[list(perm)]
 
-        measure = np.einsum('ij, ij -> ', coordinates, permu_coor)
-        # measure = np.trace(np.dot(coordinates, permu_coor.T))
-
-        return measure, list(perm)
+        if return_dot:
+            measure = np.einsum('ij, ij -> ', coordinates, permu_coor)
+            # measure = np.trace(np.dot(coordinates, permu_coor.T))
+            return measure, list(perm)
+        else:
+            return list(perm)
 
     def get_normalization(self, coordinates):
 

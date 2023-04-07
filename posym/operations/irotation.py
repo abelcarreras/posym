@@ -43,7 +43,7 @@ class ImproperRotation(Operation):
 
             operated_coor = np.dot(operation, coordinates.T).T
 
-            mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+            permu = self.get_permutation(operation, coordinates, symbols)
 
             measure_mode_list = []
             for mode in modes:
@@ -69,7 +69,7 @@ class ImproperRotation(Operation):
         operation2 = reflection(rotated_axis)
         operation = np.dot(operation2, operation1)
 
-        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
+        permu = self.get_permutation(operation, coordinates, symbols)
         measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
 
         return np.sum(measure_atoms)
@@ -107,8 +107,7 @@ class ImproperRotation(Operation):
             operation2 = reflection(rotated_axis)
             operation = np.dot(operation2, operation1)
 
-            mesure_coor, permu = self.get_permutation(operation, coordinates, symbols)
-
+            mesure_coor, permu = self.get_permutation(operation, coordinates, symbols, return_dot=True)
             measure_coor.append(mesure_coor)
 
         measure_coor_total = np.average(measure_coor)
