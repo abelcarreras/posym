@@ -10,15 +10,10 @@ import numpy as np
 import pandas as pd
 import itertools
 
+
 cache_orientation = {}
 def get_hash(coordinates, symbols, group):
-    return hash((np.array2string(coordinates, precision=2),
-                 tuple(symbols),
-                 group))
-
-
-def get_simple(rep, group):
-    return pd.Series(rep.values, index=rep.index)
+    return hash((np.array2string(coordinates, precision=2), tuple(symbols), group))
 
 
 class SymmetryBase():
