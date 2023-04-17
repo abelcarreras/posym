@@ -17,16 +17,12 @@ group = 'Oh'
 print('\nPoint Group: {}'.format(group))
 
 sm = SymmetryMoleculeBase(group=group, coordinates=sh6_coor, symbols=sh6_sym)
-print(sm.measure_pos)
-exit()
 
 print(sm.get_point_group())
 print('Group measure: ', sm.measure_pos)
 print('Symmetry center: ', sm.center)
 print('Group orientation Euler angles zyx (deg): ', sm.orientation_angles)
 
-print(len(sm.get_oriented_operations()))
-exit()
 print('\nOperations list\n---------------')
 for operation in sm.get_oriented_operations():
     print('Operation object: ', operation)
