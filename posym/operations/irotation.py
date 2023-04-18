@@ -113,7 +113,7 @@ class ImproperRotation(Operation):
         measure_coor_total = np.average(measure_coor)
 
         if normalized:
-            mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)
+            measure_coor_total /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
         return measure_coor_total
 
