@@ -91,21 +91,27 @@ def get_basis_set(coordinates, basis_set, use_angstrom=True):
                 for exponent in shell['p_exponents']:
                     primitives.append(PrimitiveGaussian(alpha=exponent))
 
-                basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:S'.format(atom['symbol'])))
+                basis_list.append(BasisFunction(primitives, shell['con_coefficients'],
+                                                center=coordinates[iatom],
+                                                label='{}:S'.format(atom['symbol'])))
 
             elif shell['shell_type'] == 'sp':
                 primitives = []
                 for exponent in shell['p_exponents']:
                     primitives.append(PrimitiveGaussian(alpha=exponent))
 
-                basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:S'.format(atom['symbol'])))
+                basis_list.append(BasisFunction(primitives, shell['con_coefficients'],
+                                                center=coordinates[iatom],
+                                                label='{}:S'.format(atom['symbol'])))
 
                 for l_set in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
                     primitives = []
                     for exponent in shell['p_exponents']:
                         primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
 
-                    basis_list.append(BasisFunction(primitives, shell['p_con_coefficients'], center=coordinates[iatom], label='{}:P_{}'.format(atom['symbol'], l_set)))
+                    basis_list.append(BasisFunction(primitives, shell['p_con_coefficients'],
+                                                    center=coordinates[iatom],
+                                                    label='{}:P_{}'.format(atom['symbol'], l_set)))
 
             elif shell['shell_type'] == 'p':
                 for l_set in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
@@ -113,14 +119,18 @@ def get_basis_set(coordinates, basis_set, use_angstrom=True):
                     for exponent in shell['p_exponents']:
                         primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
 
-                    basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:P_{}'.format(atom['symbol'], l_set)))
+                    basis_list.append(BasisFunction(primitives, shell['con_coefficients'],
+                                                    center=coordinates[iatom],
+                                                    label='{}:P_{}'.format(atom['symbol'], l_set)))
 
             elif shell['shell_type'] == 'd':
                 for l_set in [[2, 0, 0], [0, 2, 0], [0, 0, 2], [1, 1, 0], [1, 0, 1], [0, 1, 1]]:
                     primitives = []
                     for exponent in shell['p_exponents']:
                         primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
-                    basis_list.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:D_{}'.format(atom['symbol'], l_set)))
+                    basis_list.append(BasisFunction(primitives, shell['con_coefficients'],
+                                                    center=coordinates[iatom],
+                                                    label='{}:D_{}'.format(atom['symbol'], l_set)))
 
             elif shell['shell_type'] == 'd_':
                 basis_list_temp = []
@@ -128,7 +138,9 @@ def get_basis_set(coordinates, basis_set, use_angstrom=True):
                     primitives = []
                     for exponent in shell['p_exponents']:
                         primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
-                    basis_list_temp.append(BasisFunction(primitives, shell['con_coefficients'], center=coordinates[iatom], label='{}:D_{}'.format(atom['symbol'], l_set)))
+                    basis_list_temp.append(BasisFunction(primitives, shell['con_coefficients'],
+                                                         center=coordinates[iatom],
+                                                         label='{}:D_{}'.format(atom['symbol'], l_set)))
 
                 # d0 : 2*z2-x2-y2
                 d0 = 2 * basis_list_temp[2] - basis_list_temp[0] - basis_list_temp[1]
@@ -152,7 +164,65 @@ def get_basis_set(coordinates, basis_set, use_angstrom=True):
                 d4 = basis_list_temp[3]
                 basis_list.append(d4)
 
+            elif shell['shell_type'] == 'f':
+                for l_set in [[3, 0, 0], [2, 1, 0], [2, 0, 1], [1, 2, 0], [1, 1, 1],
+                              [1, 0, 2], [0, 3, 0], [0, 2, 1], [0, 1, 2], [0, 0, 3]]:
+                    primitives = []
+                    for exponent in shell['p_exponents']:
+                        primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
+                    basis_list.append(BasisFunction(primitives, shell['con_coefficients'],
+                                                    center=coordinates[iatom],
+                                                    label='{}:F_{}'.format(atom['symbol'], l_set)))
+
+            elif shell['shell_type'] == 'f_':
+                basis_list_temp = []
+                              #  xxx 0     xxy 1      xxz 2      xyy 3      xyz 4
+                for l_set in [[3, 0, 0], [2, 1, 0], [2, 0, 1], [1, 2, 0], [1, 1, 1],
+                              #  xzz 5     yyy 6      yyz 7      yzz 8      zzz 9
+                              [1, 0, 2], [0, 3, 0], [0, 2, 1], [0, 1, 2], [0, 0, 3]]:
+                    primitives = []
+                    for exponent in shell['p_exponents']:
+                        primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
+                    basis_list_temp.append(BasisFunction(primitives, shell['con_coefficients'],
+                                                         center=coordinates[iatom],
+                                                         label='{}:F_{}'.format(atom['symbol'], l_set)))
+
+                # f0 : zzz - 3.0/2.0 * (xxz + yyz)
+                f0 = basis_list_temp[9] - 3/2*(basis_list_temp[2] + basis_list_temp[7])
+                norm = 1/np.sqrt((f0*f0).integrate)
+                basis_list.append(f0 * norm)
+
+                # f1 : 6.0 * xzz - 3.0/2.0 * (xxx + xyy)
+                f1 = 6 * basis_list_temp[5] - 3/2 * (basis_list_temp[0] + basis_list_temp[3])
+                norm = 1/np.sqrt((f1*f1).integrate)
+                basis_list.append(f1 * norm)
+
+                # f2 : 6.0 * yzz - 3.0/2.0 * (xxy + yyy)
+                f2 = 6 * basis_list_temp[8] - 3/2 * (basis_list_temp[1] + basis_list_temp[6])
+                norm = 1/np.sqrt((f2*f2).integrate)
+                basis_list.append(f2 * norm)
+
+                # f3 : 15.0 * (xxz - yyz))
+                f3 = 15 * (basis_list_temp[2] - basis_list_temp[7])
+                norm = 1/np.sqrt((f3*f3).integrate)
+                basis_list.append(f3 * norm)
+
+                # f4 : 30.0 * xyz
+                f4 = 30 * basis_list_temp[4]
+                norm = 1/np.sqrt((f4*f4).integrate)
+                basis_list.append(f4 * norm)
+
+                # f5 : 15.0 * xxx - 45.0 * xyy
+                f5 = 15 * basis_list_temp[0] - 45 * basis_list_temp[3]
+                norm = 1/np.sqrt((f5*f5).integrate)
+                basis_list.append(f5 * norm)
+
+                # f6 : 45.0 * xxy - 15.0 * yyy
+                f6 = 45 * basis_list_temp[1] - 15 * basis_list_temp[6]
+                norm = 1/np.sqrt((f6*f6).integrate)
+                basis_list.append(f6 * norm)
+
             else:
-                raise Exception('Unknown/not implemented shell type:{}'.format(shell['shell_type']))
+                raise Exception('Not implemented shell type:{}'.format(shell['shell_type']))
 
     return basis_list
