@@ -14,6 +14,7 @@ extendable to other objects by subclassing the `SymmetryBase` class.
 Features
 --------
 - Use as simple calculator for irreducible representations supporting direct sum and product
+- Continuous symmetry measures (CSM) expressed in the basis or irreducible representation
 - Determine symmetry of: 
   - normal modes 
   - functions defined in gaussian basis (molecular orbitals, electronic densities, operators)
@@ -81,6 +82,30 @@ for i in range(len(normal_modes)):
 
 print('Total symmetry: ', sym_modes_gs)
 
+```
+
+Determine the symmetry of a molecular geometry
+----------------------------------------------
+Continuous symmetry measure (CSM) is obtained using `measure` method.
+```python
+from posym import SymmetryMoleculeBase
+
+coordinates = [[ 0.0000000000,  0.0000000000,  0.0000000000],
+               [ 0.5541000000,  0.7996000000,  0.4965000000],
+               [ 0.6833000000, -0.8134000000, -0.2536000000],
+               [-0.7782000000, -0.3735000000,  0.6692000000],
+               [-0.4593000000,  0.3874000000, -0.9121000000]]
+
+symbols = ['C', 'H', 'H', 'H', 'H']
+
+sym_geom = SymmetryMoleculeBase(group='Td', coordinates=coordinates, symbols=symbols)
+print('Symmetry measure Td : ', sym_geom.measure)
+
+sym_geom = SymmetryMoleculeBase(group='C3v', coordinates=coordinates, symbols=symbols)
+print('Symmetry measure C3v : ', sym_geom.measure)
+
+sym_geom = SymmetryMoleculeBase(group='C4v', coordinates=coordinates, symbols=symbols)
+print('Symmetry measure C4v : ', sym_geom.measure)
 ```
 
 Define basis set functions in gaussian basis
