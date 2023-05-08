@@ -79,12 +79,19 @@ def build_orbital(basis_set, mo_coefficients):
     return orbital
 
 
-def get_basis_set(coordinates, basis_set, use_angstrom=True):
+def get_basis_set(coordinates, basis, use_angstrom=True):
+    """
+    get list of basis functions (basis_set) from pyQchem formatted basis dictionary
+    :param coordinates: list/array of atom positions
+    :param basis: pyQchem basis dictionary
+    :param use_angstrom: if True, coordinates are provided in angstrom else Bohr
+    :return: list of BasisFunction objects
+    """
     if use_angstrom:
         coordinates = np.array(coordinates)*1.8897259886  # convert from Angstrom to bohr
 
     basis_list = []
-    for iatom, atom in enumerate(basis_set['atoms']):
+    for iatom, atom in enumerate(basis['atoms']):
         for shell in atom['shells']:
             if shell['shell_type'] == 's':
                 primitives = []
