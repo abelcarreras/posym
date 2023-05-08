@@ -129,14 +129,11 @@ class SymmetryMoleculeBase(SymmetryBase):
 
         if total_state is None:
             rotmol = R.from_euler('zyx', self._angles, degrees=True)
-            geom_center = np.average(coordinates, axis=0)
-            centered_coor = np.subtract(coordinates, geom_center)
-
             self._operator_measures = []
             for operation in self._pg.operations:
                 operator_measures = []
                 for op in self._pg.get_sub_operations(operation.label):
-                    overlap = op.get_measure_pos(centered_coor, symbols, orientation=rotmol)
+                    overlap = op.get_measure_pos(self._coordinates, symbols, orientation=rotmol)
                     operator_measures.append(overlap)
 
                 self._operator_measures.append(np.array(operator_measures))
@@ -278,9 +275,9 @@ class SymmetryMoleculeBase(SymmetryBase):
 
 
 class SymmetryModes(SymmetryMoleculeBase):
-    def __init__(self, group, coordinates, modes, symbols, orientation_angles=None):
+    def __init__(self, group, coordinates, modes, symbols, orientation_angles=None, center=None):
 
-        self._setup_structure(coordinates, symbols, group, None, orientation_angles)
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         self._modes = modes
 
@@ -312,7 +309,7 @@ class SymmetryModes(SymmetryMoleculeBase):
 
         total_state = pd.Series(mode_measures_total, index=self._pg.op_labels)
 
-        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
     def get_state_mode(self, n):
         return SymmetryBase(group=self._group, rep=pd.Series(self._mode_measures[n],
@@ -346,7 +343,7 @@ class SymmetryModesFull(SymmetryMoleculeBase):
 
         self._mode_measures = np.array(self._mode_measures, dtype=object).flatten() - trans_rots
         total_state = pd.Series(self._mode_measures, index=self._pg.op_labels)
-        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
 
 class SymmetryFunction(SymmetryMoleculeBase):
@@ -373,7 +370,7 @@ class SymmetryFunction(SymmetryMoleculeBase):
             self._operator_measures.append(np.array(operator_measures))
 
         total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
-        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0,0,0])
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
     @property
     def self_similarity(self):
@@ -381,7 +378,7 @@ class SymmetryFunction(SymmetryMoleculeBase):
 
 
 class SymmetryWaveFunction(SymmetryMoleculeBase):
-    def __init__(self, group, alpha_orbitals, beta_orbitals, center=None, orientation_angles=None):
+    def __init__(self, group, alpha_orbitals, beta_orbitals, orientation_angles=None, center=None):
 
         # generate copy to not modify original orbitals
         alpha_orbitals = [f.copy() for f in alpha_orbitals]
@@ -464,9 +461,7 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
 
 
 class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
-    def __init__(self, group, orbitals,
-                 configurations,
-                 center=None, orientation_angles=None):
+    def __init__(self, group, orbitals, configurations, orientation_angles=None, center=None):
 
         # generate copy to not modify original orbitals
         orbitals = [f.copy() for f in orbitals]
