@@ -340,7 +340,7 @@ class BasisFunction:
                 primitive.apply_translation(center - primitive.center)
 
         self.primitive_gaussians = primitive_gaussians
-        self.coefficients = coefficients
+        self.coefficients = list(coefficients)
         self.label = label
 
     def get_number_of_primitives(self):
