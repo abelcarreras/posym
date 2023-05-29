@@ -234,7 +234,7 @@ class PrimitiveGaussian:
             #print(list(range(1, n, 2)))
             return np.prod(list(range(1, n, 2)))
 
-        num = 2**sum(l)*self.alpha**((2*l[0] + 2*l[1] + 2*l[2]+ 3)/4)
+        num = 2**np.sum(l)*self.alpha**((2*l[0] + 2*l[1] + 2*l[2]+ 3)/4)
         denom = d_fact(2*l[0]) * d_fact(2*l[1]) * d_fact(2*l[2])
 
         # print('res', (2*np.pi)**(3/4)* num/np.sqrt(denom))
@@ -385,7 +385,7 @@ class BasisFunction:
 
     @property
     def integrate(self):
-        return sum([coef * prim.integrate for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
+        return np.sum([coef * prim.integrate for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
 
     def get_environment_centers(self):
         """
@@ -732,15 +732,11 @@ if __name__ == '__main__':
     plt.contour(X, Y, Z, colors='k')
     plt.show()
 
-
-
-
-    #self_similarity = get_overlap_density(basis_functions, basis_functions, density_matrix)
-    #print('self_similarity', self_similarity)
+    # self_similarity = get_overlap_density(basis_functions, basis_functions, density_matrix)
+    # print('self_similarity', self_similarity)
 
     self_similarity = get_self_similarity(basis_functions, density_matrix)
     print('self_similarity', self_similarity)
-
 
     basis_functions_r = rotate_basis_set(basis_functions, np.pi, [1, 0, 0])
     basis_functions_t = translate_basis_set(basis_functions, [1, 0, 0])
@@ -753,5 +749,5 @@ if __name__ == '__main__':
     o2 = s_O * 0.0 + s2_O * 0.0 + px_O * 0.612692349 + py_O * 0.0 + pz_O * 0.0 + s_H * -0.44922168 + s2_H * 0.449221684
     print('dot(trans)', (o2*o2).integrate)
 
-    #print('measure dens:', get_overlap_density(basis_functions, basis_functions_r, density_matrix)/self_similarity)
+    # print('measure dens:', get_overlap_density(basis_functions, basis_functions_r, density_matrix)/self_similarity)
 
