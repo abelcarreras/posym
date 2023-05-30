@@ -82,6 +82,7 @@ def build_orbital(basis_set, mo_coefficients):
 def get_basis_set(coordinates, basis, use_angstrom=True):
     """
     get list of basis functions (basis_set) from pyQchem formatted basis dictionary
+
     :param coordinates: list/array of atom positions
     :param basis: pyQchem basis dictionary
     :param use_angstrom: if True, coordinates are provided in angstrom else Bohr
@@ -231,5 +232,83 @@ def get_basis_set(coordinates, basis, use_angstrom=True):
 
             else:
                 raise Exception('Not implemented shell type:{}'.format(shell['shell_type']))
+
+    return basis_list
+
+
+def get_basis_set_pyscf(pyscf_mol):
+    """
+    get list of basis functions (basis_set) from pyscf molecule object
+
+    :param pyscf_mol: pyscf molecule object
+    :return: list of basis functions
+    """
+
+    bf_names = ['s', 'p', 'd', 'f', 'g', 'h', 'i']
+
+    basis_list = []
+    for bas_id in range(pyscf_mol.nbas):
+
+        if pyscf_mol.bas_angular(bas_id) == 0:  # s
+            primitives = []
+            for prim_id, exponent in enumerate(pyscf_mol.bas_exp(bas_id)):
+                primitives.append(PrimitiveGaussian(alpha=exponent))
+
+            basis_list.append(BasisFunction(primitives, pyscf_mol.bas_ctr_coeff(bas_id),
+                                                 center=pyscf_mol.bas_coord(bas_id),
+                                                 label='{}:{}'.format(pyscf_mol.atom_symbol(pyscf_mol.bas_atom(bas_id)),
+                                                                      bf_names[pyscf_mol.bas_angular(bas_id)]))
+                                   )
+
+        elif pyscf_mol.bas_angular(bas_id) == 1:  # p
+            for l_set in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
+                primitives = []
+                for prim_id, exponent in enumerate(pyscf_mol.bas_exp(bas_id)):
+                    primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
+
+
+                basis_list.append(BasisFunction(primitives, pyscf_mol.bas_ctr_coeff(bas_id),
+                                                     center=pyscf_mol.bas_coord(bas_id),
+                                                     label='{}:{}'.format(pyscf_mol.atom_symbol(pyscf_mol.bas_atom(bas_id)),
+                                                                          bf_names[pyscf_mol.bas_angular(bas_id)]))
+                                       )
+
+        elif pyscf_mol.bas_angular(bas_id) == 2:  # d
+
+            basis_list_temp = []
+            for l_set in [[2, 0, 0], [0, 2, 0], [0, 0, 2], [1, 1, 0], [1, 0, 1], [0, 1, 1]]:
+                primitives = []
+                for prim_id, exponent in enumerate(pyscf_mol.bas_exp(bas_id)):
+                    primitives.append(PrimitiveGaussian(alpha=exponent, l=l_set))
+
+                basis_list_temp.append(BasisFunction(primitives, pyscf_mol.bas_ctr_coeff(bas_id),
+                                                     center=pyscf_mol.bas_coord(bas_id),
+                                                     label='{}:{}'.format(pyscf_mol.atom_symbol(pyscf_mol.bas_atom(bas_id)),
+                                                                          bf_names[pyscf_mol.bas_angular(bas_id)])))
+
+            # d1 : xy
+            d1 = basis_list_temp[3]
+            basis_list.append(d1)
+
+            # d2 : yz
+            d2 = basis_list_temp[5]
+            basis_list.append(d2)
+
+            # d3 : 2*z2-x2-y2 (z^2?)
+            d3 = 2 * basis_list_temp[2] - basis_list_temp[0] - basis_list_temp[1]
+            norm = 1 / np.sqrt((d3 * d3).integrate)
+            basis_list.append(d3 * norm)
+
+            # d4 : xz
+            d4 = basis_list_temp[4]
+            basis_list.append(d4)
+
+            # d5 : x2-y2
+            d5 = basis_list_temp[0] - basis_list_temp[1]
+            norm = 1/np.sqrt((d5*d5).integrate)
+            basis_list.append(d5 * norm)
+
+        else:
+            raise Exception('Not implemented shell type with angular momentum:{}'.format(pyscf_mol.bas_angular(bas_id)))
 
     return basis_list
