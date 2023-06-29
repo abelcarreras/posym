@@ -160,7 +160,7 @@ class SymmetryMoleculeBase(SymmetryBase):
         else:
             self._angles = orientation_angles
 
-    def get_orientation(self, fast_optimization=True, scan_step=10):
+    def get_orientation(self, fast_optimization=True, scan_step=10, guess_angles=None):
         """
         get orientation angles for optimum orientation.
         Use full=False to orient perfect symmetric molecules. Use full=True to orient quasi symmetric molecules
@@ -212,13 +212,14 @@ class SymmetryMoleculeBase(SymmetryBase):
         optimization_function = optimization_function_simple if fast_optimization else optimization_function_full
 
         # preliminary scan
-        ranges = np.arange(-90, 90+scan_step, scan_step)
-        guess_angles = ref_value = None
-        for angles in itertools.product(ranges, ranges, ranges):
-            value = optimization_function(angles)
-            if ref_value is None or value < ref_value:
-                ref_value = value
-                guess_angles = angles
+        if guess_angles is None:
+            ranges = np.arange(-90, 90+scan_step, scan_step)
+            guess_angles = ref_value = None
+            for angles in itertools.product(ranges, ranges, ranges):
+                value = optimization_function(angles)
+                if ref_value is None or value < ref_value:
+                    ref_value = value
+                    guess_angles = angles
 
         result = minimize(optimization_function, guess_angles, method='CG',)
 
