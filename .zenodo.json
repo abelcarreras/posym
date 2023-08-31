@@ -4,23 +4,6 @@
       "id": "MIT"
     },
     "title": "PoSym: A python library to analyze the symmetry of theoretical chemistry objects",
-    "relations": {
-      "version": [
-        {
-          "count": 1,
-          "index": 0,
-          "parent": {
-            "pid_type": "recid",
-            "pid_value": "7261325"
-          },
-          "is_last": true,
-          "last_child": {
-            "pid_type": "recid",
-            "pid_value": "7261326"
-          }
-        }
-      ]
-    },
     "keywords": [
       "symmetry, Python, normal modes, wave function, molecular orbitals, chemistry"
     ],
