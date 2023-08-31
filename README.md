@@ -361,6 +361,15 @@ print('State 1: ', wf_sym) # T1
 
 Try an [interactive example](https://colab.research.google.com/github/abelcarreras/posym) in Google Colab
 
+Bibliography
+------------
+This software is based on the theory described in the following works:
+
+Pinsky M, Dryzun C, Casanova D, Alemany P, Avnir D, J Comput Chem. 29:2712-21 (2008) [[link]](https://doi.org/10.1002/jcc.20990)  
+Pinsky M, Casanova D, Alemany P, Alvarez S, Avnir D, Dryzun C, Kizner Z, Sterkin A. J Comput Chem. 29:190-7 (2008) [[link]](https:///doi/10.1002/jcc.20772)  
+Casanova D, Alemany P. Phys Chem Chem Phys. 12(47):15523–9 (2010) [[link]](https://doi.org/10.1039/C0CP01326A)  
+Casanova D, Alemany P, Falceto A, Carreras A, Alvarez S. J Comput Chem 34(15):1321–31 (2013) [[link]](https://doi.org/10.1002/jcc.23257)  
+A. Carreras, E. Bernuz, X. Marugan, M. Llunell, P. Alemany, Chem. Eur. J. 25, 673 – 691 (2019) [[link]](https://doi.org/10.1002/chem.201801682)
 
 Contact info
 ------------
