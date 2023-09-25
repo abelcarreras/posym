@@ -4,7 +4,7 @@
 
 from pyqchem import get_output_from_qchem, Structure, QchemInput
 from pyqchem.parsers.basic import basic_parser_qchem
-from posym import PointGroup, SymmetryFunction
+from posym import PointGroup, SymmetryGaussianLinear
 import matplotlib.pyplot as plt
 import numpy as np
 from posym.tools import build_density, get_basis_set
@@ -50,7 +50,7 @@ for x_dist in scan_range:
     print('Final energy:', parsed_data['scf_energy'])
     energies.append(parsed_data['scf_energy'])
 
-    sm = SymmetryFunction(point_group, f_density)
+    sm = SymmetryGaussianLinear(point_group, f_density)
 
     measures.append(sm.get_ir_representation().values)
 

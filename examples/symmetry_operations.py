@@ -1,5 +1,5 @@
 # list all symmetry operations in the original orientation of the molecule
-from posym import SymmetryMoleculeBase
+from posym import SymmetryMolecule
 import numpy as np
 
 
@@ -16,7 +16,7 @@ group = 'Oh'
 # print(' structure')
 print('\nPoint Group: {}'.format(group))
 
-sm = SymmetryMoleculeBase(group=group, coordinates=sh6_coor, symbols=sh6_sym)
+sm = SymmetryMolecule(group=group, coordinates=sh6_coor, symbols=sh6_sym)
 
 print(sm.get_point_group())
 print('Group measure: ', sm.measure_pos)

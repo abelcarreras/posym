@@ -34,16 +34,17 @@ Use as a simple symmetry calculation
 ------------------------------------
 Posym allows to create basic continuous symmetry python objects that can be operated using 
 direct sum (+) and direct product (*).
+
 ```python
-from posym import PointGroup, SymmetryBase
+from posym import PointGroup, SymmetryObject
 
 pg = PointGroup(group='Td')
 print(pg)
 
-a1 = SymmetryBase(group='Td', rep='A1')
-a2 = SymmetryBase(group='Td', rep='A2')
-e = SymmetryBase(group='Td', rep='E')
-t1 = SymmetryBase(group='Td', rep='T1')
+a1 = SymmetryObject(group='Td', rep='A1')
+a2 = SymmetryObject(group='Td', rep='A2')
+e = SymmetryObject(group='Td', rep='E')
+t1 = SymmetryObject(group='Td', rep='T1')
 
 print('t1 * t1:', t1 * t1)
 print('t1 * e:', t1 * e)
@@ -53,32 +54,33 @@ print('e * (e + a1):', e * (e + a1))
 Determine the symmetry of normal modes
 --------------------------------------
 Symmetry objects can be obtained from normal modes using `SymmetryModes`.
-```python
-from posym import SymmetryModes
 
-coordinates = [[ 0.00000, 0.0000000, -0.0808819],
+```python
+from posym import SymmetryNormalModes
+
+coordinates = [[0.00000, 0.0000000, -0.0808819],
                [-1.43262, 0.0000000, -1.2823700],
-               [ 1.43262, 0.0000000, -1.2823700]]
+               [1.43262, 0.0000000, -1.2823700]]
 
 symbols = ['O', 'H', 'H']
 
-normal_modes = [[[ 0.,     0.,    -0.075],
-                 [-0.381, -0.,     0.593],
-                 [ 0.381, -0.,     0.593]], # mode 1
+normal_modes = [[[0., 0., -0.075],
+                 [-0.381, -0., 0.593],
+                 [0.381, -0., 0.593]],  # mode 1
 
-                [[-0.   , -0.,     0.044],
-                 [-0.613, -0.,    -0.35 ],
-                 [ 0.613,  0.,    -0.35 ]], # mode 2
+                [[-0., -0., 0.044],
+                 [-0.613, -0., -0.35],
+                 [0.613, 0., -0.35]],  # mode 2
 
-                [[-0.073, -0.,    -0.   ],
-                 [ 0.583,  0.,     0.397],
-                 [ 0.583,  0.,    -0.397]]] # mode 3
+                [[-0.073, -0., -0.],
+                 [0.583, 0., 0.397],
+                 [0.583, 0., -0.397]]]  # mode 3
 
 frequencies = [1737.01, 3988.5, 4145.43]
 
-sym_modes_gs = SymmetryModes(group='c2v', coordinates=coordinates, modes=normal_modes, symbols=symbols)
+sym_modes_gs = SymmetryNormalModes(group='c2v', coordinates=coordinates, modes=normal_modes, symbols=symbols)
 for i in range(len(normal_modes)):
-    print('Mode {:2}: {:8.3f} :'.format(i + 1, frequencies[i]), sym_modes_gs.get_state_mode(i))
+  print('Mode {:2}: {:8.3f} :'.format(i + 1, frequencies[i]), sym_modes_gs.get_state_mode(i))
 
 print('Total symmetry: ', sym_modes_gs)
 
@@ -87,24 +89,25 @@ print('Total symmetry: ', sym_modes_gs)
 Determine the symmetry of a molecular geometry
 ----------------------------------------------
 Continuous symmetry measure (CSM) is obtained using `measure` method.
-```python
-from posym import SymmetryMoleculeBase
 
-coordinates = [[ 0.0000000000,  0.0000000000,  0.0000000000],
-               [ 0.5541000000,  0.7996000000,  0.4965000000],
-               [ 0.6833000000, -0.8134000000, -0.2536000000],
-               [-0.7782000000, -0.3735000000,  0.6692000000],
-               [-0.4593000000,  0.3874000000, -0.9121000000]]
+```python
+from posym import SymmetryMolecule
+
+coordinates = [[0.0000000000, 0.0000000000, 0.0000000000],
+               [0.5541000000, 0.7996000000, 0.4965000000],
+               [0.6833000000, -0.8134000000, -0.2536000000],
+               [-0.7782000000, -0.3735000000, 0.6692000000],
+               [-0.4593000000, 0.3874000000, -0.9121000000]]
 
 symbols = ['C', 'H', 'H', 'H', 'H']
 
-sym_geom = SymmetryMoleculeBase(group='Td', coordinates=coordinates, symbols=symbols)
+sym_geom = SymmetryMolecule(group='Td', coordinates=coordinates, symbols=symbols)
 print('Symmetry measure Td : ', sym_geom.measure)
 
-sym_geom = SymmetryMoleculeBase(group='C3v', coordinates=coordinates, symbols=symbols)
+sym_geom = SymmetryMolecule(group='C3v', coordinates=coordinates, symbols=symbols)
 print('Symmetry measure C3v : ', sym_geom.measure)
 
-sym_geom = SymmetryMoleculeBase(group='C4v', coordinates=coordinates, symbols=symbols)
+sym_geom = SymmetryMolecule(group='C4v', coordinates=coordinates, symbols=symbols)
 print('Symmetry measure C4v : ', sym_geom.measure)
 ```
 
@@ -213,16 +216,17 @@ print('<o1|o2>: ', (o1*o2).integrate)
 
 Analyze symmetry of molecular orbitals
 --------------------------------------
-Get symmetry of molecular orbitals defined as `PrimitiveGaussian/BasisFunction` type objects
-```python
-from posym import SymmetryFunction
+Get symmetry of molecular orbitals defined as `BasisFunction` type objects
 
-sym_o1 = SymmetryFunction('c2v', o1)
-sym_o2 = SymmetryFunction('c2v', o2)
-sym_o3 = SymmetryFunction('c2v', o3)
-sym_o4 = SymmetryFunction('c2v', o4)
-sym_o5 = SymmetryFunction('c2v', o5)
-sym_o6 = SymmetryFunction('c2v', o6)
+```python
+from posym import SymmetryGaussianLinear
+
+sym_o1 = SymmetryGaussianLinear('c2v', o1)
+sym_o2 = SymmetryGaussianLinear('c2v', o2)
+sym_o3 = SymmetryGaussianLinear('c2v', o3)
+sym_o4 = SymmetryGaussianLinear('c2v', o4)
+sym_o5 = SymmetryGaussianLinear('c2v', o5)
+sym_o6 = SymmetryGaussianLinear('c2v', o6)
 
 print('Symmetry O1: ', sym_o1)
 print('Symmetry O2: ', sym_o2)
@@ -234,15 +238,15 @@ print('Symmetry O6: ', sym_o6)
 # Operate molecular orbitals symmetries to get the symmetry of non-degenerate wave functions
 
 # restricted close shell
-sym_wf_gs = sym_o1*sym_o1 * sym_o2*sym_o2 * sym_o3*sym_o3 * sym_o4*sym_o4 * sym_o5*sym_o5
+sym_wf_gs = sym_o1 * sym_o1 * sym_o2 * sym_o2 * sym_o3 * sym_o3 * sym_o4 * sym_o4 * sym_o5 * sym_o5
 print('Symmetry WF (ground state): ', sym_wf_gs)
 
 # restricted open shell
-sym_wf_excited_1 = sym_o1*sym_o1 * sym_o2*sym_o2 * sym_o3*sym_o3 * sym_o4*sym_o4 * sym_o5*sym_o6
+sym_wf_excited_1 = sym_o1 * sym_o1 * sym_o2 * sym_o2 * sym_o3 * sym_o3 * sym_o4 * sym_o4 * sym_o5 * sym_o6
 print('Symmetry WF (excited state 1): ', sym_wf_excited_1)
 
 # restricted close shell
-sym_wf_excited_2 = sym_o1*sym_o1 * sym_o2*sym_o2 * sym_o3*sym_o3 * sym_o4*sym_o4 * sym_o6*sym_o6
+sym_wf_excited_2 = sym_o1 * sym_o1 * sym_o2 * sym_o2 * sym_o3 * sym_o3 * sym_o4 * sym_o4 * sym_o6 * sym_o6
 print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
 
 ```
@@ -251,27 +255,27 @@ Combine with PyQchem to create useful automations
 -------------------------------------------------
 PyQchem (https://github.com/abelcarreras/PyQchem) is a Python interface 
 for Q-Chem (https://www.q-chem.com). PyQchem can be used to obtain 
-wave functions and normal modes as Python objects that can be directly used in Posym. 
+wave functions and normal modes as Python objects that can be directly used in Posym.
+
 ```python
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.basic import basic_parser_qchem
-from posym import SymmetryFunction
+from posym import SymmetryGaussianLinear
 # convenient functions to connect pyqchem - posym
-from posym.tools import get_basis_set, build_orbital 
+from posym.tools import get_basis_set, build_orbital
 
 # define molecules
-butadiene = Structure(coordinates=[[ -1.07076839,   -2.13175980,    0.03234382],
-                                   [ -0.53741536,   -3.05918866,    0.04995793],
-                                   [ -2.14073783,   -2.12969357,    0.04016267],
-                                   [ -0.39112115,   -0.95974916,    0.00012984],
-                                   [  0.67884827,   -0.96181542,   -0.00769025],
-                                   [ -1.15875076,    0.37505495,   -0.02522296],
-                                   [ -0.62213437,    1.30041753,   -0.05065831],
-                                   [ -2.51391203,    0.37767199,   -0.01531698],
-                                   [ -3.04726506,    1.30510083,   -0.03293196],
-                                   [ -3.05052841,   -0.54769055,    0.01011971]],
+butadiene = Structure(coordinates=[[-1.07076839, -2.13175980, 0.03234382],
+                                   [-0.53741536, -3.05918866, 0.04995793],
+                                   [-2.14073783, -2.12969357, 0.04016267],
+                                   [-0.39112115, -0.95974916, 0.00012984],
+                                   [0.67884827, -0.96181542, -0.00769025],
+                                   [-1.15875076, 0.37505495, -0.02522296],
+                                   [-0.62213437, 1.30041753, -0.05065831],
+                                   [-2.51391203, 0.37767199, -0.01531698],
+                                   [-3.04726506, 1.30510083, -0.03293196],
+                                   [-3.05052841, -0.54769055, 0.01011971]],
                       symbols=['C', 'H', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'H'])
-
 
 # create qchem input
 qc_input = QchemInput(butadiene,
@@ -295,10 +299,10 @@ basis = ee['basis']
 print('Molecular orbitals (alpha) symmetry')
 basis_set = get_basis_set(coordinates, basis)
 for i, orbital_coeff in enumerate(mo_coefficients):
-    orbital = build_orbital(basis_set, orbital_coeff)
-    sym_orbital = SymmetryFunction('c2v', orbital)
-    print('Symmetry O{}: '.format(i+1), sym_orbital)
-    
+  orbital = build_orbital(basis_set, orbital_coeff)
+  sym_orbital = SymmetryGaussianLinear('c2v', orbital)
+  print('Symmetry O{}: '.format(i + 1), sym_orbital)
+
 
 ```
 
@@ -306,10 +310,10 @@ Compute the symmetry of wave functions defined as a Slater determinant
 ----------------------------------------------------------------------
 Use `SymmetryWaveFunction` class to determine the symmetry of a wave function
 from a set of occupied molecular orbitals defined as `BasisFunction` objects
-```python
-from posym import SymmetryWaveFunction
-from posym.tools import build_orbital 
 
+```python
+from posym import SymmetrySingleDeterminant
+from posym.tools import build_orbital
 
 # get orbitals from basis set and MO coefficients
 orbital1 = build_orbital(basis_set, coefficients['alpha'][0])  # A1
@@ -318,20 +322,19 @@ orbital3 = build_orbital(basis_set, coefficients['alpha'][2])  # T1
 orbital4 = build_orbital(basis_set, coefficients['alpha'][3])  # T1
 orbital5 = build_orbital(basis_set, coefficients['alpha'][4])  # T1
 
+wf_sym = SymmetrySingleDeterminant('Td',
+                                   alpha_orbitals=[orbital1, orbital2, orbital5],
+                                   beta_orbitals=[orbital1, orbital2, orbital4],
+                                   center=[0, 0, 0])
 
-wf_sym = SymmetryWaveFunction('Td',
-                              alpha_orbitals=[orbital1, orbital2, orbital5],
-                              beta_orbitals=[orbital1, orbital2, orbital4],
-                              center=[0, 0, 0])
+print('Configuration 1: ', wf_sym)  # T1 + T2
 
-print('Configuration 1: ', wf_sym) # T1 + T2
+wf_sym = SymmetrySingleDeterminant('Td',
+                                   alpha_orbitals=[orbital1, orbital2, orbital3],
+                                   beta_orbitals=[orbital1, orbital2, orbital3],
+                                   center=[0, 0, 0])
 
-wf_sym = SymmetryWaveFunction('Td',
-                              alpha_orbitals=[orbital1, orbital2, orbital3],
-                              beta_orbitals=[orbital1, orbital2, orbital3],
-                              center=[0, 0, 0])
-
-print('Configuration 2: ', wf_sym) # A1 + E
+print('Configuration 2: ', wf_sym)  # A1 + E
 
 ```
 
@@ -340,21 +343,21 @@ Compute the symmetry of multi-reference wave functions
 Use `SymmetryWaveFunctionCI` class to determine the symmetry of multi-reference wave function
 (defined as a liner combination of Slater determinants) from a set of 
 occupied molecular orbitals defined as `BasisFunction` objects and a *configurations* dictionary.
+
 ```python
-from posym import SymmetryWaveFunctionCI
+from posym import SymmetryMultiDeterminant
 
 configurations = [{'amplitude': -0.03216, 'occupations': {'alpha': [1, 1, 0, 0, 1], 'beta': [1, 1, 1, 0, 0]}},
-                  {'amplitude':  0.70637, 'occupations': {'alpha': [1, 1, 0, 1, 0], 'beta': [1, 1, 1, 0, 0]}},
-                  {'amplitude':  0.03216, 'occupations': {'alpha': [1, 1, 1, 0, 0], 'beta': [1, 1, 0, 0, 1]}},
+                  {'amplitude': 0.70637, 'occupations': {'alpha': [1, 1, 0, 1, 0], 'beta': [1, 1, 1, 0, 0]}},
+                  {'amplitude': 0.03216, 'occupations': {'alpha': [1, 1, 1, 0, 0], 'beta': [1, 1, 0, 0, 1]}},
                   {'amplitude': -0.70637, 'occupations': {'alpha': [1, 1, 1, 0, 0], 'beta': [1, 1, 0, 1, 0]}}]
 
+wf_sym = SymmetryMultiDeterminant('Td',
+                                  orbitals=[orbital1, orbital2, orbital3, orbital4, orbital5],
+                                  configurations=configurations,
+                                  center=[0, 0, 0])
 
-wf_sym = SymmetryWaveFunctionCI('Td',
-                                orbitals=[orbital1, orbital2, orbital3, orbital4, orbital5],
-                                configurations=configurations,
-                                center=[0, 0, 0])
-
-print('State 1: ', wf_sym) # T1
+print('State 1: ', wf_sym)  # T1
 
 
 ```

@@ -6,7 +6,7 @@ from pyqchem.parsers.parser_optimization import basic_optimization
 from pyqchem.parsers.parser_rasci import parser_rasci
 from pyqchem.file_io import write_to_fchk
 
-from posym import SymmetryFunction, SymmetryWaveFunction
+from posym import SymmetryGaussianLinear, SymmetrySingleDeterminant
 import numpy as np
 from posym.tools import get_basis_set, build_orbital
 
@@ -87,27 +87,27 @@ orbital4 = build_orbital(basis_set, coefficients['alpha'][3])
 orbital5 = build_orbital(basis_set, coefficients['alpha'][4])
 
 # compute symmetry of molecular orbitals
-sym_orbital1 = SymmetryFunction('Td', orbital1)
-sym_orbital2 = SymmetryFunction('Td', orbital2)
-sym_orbital3 = SymmetryFunction('Td', orbital3)
-sym_orbital4 = SymmetryFunction('Td', orbital4)
-sym_orbital5 = SymmetryFunction('Td', orbital5)
+sym_orbital1 = SymmetryGaussianLinear('Td', orbital1)
+sym_orbital2 = SymmetryGaussianLinear('Td', orbital2)
+sym_orbital3 = SymmetryGaussianLinear('Td', orbital3)
+sym_orbital4 = SymmetryGaussianLinear('Td', orbital4)
+sym_orbital5 = SymmetryGaussianLinear('Td', orbital5)
 
 for i, s in enumerate([sym_orbital1, sym_orbital2, sym_orbital3, sym_orbital4, sym_orbital5]):
     print('Orbital {}: {}'.format(i+1, s))
 
 print('\nWave function symmetry')
 # compute symmetry of sample configuration (in T states)
-wf_1 = SymmetryWaveFunction('Td',
-                            alpha_orbitals=[orbital1, orbital2, orbital5],
-                            beta_orbitals=[orbital1, orbital2, orbital4])
+wf_1 = SymmetrySingleDeterminant('Td',
+                                 alpha_orbitals=[orbital1, orbital2, orbital5],
+                                 beta_orbitals=[orbital1, orbital2, orbital4])
 
 print('Configuration 1: ', wf_1)
 
 # compute symmetry of sample configuration (in A & E states)
-wf_2 = SymmetryWaveFunction('Td',
-                            alpha_orbitals=[orbital1, orbital2, orbital3],
-                            beta_orbitals=[orbital1, orbital2, orbital3])
+wf_2 = SymmetrySingleDeterminant('Td',
+                                 alpha_orbitals=[orbital1, orbital2, orbital3],
+                                 beta_orbitals=[orbital1, orbital2, orbital3])
 
 print('Configuration 2: ', wf_2)
 

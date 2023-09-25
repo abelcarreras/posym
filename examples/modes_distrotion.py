@@ -4,7 +4,7 @@
 
 from pyqchem import get_output_from_qchem, Structure, QchemInput
 from pyqchem.parsers.parser_frequencies import basic_frequencies
-from posym import PointGroup, SymmetryModes
+from posym import PointGroup, SymmetryNormalModes
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -48,7 +48,7 @@ for x_dist in scan_range:
     print('freqs: ', freqs)
     frequencies.append(freqs)
 
-    sm = SymmetryModes(group='c2v', coordinates=molecule_coor, modes=modes, symbols=molecule_symbols)
+    sm = SymmetryNormalModes(group='c2v', coordinates=molecule_coor, modes=modes, symbols=molecule_symbols)
 
     m = 1  # mode number
     measures_m0.append(sm.get_state_mode(0).get_ir_representation().values)

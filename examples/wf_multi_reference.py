@@ -4,7 +4,7 @@ from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.parser_optimization import basic_optimization
 from pyqchem.parsers.parser_rasci import parser_rasci
 from pyqchem.file_io import write_to_fchk
-from posym import SymmetryWaveFunctionCI, SymmetryFunction
+from posym import SymmetryMultiDeterminant, SymmetryGaussianLinear
 from posym.tools import get_basis_set, build_orbital
 import posym.algebra as al
 
@@ -76,7 +76,7 @@ basis_set = get_basis_set(coordinates, basis)
 print('Molecular Orbitals')
 for i, mo_coeff in enumerate(ee_methane['coefficients']['alpha']):
     mo_orbital = build_orbital(basis_set, mo_coeff)
-    print(i+1, ':', SymmetryFunction('Td', mo_orbital))
+    print(i + 1, ':', SymmetryGaussianLinear('Td', mo_orbital))
 
 orbitals = []
 for orbital_coefficients in coefficients['alpha']:
@@ -90,10 +90,10 @@ for istate, state in enumerate(data_methane['excited_states']):
     for configuration in state['configurations']:
         print('amplitude: {:12.8f} '.format(configuration['amplitude']), configuration['occupations'])
 
-    wf = SymmetryWaveFunctionCI('Td',
-                                orbitals=orbitals,
-                                configurations=state['configurations'],
-                                center=[0, 0, 0])
+    wf = SymmetryMultiDeterminant('Td',
+                                  orbitals=orbitals,
+                                  configurations=state['configurations'],
+                                  center=[0, 0, 0])
 
     print(wf.get_ir_representation())
     print(wf)

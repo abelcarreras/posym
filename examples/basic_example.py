@@ -1,4 +1,4 @@
-from posym import PointGroup, SymmetryBase
+from posym import PointGroup, SymmetryObject
 
 # Print symmetry IR table of C2h group
 pg = PointGroup(group='C2h')
@@ -6,9 +6,9 @@ print('\nTest Point group table')
 print(pg)
 
 # define symmetry objects of particular IR in the C2h group
-bu = SymmetryBase(group='C2h', rep='Bu')
-bg = SymmetryBase('C2h', 'Bg')
-ag = SymmetryBase('C2h', 'Ag')
+bu = SymmetryObject(group='C2h', rep='Bu')
+bg = SymmetryObject('C2h', 'Bg')
+ag = SymmetryObject('C2h', 'Ag')
 
 # symmetry operation using symmetry objects
 print('\nTest symmetry object operation')
@@ -23,11 +23,11 @@ print('\nTest symmetry object representation')
 pg = PointGroup(group='Td')
 print(pg)
 
-bg = SymmetryBase('C2h', 'Bg')
-a1 = SymmetryBase(group='Td', rep='A1')
-a2 = SymmetryBase(group='Td', rep='A2')
-e = SymmetryBase(group='Td', rep='E')
-t1 = SymmetryBase(group='Td', rep='T1')
+bg = SymmetryObject('C2h', 'Bg')
+a1 = SymmetryObject(group='Td', rep='A1')
+a2 = SymmetryObject(group='Td', rep='A2')
+e = SymmetryObject(group='Td', rep='E')
+t1 = SymmetryObject(group='Td', rep='T1')
 
 print('e*e + a1:', e * e + 2 * a1)
 print('t1*t1:', t1 * t1)
@@ -36,9 +36,9 @@ pg = PointGroup(group='C2v')
 print('\nTest Point group table')
 print(pg)
 
-a1 = SymmetryBase(group='C2v', rep='A1')
-b1 = SymmetryBase('C2v', 'B1')
-a2 = SymmetryBase('C2v', 'A2')
+a1 = SymmetryObject(group='C2v', rep='A1')
+b1 = SymmetryObject('C2v', 'B1')
+a2 = SymmetryObject('C2v', 'A2')
 
 print(a1 * a2 + b1)
 

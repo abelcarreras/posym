@@ -1,4 +1,4 @@
-from posym import SymmetryMoleculeBase
+from posym import SymmetryMolecule
 import unittest
 import numpy as np
 
@@ -23,7 +23,7 @@ class MoleculeTest(unittest.TestCase):
                      [-1.26723, 1.10512, 0.05139],
                      [-1.95144, 1.28518, 0.02485]]
 
-            sm = SymmetryMoleculeBase('Td', coordinates=coord, symbols=['H', 'H', 'H', 'H'])
+            sm = SymmetryMolecule('Td', coordinates=coord, symbols=['H', 'H', 'H', 'H'])
 
             # check sm.measure & sm.measure_pos are consistent
             np.testing.assert_almost_equal(sm.measure, sm.measure_pos, decimal=8)

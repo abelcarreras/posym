@@ -1,11 +1,11 @@
 __author__ = 'Abel Carreras'
-__version__ = '0.5.5'
+__version__ = '1.0'
 
 from posym.tools import list_round
 from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from scipy.spatial.transform import Rotation as R
-from scipy.optimize import minimize, basinhopping
+from scipy.optimize import minimize
 import numpy as np
 import pandas as pd
 import itertools
@@ -16,9 +16,9 @@ def get_hash(coordinates, symbols, group):
     return hash((np.array2string(coordinates, precision=2), tuple(symbols), group))
 
 
-class SymmetryBase():
+class SymmetryObject:
     """
-    This class is supposed to be used as a base for more complex symmetry objects
+    Main symmetry object that abstracts an element in the g-module space
 
     """
     def __init__(self, group, rep, normalize=False):
@@ -99,8 +99,8 @@ class SymmetryBase():
     def __add__(self, other):
 
         if self._group == other._group:
-            return SymmetryBase(self._group,
-                                self._op_representation + other._op_representation)
+            return SymmetryObject(self._group,
+                                  self._op_representation + other._op_representation)
 
         raise Exception('Incompatible point groups')
 
@@ -110,20 +110,33 @@ class SymmetryBase():
     def __mul__(self, other):
 
         if isinstance(other, (float, int)):
-            return SymmetryBase(self._group,
-                                self._op_representation * other)
+            return SymmetryObject(self._group,
+                                  self._op_representation * other)
 
-        elif isinstance(other, SymmetryBase):
+        elif isinstance(other, SymmetryObject):
             mul_rep = self._op_representation * other._op_representation
 
-            return SymmetryBase(self._group, mul_rep)
+            return SymmetryObject(self._group, mul_rep)
         else:
             raise Exception('Symmetry operation not possible')
 
 
-class SymmetryMoleculeBase(SymmetryBase):
+class SymmetryMolecule(SymmetryObject):
+    """
+    Symmetry of molecular geometry
+    """
     def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None,
                  fast_optimization=True):
+        """
+
+        :param group: symmetry point group
+        :param coordinates: molecular coordinates
+        :param symbols: atomic symbols
+        :param total_state: symmetry operations overlaps (SOEV's) as a panda Series object
+        :param orientation_angles: orientation angles
+        :param center: center of symmetry group [x, y, z]
+        :param fast_optimization: if True use fast optimization of the orientation (check only one symmetry element per operation)
+        """
 
         self._setup_structure(coordinates, symbols, group, center, orientation_angles, fast_optimization=fast_optimization)
 
@@ -275,8 +288,20 @@ class SymmetryMoleculeBase(SymmetryBase):
         return self._center
 
 
-class SymmetryModes(SymmetryMoleculeBase):
+class SymmetryNormalModes(SymmetryMolecule):
+    """
+    get symmetry of the normal modes.
+    """
     def __init__(self, group, coordinates, modes, symbols, orientation_angles=None, center=None):
+        """
+
+        :param group: symmetry point group
+        :param coordinates: atomic coordinates
+        :param modes: list of normal modes separated by atoms [[[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]], ...]
+        :param symbols: atomic symbols
+        :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
+        :param center: center of symmetry group [x, y, z]
+        """
 
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
@@ -313,12 +338,26 @@ class SymmetryModes(SymmetryMoleculeBase):
         super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
     def get_state_mode(self, n):
-        return SymmetryBase(group=self._group, rep=pd.Series(self._mode_measures[n],
-                                                             index=self._pg.op_labels))
+        return SymmetryObject(group=self._group, rep=pd.Series(self._mode_measures[n],
+                                                               index=self._pg.op_labels))
+
+    def get_number_of_modes(self):
+        return len(self._mode_measures)
 
 
-class SymmetryModesFull(SymmetryMoleculeBase):
+class SymmetryAtomDisplacements(SymmetryMolecule):
+    """
+    get symmetry of atom displacements . This is equivalent to the sum of the symmetries of all
+    normal modes (gamma 3N).
+    """
     def __init__(self, group, coordinates, symbols, orientation_angles=None):
+        """
+
+        :param group: symmetry group
+        :param coordinates: atomic coordinates
+        :param symbols: atomic symbols
+        :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
+        """
 
         self._setup_structure(coordinates, symbols, group, None, orientation_angles)
 
@@ -347,8 +386,19 @@ class SymmetryModesFull(SymmetryMoleculeBase):
         super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
 
-class SymmetryFunction(SymmetryMoleculeBase):
+class SymmetryGaussianLinear(SymmetryMolecule):
+    """
+    get symmetry from a function defined in the basis of Gaussian functions (BaseFunction object)
+
+    """
     def __init__(self, group, function, orientation_angles=None, center=None):
+        """
+
+        :param group: symmetry group
+        :param function: the function (BaseFunction object)
+        :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
+        :param center: center of symmetry group [x, y, z]
+        """
 
         symbols, coordinates = function.get_environment_centers()
 
@@ -378,8 +428,19 @@ class SymmetryFunction(SymmetryMoleculeBase):
         return self._self_similarity
 
 
-class SymmetryWaveFunction(SymmetryMoleculeBase):
+class SymmetrySingleDeterminant(SymmetryMolecule):
+    """
+    get symmetry from single determinat wave function
+    """
     def __init__(self, group, alpha_orbitals, beta_orbitals, orientation_angles=None, center=None):
+        """
+
+        :param group: symmetry group
+        :param alpha_orbitals: list of alpha orbitals (BasisFunction objects)
+        :param beta_orbitals: list of beta orbitals (BasisFunction objects)
+        :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
+        :param center: center of symmetry group [x, y, z]
+        """
 
         # generate copy to not modify original orbitals
         alpha_orbitals = [f.copy() for f in alpha_orbitals]
@@ -461,8 +522,19 @@ class SymmetryWaveFunction(SymmetryMoleculeBase):
             super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
 
 
-class SymmetryWaveFunctionCI(SymmetryMoleculeBase):
+class SymmetryMultiDeterminant(SymmetryMolecule):
+    """
+    Get symmetry from multi determinant wave function
+    """
     def __init__(self, group, orbitals, configurations, orientation_angles=None, center=None):
+        """
+
+        :param group:
+        :param orbitals:
+        :param configurations:
+        :param orientation_angles:
+        :param center:
+        """
 
         # generate copy to not modify original orbitals
         orbitals = [f.copy() for f in orbitals]
@@ -571,10 +643,10 @@ if __name__ == '__main__':
 
     symbols_ = ['C', 'H', 'H', 'H', 'H']
 
-    sm = SymmetryModesFull('c2v', coordinates, symbols)
+    sm = SymmetryAtomDisplacements('c2v', coordinates, symbols)
     print(sm.get_point_group())
     print(sm)
-    mb = SymmetryMoleculeBase('c2v', coordinates, symbols)
+    mb = SymmetryMolecule('c2v', coordinates, symbols)
     from posym.algebra import norm
     print('Coor measure: ', mb, '(', norm(mb), ')')
 

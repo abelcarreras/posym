@@ -1,5 +1,5 @@
 from posym.basis import PrimitiveGaussian, BasisFunction
-from posym import SymmetryFunction
+from posym import SymmetryGaussianLinear
 from posym.tools import build_orbital, build_density, get_basis_set
 import numpy as np
 import posym.algebra as al
@@ -149,11 +149,11 @@ orbital_5 = build_orbital(basis_functions, mo_coefficients[4])
 
 orbital_5.apply_rotation(np.pi/3, [0, 0, 1])
 
-sym_o1 = SymmetryFunction('c2v', orbital_1)
-sym_o2 = SymmetryFunction('c2v', orbital_2)
-sym_o3 = SymmetryFunction('c2v', orbital_3)
-sym_o4 = SymmetryFunction('c2v', orbital_4)
-sym_o5 = SymmetryFunction('c2v', orbital_5)
+sym_o1 = SymmetryGaussianLinear('c2v', orbital_1)
+sym_o2 = SymmetryGaussianLinear('c2v', orbital_2)
+sym_o3 = SymmetryGaussianLinear('c2v', orbital_3)
+sym_o4 = SymmetryGaussianLinear('c2v', orbital_4)
+sym_o5 = SymmetryGaussianLinear('c2v', orbital_5)
 
 print('Symmetry O1: ', sym_o1)
 print('Symmetry O2: ', sym_o2)
@@ -164,7 +164,7 @@ print('Symmetry O5: ', sym_o5)
 f_density = build_density(basis_functions, density_matrix)
 print('density integral: ', f_density.integrate)
 
-sym_density = SymmetryFunction('c2v', f_density)
+sym_density = SymmetryGaussianLinear('c2v', f_density)
 print('Symmetry density: ', sym_density)
 print('density self_similarity', sym_density.self_similarity)
 
@@ -172,14 +172,14 @@ f_dipole_x = build_density(basis_functions, dipole_x)
 f_dipole_y = build_density(basis_functions, dipole_y)
 f_dipole_z = build_density(basis_functions, dipole_z)
 
-sym_dipole_x = SymmetryFunction('c2v', f_dipole_x)
-sym_dipole_y = SymmetryFunction('c2v', f_dipole_y)
-sym_dipole_z = SymmetryFunction('c2v', f_dipole_z)
+sym_dipole_x = SymmetryGaussianLinear('c2v', f_dipole_x)
+sym_dipole_y = SymmetryGaussianLinear('c2v', f_dipole_y)
+sym_dipole_z = SymmetryGaussianLinear('c2v', f_dipole_z)
 
 print('Symmetry dipole X operator: ', sym_dipole_x)
 print('Symmetry dipole Y operator: ', sym_dipole_y)
 print('Symmetry dipole Z operator: ', sym_dipole_z)
 
 f_fock = build_density(basis_functions, fock_matrix)
-sym_fock = SymmetryFunction('c2v', f_fock)
+sym_fock = SymmetryGaussianLinear('c2v', f_fock)
 print('Symmetry Fock operator: ', sym_fock)

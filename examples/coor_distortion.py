@@ -3,7 +3,7 @@
 # This example requires PyQchem to compute the electronic density
 
 from pyqchem import Structure
-from posym import PointGroup, SymmetryMoleculeBase
+from posym import PointGroup, SymmetryMolecule
 import matplotlib.pyplot as plt
 import numpy as np
 import posym.algebra as al
@@ -25,7 +25,7 @@ for x_dist in scan_range:
                                multiplicity=1)
 
 
-    sm = SymmetryMoleculeBase(point_group, molecule_water.get_coordinates(), molecule_water.get_symbols())
+    sm = SymmetryMolecule(point_group, molecule_water.get_coordinates(), molecule_water.get_symbols())
 
     measures.append(sm.get_ir_representation().values)
 

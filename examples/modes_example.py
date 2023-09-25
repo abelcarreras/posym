@@ -4,7 +4,7 @@ from pyqchem import get_output_from_qchem, Structure, QchemInput
 from pyqchem.parsers.parser_frequencies import basic_frequencies
 from pyqchem.parsers.parser_optimization import basic_optimization
 
-from posym import SymmetryModes
+from posym import SymmetryNormalModes
 from pyqchem.tools import get_geometry_from_pubchem
 import numpy as np
 import posym.algebra as al
@@ -75,6 +75,9 @@ for molecule, group in zip([h2o2_mol, sh6_mol, water_mol, dichloro_mol, methane_
 
     molecule_coor = np.array(ee['structure'].get_coordinates())
     molecule_symbols = np.array(ee['structure'].get_symbols())
+    hessian = np.array(ee['hessian'])
+    print('Hessian')
+    print(hessian)
 
     # print(' structure')
     print('\nPoint Group: {}'.format(group))
@@ -85,7 +88,7 @@ for molecule, group in zip([h2o2_mol, sh6_mol, water_mol, dichloro_mol, methane_
     # print('freqs: ', freqs)
     # print(molecule_coor)
 
-    sm = SymmetryModes(group=group, coordinates=molecule_coor, modes=modes, symbols=molecule_symbols)
+    sm = SymmetryNormalModes(group=group, coordinates=molecule_coor, modes=modes, symbols=molecule_symbols)
 
     for i in range(len(modes)):
         print('m {:2}: {:8.3f} :'.format(i + 1, freqs[i]), sm.get_state_mode(i))

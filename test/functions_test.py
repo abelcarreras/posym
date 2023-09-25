@@ -1,4 +1,4 @@
-from posym import SymmetryFunction, SymmetryBase, SymmetryWaveFunction, SymmetryWaveFunctionCI
+from posym import SymmetryGaussianLinear, SymmetryObject, SymmetrySingleDeterminant, SymmetryMultiDeterminant
 from posym.basis import PrimitiveGaussian, BasisFunction
 import posym.algebra as al
 import unittest
@@ -109,16 +109,16 @@ class OperationsTest(unittest.TestCase):
 
         o1, o2, o3, o4, o5, o6 = self._orbitals
 
-        a1 = SymmetryBase(group='c2v', rep='A1')
-        b1 = SymmetryBase(group='c2v', rep='B1')
-        b2 = SymmetryBase(group='c2v', rep='B2')
+        a1 = SymmetryObject(group='c2v', rep='A1')
+        b1 = SymmetryObject(group='c2v', rep='B1')
+        b2 = SymmetryObject(group='c2v', rep='B2')
 
-        sym_o1 = SymmetryFunction('c2v', o1)
-        sym_o2 = SymmetryFunction('c2v', o2)
-        sym_o3 = SymmetryFunction('c2v', o3)
-        sym_o4 = SymmetryFunction('c2v', o4)
-        sym_o5 = SymmetryFunction('c2v', o5)
-        sym_o6 = SymmetryFunction('c2v', o6)
+        sym_o1 = SymmetryGaussianLinear('c2v', o1)
+        sym_o2 = SymmetryGaussianLinear('c2v', o2)
+        sym_o3 = SymmetryGaussianLinear('c2v', o3)
+        sym_o4 = SymmetryGaussianLinear('c2v', o4)
+        sym_o5 = SymmetryGaussianLinear('c2v', o5)
+        sym_o6 = SymmetryGaussianLinear('c2v', o6)
 
         print('Symmetry O1: ', sym_o1)
         print('Symmetry O2: ', sym_o2)
@@ -160,16 +160,16 @@ class OperationsTest(unittest.TestCase):
             o.apply_rotation(np.pi, random_axis)
 
         print('SymmetryWaveFunction')
-        sym_wf_excited_1 = SymmetryWaveFunction('c2v',
-                                                [o1, o2, o3, o4, o5],
-                                                [o1, o2, o3, o4, o6])
+        sym_wf_excited_1 = SymmetrySingleDeterminant('c2v',
+                                                     [o1, o2, o3, o4, o5],
+                                                     [o1, o2, o3, o4, o6])
 
         print(sym_wf_excited_1.center)
         print('Symmetry WF (excited state 1): ', sym_wf_excited_1)
 
-        sym_wf_excited_2 = SymmetryWaveFunction('c2v',
-                                                [o1, o2, o3, o4, o6],
-                                                [o1, o2, o3, o4, o6])
+        sym_wf_excited_2 = SymmetrySingleDeterminant('c2v',
+                                                     [o1, o2, o3, o4, o6],
+                                                     [o1, o2, o3, o4, o6])
         print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
 
         self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2) + al.dot(sym_wf_excited_1, b1), 1, places=4)
@@ -182,8 +182,8 @@ class OperationsTest(unittest.TestCase):
                                                                'beta': [1, 1, 1, 1, 0, 1]}}]
 
         print('SymmetryWaveFunctionCI')
-        sym_wf_excited_1 = SymmetryWaveFunctionCI('c2v', self._orbitals, configurations=configurations_1)
-        sym_wf_excited_2 = SymmetryWaveFunctionCI('c2v', self._orbitals, configurations=configurations_2)
+        sym_wf_excited_1 = SymmetryMultiDeterminant('c2v', self._orbitals, configurations=configurations_1)
+        sym_wf_excited_2 = SymmetryMultiDeterminant('c2v', self._orbitals, configurations=configurations_2)
         print('Symmetry WF (excited state 1): ', sym_wf_excited_1)
         print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
         print(sym_wf_excited_1.center)

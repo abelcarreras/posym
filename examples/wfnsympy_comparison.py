@@ -1,5 +1,5 @@
 from wfnsympy import WfnSympy
-from posym import SymmetryBase
+from posym import SymmetryObject
 import pandas as pd
 
 basis = {'name': 'STO-3G',
@@ -49,9 +49,9 @@ wf_results.print_wf_mo_IRD()
 
 
 def get_orbital_state(orbital_soev):
-    state_orb = SymmetryBase(group='c2v',
-                             rep=pd.Series(orbital_soev, index=["E", "C2", "sv_xz", "sd_yz"])
-                             )
+    state_orb = SymmetryObject(group='c2v',
+                               rep=pd.Series(orbital_soev, index=["E", "C2", "sv_xz", "sd_yz"])
+                               )
     return state_orb
 
 

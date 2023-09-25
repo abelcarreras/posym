@@ -2,7 +2,7 @@
 # This example makes use of pyQChem to automatize the calculation of the wave function
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.basic import basic_parser_qchem
-from posym import SymmetryFunction, SymmetryBase
+from posym import SymmetryGaussianLinear, SymmetryObject
 from posym.tools import get_basis_set, build_orbital
 import posym.algebra as al
 import numpy as np
@@ -130,7 +130,7 @@ cis_orbitals_sym = []
 for i, orbital_coeff in enumerate(coefficients_cis['alpha']):
     orbital = build_orbital(basis_set_cis, orbital_coeff)
     orbital.apply_translation([1, 0, 0])
-    sym_orbital = SymmetryFunction('c2v', orbital)
+    sym_orbital = SymmetryGaussianLinear('c2v', orbital)
     print('Symmetry O{}: '.format(i+1), sym_orbital)
     cis_orbitals_sym.append(sym_orbital)
 
@@ -147,13 +147,13 @@ cis_wf_2 = get_simple_wf_symm(cis_orbitals_sym,
                               beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
 
 # generate symmetry of dipole moment operator for C2v group
-cis_dm = SymmetryBase(group='C2v', rep='B1') + \
-         SymmetryBase(group='C2v', rep='B2') + \
-         SymmetryBase(group='C2v', rep='A1')
+cis_dm = SymmetryObject(group='C2v', rep='B1') + \
+         SymmetryObject(group='C2v', rep='B2') + \
+         SymmetryObject(group='C2v', rep='A1')
 
 
 def check_transition(transtion):
-    if al.dot(transtion, SymmetryBase(group='C2v', rep='A1')) > 0.1:
+    if al.dot(transtion, SymmetryObject(group='C2v', rep='A1')) > 0.1:
         return 'Allowed'
     else:
         return 'Forbidden'
@@ -167,7 +167,7 @@ print('\nTRANS\n----')
 trans_orbitals_sym = []
 for i, orbital_coeff in enumerate(coefficients_trans['alpha']):
     orbital = build_orbital(basis_set_trans, orbital_coeff)
-    sym_orbital = SymmetryFunction('c2h', orbital)
+    sym_orbital = SymmetryGaussianLinear('c2h', orbital)
     print('Symmetry O{}: '.format(i+1), sym_orbital)
     trans_orbitals_sym.append(sym_orbital)
 
@@ -183,12 +183,12 @@ trans_wf_2 = get_simple_wf_symm(trans_orbitals_sym,
                                 beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
 
 # generate symmetry of dipole moment operator for C2h group
-trans_dm = SymmetryBase(group='C2h', rep='Bu') + \
-           SymmetryBase(group='C2h', rep='Au')
+trans_dm = SymmetryObject(group='C2h', rep='Bu') + \
+           SymmetryObject(group='C2h', rep='Au')
 
 
 def check_transition(transition):
-    if al.dot(transition, SymmetryBase(group='C2h', rep='Ag')) > 0.1:
+    if al.dot(transition, SymmetryObject(group='C2h', rep='Ag')) > 0.1:
         return 'Allowed'
     else:
         return 'Forbidden'

@@ -1,4 +1,4 @@
-from posym import SymmetryModes, SymmetryModesFull
+from posym import SymmetryNormalModes, SymmetryAtomDisplacements
 from posym import algebra as al
 import unittest
 import numpy as np
@@ -23,15 +23,15 @@ def make_test_function(filename, group):
         modes = [m['displacement'] for m in json_object['modes']]
         freqs = [m['frequency'] for m in json_object['modes']]
 
-        sm = SymmetryModes(group=group,
-                           coordinates=molecule_coor,
-                           modes=modes,
-                           symbols=molecule_symbols,
-                           )
+        sm = SymmetryNormalModes(group=group,
+                                 coordinates=molecule_coor,
+                                 modes=modes,
+                                 symbols=molecule_symbols,
+                                 )
 
-        sm_xyz = SymmetryModesFull(group=group,
-                                   coordinates=molecule_coor,
-                                   symbols=molecule_symbols)
+        sm_xyz = SymmetryAtomDisplacements(group=group,
+                                           coordinates=molecule_coor,
+                                           symbols=molecule_symbols)
 
         def localization(measure_list):
             import itertools
