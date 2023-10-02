@@ -4,6 +4,7 @@ __version__ = '1.0'
 from posym.tools import list_round, get_principal_axis_angles
 from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
+from posym.config import Configuration
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import numpy as np
@@ -125,8 +126,7 @@ class SymmetryMolecule(SymmetryObject):
     """
     Symmetry of molecular geometry
     """
-    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None,
-                 fast_optimization=True):
+    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None):
         """
 
         :param group: symmetry point group
@@ -135,10 +135,9 @@ class SymmetryMolecule(SymmetryObject):
         :param total_state: symmetry operations overlaps (SOEV's) as a panda Series object
         :param orientation_angles: orientation angles
         :param center: center of symmetry group [x, y, z]
-        :param fast_optimization: if True use fast optimization of the orientation (check only one symmetry element per operation)
         """
 
-        self._setup_structure(coordinates, symbols, group, center, orientation_angles, fast_optimization=fast_optimization)
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         if total_state is None:
             rotmol = R.from_euler('zyx', self._angles, degrees=True)
@@ -155,7 +154,9 @@ class SymmetryMolecule(SymmetryObject):
 
         super().__init__(group, total_state)
 
-    def _setup_structure(self, coordinates, symbols, group, center, orientation_angles, fast_optimization=True):
+    def _setup_structure(self, coordinates, symbols, group, center, orientation_angles):
+
+        conf = Configuration()
 
         self._coordinates = np.array(coordinates)
         self._symbols = symbols
@@ -169,7 +170,7 @@ class SymmetryMolecule(SymmetryObject):
             self._coordinates = np.array([c - self._center for c in self._coordinates])
 
         if orientation_angles is None:
-            self._angles = self.get_orientation(fast_optimization=fast_optimization)
+            self._angles = self.get_orientation(fast_optimization=conf.fast_optimization, scan_step=conf.scan_steps)
         else:
             self._angles = orientation_angles
 
