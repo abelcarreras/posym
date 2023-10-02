@@ -50,8 +50,6 @@ class Inversion(Operation):
     def get_measure_xyz(self, orientation=None):
 
         operation = inversion()
-        # permu = self.get_permutation(operation, coordinates, symbols)
-        #permu_mask = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
 
         measure_mode = []
         for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:

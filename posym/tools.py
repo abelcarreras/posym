@@ -1,9 +1,18 @@
 from copy import deepcopy
 import numpy as np
 from posym.basis import BasisFunction, PrimitiveGaussian
+from scipy.spatial.transform import Rotation as R
 
 
 def list_round(elements_list, decimals=2):
+    """
+    rounds a list of numbers and converts to Integer if necessary.
+    Used for the string representation of symmetry objects
+
+    :param elements_list: list of numbers
+    :param decimals: decimal places used to round
+    :return: list of rounded numbers
+    """
     r_list = []
     for element in elements_list:
         if abs(np.round(element) - element) < 10**(-decimals):
@@ -15,7 +24,13 @@ def list_round(elements_list, decimals=2):
 
 
 def standardize_vector(vector, prec=1e-5):
+    """
+    constructs a standard vector that indicates a direction (used in caches)
 
+    :param vector: a vector
+    :param prec: precision
+    :return: standard vector
+    """
     vector = np.array(vector, dtype=float)
     if np.abs(vector[0]) > prec:
         if vector[0] < 0:
@@ -31,6 +46,14 @@ def standardize_vector(vector, prec=1e-5):
 
 
 def rotate_basis_set(basis_set, angle, axis):
+    """
+    rotate a list of BaseFunctions object
+
+    :param basis_set: list of BaseFunction objects
+    :param angle: angle to rotate
+    :param axis: rotation axis
+    :return: rotated basis set
+    """
     new_basis_set = deepcopy(basis_set)
     for bf in new_basis_set:
         bf.apply_rotation(angle, axis)
@@ -38,22 +61,36 @@ def rotate_basis_set(basis_set, angle, axis):
 
 
 def translate_basis_set(basis_set, translation):
+    """
+    translate a list of BaseFunctions object
+
+    :param basis_set: list of BaseFunction objects
+    :param translation: displacement vector
+    :return: translated basis set
+    """
     new_basis_set = deepcopy(basis_set)
     for bf in new_basis_set:
         bf.apply_translation(translation)
     return new_basis_set
 
 
-def get_self_similarity(basis_set_1, density_matrix):
+def get_self_similarity(basis_set, density_matrix):
+    """
+    compute the self similarity of a density matrix expressed in the basis_set basis
+
+    :param basis_set: list of BaseFunction objects
+    :param density_matrix: density matrix
+    :return: the self similarity
+    """
     from sympy.utilities.iterables import multiset_permutations
-    n = len(basis_set_1)
+    n = len(basis_set)
     s = np.zeros((n, n, n, n))
 
     for i in range(n):
         for j in range(i+1):
             for k in range(j+1):
                 for l in range(k+1):
-                    integral = (basis_set_1[i] * basis_set_1[j] * basis_set_1[k] * basis_set_1[l]).integrate
+                    integral = (basis_set[i] * basis_set[j] * basis_set[k] * basis_set[l]).integrate
                     for perm in multiset_permutations([i, j, k, l]):
                         dens_prod = density_matrix[perm[0], perm[1]] * density_matrix[perm[2], perm[3]]
                         s[perm[0], perm[1], perm[2], perm[3]] = integral * dens_prod
@@ -62,6 +99,13 @@ def get_self_similarity(basis_set_1, density_matrix):
 
 
 def build_density(basis_set, density_matrix):
+    """
+    helper function to build a density function from a basis and a coefficients matrix (density matrix)
+
+    :param basis_set: list of BaseFunction objects
+    :param density_matrix: density matrix
+    :return: the density matrix (BaseFunction object)
+    """
     density_matrix = np.array(density_matrix)
     density = BasisFunction([], [])
     for i, basis1 in enumerate(basis_set):
@@ -72,6 +116,13 @@ def build_density(basis_set, density_matrix):
 
 
 def build_orbital(basis_set, mo_coefficients):
+    """
+    helper function to build an orbital from a basis and coefficients
+
+    :param basis_set: list of BaseFunction objects
+    :param mo_coefficients: Molecular Orbital coefficients
+    :return: the orbitals (BaseFunction object)
+    """
     orbital = BasisFunction([], [])
     for mo_coeff, basis in zip(mo_coefficients, basis_set):
         orbital += mo_coeff * basis
@@ -312,3 +363,28 @@ def get_basis_set_pyscf(pyscf_mol):
             raise Exception('Not implemented shell type with angular momentum:{}'.format(pyscf_mol.bas_angular(bas_id)))
 
     return basis_list
+
+
+def get_principal_axis_angles(cm_vectors, masses=None):
+    """
+    Compute the principal axis and moments of inertia
+
+    :param cm_vectors: list of distance vectors of atoms respect center of mass
+    :param masses: list of atomic masses (if None then set all to 1)
+    :return: euler angles that alings the structure along the principal axis of inertia
+    """
+
+    if masses is None:
+        masses = np.ones(len(cm_vectors))
+
+    # Build inertia tensor
+    inertia_tensor = np.zeros((3, 3))
+    for m, c in zip(masses, cm_vectors):
+        inertia_tensor += m * (np.identity(3) * np.dot(c, c) - np.outer(c, c))
+
+    # Compute eigenvalues and eigenvectors of inertia tensor
+    e_values, e_vectors = np.linalg.eigh(inertia_tensor)  # be careful eigenvectors in columns!
+    axis_of_inertia = e_vectors.T
+
+    # return align euler angles
+    return R.from_matrix(axis_of_inertia).as_euler('zyx', degrees=True)

@@ -4,10 +4,13 @@ from posym.generate_tables import get_table_from_label
 
 class PointGroup:
     """
-    Basic class to basically handle IR-table.
+    Basic class that contains the point group data
 
     """
     def __init__(self, group):
+        """
+        :param group: point group label
+        """
         self._group = group.lower()
 
         self._trans_matrix = None
@@ -128,7 +131,7 @@ class PointGroup:
 
     @property
     def is_abelian(self):
-        return sum(self.trans_matrix[0]) == len(self.trans_matrix[0])
+        return sum(self.ir_degeneracies) == len(self.ir_degeneracies)
 
     @property
     def label(self):

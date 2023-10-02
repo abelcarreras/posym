@@ -9,6 +9,10 @@ import json
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 class ModesTest(unittest.TestCase):
+    """
+    test the symmetry of normal modes in molecules with exact symmetry
+
+    """
     longMessage = True
 
 

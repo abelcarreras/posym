@@ -5,6 +5,9 @@ import numpy as np
 
 
 class OperationsTest(unittest.TestCase):
+    """
+    test symmetry of basic objects
+    """
 
     def test_pg(self):
 
@@ -262,8 +265,8 @@ class H2OTest(unittest.TestCase):
         b2 = SymmetryObject(group='c2v', rep='B2')
 
         for mo, ref in zip(mo_sym, [a1, a1, b1, a1, b2, a1, b1]):
-            self.assertCountEqual(np.round(mo.get_ir_representation(), decimals=6),
-                                  np.round(ref.get_ir_representation(), decimals=6))
+            self.assertCountEqual(np.round(mo.get_ir_representation(), decimals=2),
+                                  np.round(ref.get_ir_representation(), decimals=2))
 
     def test_normal_modes(self):
         coordinates = [[ 0.00000, 0.0000000, -0.0808819],

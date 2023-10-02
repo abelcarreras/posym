@@ -6,6 +6,9 @@ import numpy as np
 
 
 class OperationsTest(unittest.TestCase):
+    """
+    test the symmetry of function based objects (orbitals, density, wave function) in H2O molecule
+    """
 
     def setUp(self):
         #  Oxygen atom

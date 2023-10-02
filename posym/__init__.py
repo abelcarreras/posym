@@ -1,7 +1,7 @@
 __author__ = 'Abel Carreras'
 __version__ = '1.0'
 
-from posym.tools import list_round
+from posym.tools import list_round, get_principal_axis_angles
 from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from scipy.spatial.transform import Rotation as R
@@ -173,7 +173,7 @@ class SymmetryMolecule(SymmetryObject):
         else:
             self._angles = orientation_angles
 
-    def get_orientation(self, fast_optimization=True, scan_step=10, guess_angles=None):
+    def get_orientation(self, fast_optimization=True, scan_step=20, guess_angles=None):
         """
         get orientation angles for optimum orientation.
         Use full=False to orient perfect symmetric molecules. Use full=True to orient quasi symmetric molecules
@@ -224,11 +224,15 @@ class SymmetryMolecule(SymmetryObject):
         # define if use simple function (faster) or full (slower)
         optimization_function = optimization_function_simple if fast_optimization else optimization_function_full
 
+        # define better orientation for preliminar scan
+        pai_angles = get_principal_axis_angles(self._coordinates)
+
         # preliminary scan
         if guess_angles is None:
             ranges = np.arange(-90, 90+scan_step, scan_step)
             guess_angles = ref_value = None
             for angles in itertools.product(ranges, ranges, ranges):
+                angles -= pai_angles
                 value = optimization_function(angles)
                 if ref_value is None or value < ref_value:
                     ref_value = value

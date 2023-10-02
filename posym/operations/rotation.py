@@ -48,7 +48,7 @@ class Rotation(Operation):
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
 
             operation = rotation(angle, rotated_axis)
-            permu = self.get_permutation(operation, coordinates, symbols)
+            permu = self._get_permutation(operation, coordinates, symbols)
 
             measure_mode_list = []
             for mode in modes:
@@ -128,7 +128,6 @@ class Rotation(Operation):
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
             operation = rotation(angle, rotated_axis)
 
-            # mesure_coor, permu = self.get_permutation(operation, coordinates, symbols, return_dot=True)
             permu_coor = self._get_operated_coordinates(operation, coordinates, symbols)
             mesure_coor = np.einsum('ij, ij -> ', coordinates, permu_coor)
 

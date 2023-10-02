@@ -13,7 +13,7 @@ def real_radical(m, n):
 
 class CharTable(pd.DataFrame):
     """
-    Subclass of DataFrame to add some convenience
+    Subclass of DataFrame that contains the symmetry table data
 
     """
     def __init__(self, name, operations, ir, rotations, translations, multiplicities):

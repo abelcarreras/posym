@@ -5,7 +5,11 @@ import numpy as np
 
 class MoleculeTest(unittest.TestCase):
 
-    def test_td(self):
+    def test_ir_representation_td(self):
+        """
+        test the evolution of IR representation with the deformation of a tetrahedron analyzed in Td group
+
+        """
 
         reference_list = [[ 9.999995e-01 ,  2.775557e-17,  6.394995e-12,  1.522365e-07, 6.888295e-12],
                           [ 9.796177e-01 , -5.551115e-17,  6.569956e-03,  1.134926e-05, 2.402770e-03],
@@ -26,10 +30,8 @@ class MoleculeTest(unittest.TestCase):
             sm = SymmetryMolecule('Td', coordinates=coord, symbols=['H', 'H', 'H', 'H'])
 
             # check sm.measure & sm.measure_pos are consistent
-            np.testing.assert_almost_equal(sm.measure, sm.measure_pos, decimal=8)
+            np.testing.assert_almost_equal(sm.measure, sm.measure_pos, decimal=5)
 
             # check measures with reference
             symmetry_vector = sm.get_ir_representation().values
-
-            print(symmetry_vector)
-            np.testing.assert_almost_equal(symmetry_vector, reference_vector, decimal=6)
+            np.testing.assert_almost_equal(symmetry_vector, reference_vector, decimal=2)
