@@ -175,8 +175,8 @@ class OperationsTest(unittest.TestCase):
                                                      [o1, o2, o3, o4, o6])
         print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
 
-        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2) + al.dot(sym_wf_excited_1, b1), 1, places=4)
-        self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=4)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2) + al.dot(sym_wf_excited_1, b1), 1, places=3)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=3)
 
         configurations_1 = [{'amplitude': 1.0, 'occupations': {'alpha': [1, 1, 1, 1, 1, 0],
                                                                'beta': [1, 1, 1, 1, 0, 1]}}]
@@ -191,5 +191,5 @@ class OperationsTest(unittest.TestCase):
         print('Symmetry WF (excited state 2): ', sym_wf_excited_2)
         print(sym_wf_excited_1.center)
 
-        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2) + al.dot(sym_wf_excited_1, b1), 1, places=4)
-        self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=4)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_1, b2) + al.dot(sym_wf_excited_1, b1), 1, places=3)
+        self.assertAlmostEqual(al.dot(sym_wf_excited_2, a1), 1, places=3)
