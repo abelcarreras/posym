@@ -43,36 +43,48 @@ def get_permutation_hungarian(distance_table, symbols):
     return list(global_permutation)
 
 
+def cache_permutation(func):
+    cache_dict = {}
+
+    def wrapper_cache(self, operation, coordinates, symbols):
+
+        hash_key = (np.array2string(operation), np.array2string(coordinates), tuple(symbols))
+        if hash_key in cache_dict:
+            return cache_dict[hash_key]
+
+        cache_dict[hash_key] = func(self, operation, coordinates, symbols)
+        return cache_dict[hash_key]
+
+    return wrapper_cache
+
+
 class Operation:
     def __init__(self, label):
         self._label = label
 
-    def get_permutation(self, operation, coordinates, symbols, return_dot=False):
-
+    @cache_permutation
+    def _get_permutation(self, operation, coordinates, symbols):
         operated_coor = np.dot(operation, coordinates.T).T
         symbols = tuple(int.from_bytes(num.encode(), 'big') for num in symbols)
 
         dot_table = -np.dot(coordinates, operated_coor.T)
         permutation = get_permutation_hungarian(dot_table, symbols)
 
-        if return_dot:
-            permu_coor = operated_coor[permutation]
-            measure = np.einsum('ij, ij -> ', coordinates, permu_coor)
-            # measure = np.trace(np.dot(coordinates, permu_coor.T))
-            return measure, permutation
-        else:
-            return permutation
+        return permutation
 
-    def get_normalization(self, coordinates):
+    def _get_operated_coordinates(self, operation, coordinates, symbols):
+        """
+        get coordinates operated and permuted
 
-        sum_list = []
-        for r1 in coordinates:
-            for r2 in coordinates:
-                subs = np.subtract(r1, r2)
-                sum_list.append(np.dot(subs, subs))
-        d = np.average(sum_list)
-
-        return d
+        :param operation: operator matrix representation (3x3)
+        :param coordinates: coordinates to be operated
+        :param symbols: atomic symbols
+        :return: operated and permuted coordinates
+        """
+        operated_coor = np.dot(operation, coordinates.T).T
+        permutation = self._get_permutation(operation, coordinates, symbols)
+        permu_coor = operated_coor[permutation]
+        return permu_coor
 
     @property
     def label(self):

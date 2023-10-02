@@ -27,7 +27,7 @@ class Inversion(Operation):
         operation = inversion()
         operated_coor = np.dot(operation, coordinates.T).T
 
-        permu = self.get_permutation(operation, coordinates, symbols)
+        permu = self._get_permutation(operation, coordinates, symbols)
 
         measure_mode = []
         for mode in modes:
@@ -42,7 +42,7 @@ class Inversion(Operation):
     def get_measure_atom(self, coordinates, symbols, orientation=None):
 
         operation = inversion()
-        permu = self.get_permutation(operation, coordinates, symbols)
+        permu = self._get_permutation(operation, coordinates, symbols)
         measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
 
         return np.sum(measure_atoms)
@@ -60,15 +60,35 @@ class Inversion(Operation):
 
         return np.sum(measure_mode)
 
+    def get_displacements_projection(self, coordinates, symbols, orientation=None):
+
+        operation = inversion()
+
+        projected_modes = []
+        permu = self._get_permutation(operation, coordinates, symbols)
+        cartesian_modes = np.identity(3 * len(symbols)).reshape(3 * len(symbols), len(symbols), 3)
+
+        for i, mode in enumerate(cartesian_modes):
+            operated_mode = np.dot(operation, np.array(mode).T).T
+            projected_modes.append(operated_mode[permu])
+
+        return np.array(projected_modes)
+
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         operation = inversion()
-        mesure_coor, permu = self.get_permutation(operation, coordinates, symbols, return_dot=True)
+        permu_coor = self._get_operated_coordinates(operation, coordinates, symbols)
+        mesure_coor = np.einsum('ij, ij -> ', coordinates, permu_coor)
 
         if normalized:
             mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
         return mesure_coor
+
+    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
+
+        operation = inversion()
+        return self._get_operated_coordinates(operation, coordinates, symbols)
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 

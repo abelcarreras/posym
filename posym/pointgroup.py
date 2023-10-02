@@ -127,5 +127,9 @@ class PointGroup:
         return self._table.ir_degeneracies
 
     @property
+    def is_abelian(self):
+        return sum(self.trans_matrix[0]) == len(self.trans_matrix[0])
+
+    @property
     def label(self):
         return self._group

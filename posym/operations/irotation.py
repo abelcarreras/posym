@@ -43,7 +43,7 @@ class ImproperRotation(Operation):
 
             operated_coor = np.dot(operation, coordinates.T).T
 
-            permu = self.get_permutation(operation, coordinates, symbols)
+            permu = self._get_permutation(operation, coordinates, symbols)
 
             measure_mode_list = []
             for mode in modes:
@@ -69,7 +69,7 @@ class ImproperRotation(Operation):
         operation2 = reflection(rotated_axis)
         operation = np.dot(operation2, operation1)
 
-        permu = self.get_permutation(operation, coordinates, symbols)
+        permu = self._get_permutation(operation, coordinates, symbols)
         measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
 
         return np.sum(measure_atoms)
@@ -96,6 +96,30 @@ class ImproperRotation(Operation):
 
         return np.sum(measure_mode_total)
 
+    def get_displacements_projection(self, coordinates, symbols, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+
+        total_project = np.zeros_like(coordinates)
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+
+            operation1 = rotation(angle, rotated_axis)
+            operation2 = reflection(rotated_axis)
+            operation = np.dot(operation2, operation1)
+
+            permu = self._get_permutation(operation, coordinates, symbols)
+
+            cartesian_modes = np.identity(3 * len(symbols)).reshape(3 * len(symbols), len(symbols), 3)
+
+            projected_modes = []
+            for i, mode in enumerate(cartesian_modes):
+                operated_mode = np.dot(operation, np.array(mode).T).T
+                projected_modes.append(operated_mode[permu])
+
+            total_project += np.array(projected_modes)
+
+        return total_project/2
+
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
@@ -107,7 +131,10 @@ class ImproperRotation(Operation):
             operation2 = reflection(rotated_axis)
             operation = np.dot(operation2, operation1)
 
-            mesure_coor, permu = self.get_permutation(operation, coordinates, symbols, return_dot=True)
+            # permu = self._get_permutation(operation, coordinates, symbols, return_dot=True)
+            permu_coor = self._get_operated_coordinates(operation, coordinates, symbols)
+            mesure_coor = np.einsum('ij, ij -> ', coordinates, permu_coor)
+
             measure_coor.append(mesure_coor)
 
         measure_coor_total = np.average(measure_coor)
@@ -116,6 +143,20 @@ class ImproperRotation(Operation):
             measure_coor_total /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
         return measure_coor_total
+
+    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+
+        operated_coordinates = []
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+            operation1 = rotation(angle, rotated_axis)
+            operation2 = reflection(rotated_axis)
+            operation = np.dot(operation2, operation1)
+
+            operated_coordinates.append(self._get_operated_coordinates(operation, coordinates, symbols))
+
+        return np.average(operated_coordinates, axis=0)
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 

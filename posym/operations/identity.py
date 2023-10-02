@@ -23,6 +23,12 @@ class Identity(Operation):
     def get_measure_xyz(self, orientation=None):
         return 3
 
+    def get_displacements_projection(self, coordinates, symbols, orientation=None):
+        return np.identity(3*len(symbols)).reshape(3*len(symbols), len(symbols), 3)#.tolist()
+
+    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
+        return np.array(coordinates)
+
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
         return (op_function1*op_function2).integrate
 

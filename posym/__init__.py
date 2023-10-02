@@ -280,6 +280,21 @@ class SymmetryMolecule(SymmetryObject):
         return rotmol.apply(self._coordinates)
 
     @property
+    def symmetrized_coordinates(self):
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+        operator_measures = []
+        for operation in self._pg.operations:
+            sub_operator_measures = []
+            for op in self._pg.get_sub_operations(operation.label):
+                operated_coordinates = op.get_operated_coordinates(self._coordinates, self._symbols, orientation=rotmol)
+                sub_operator_measures.append(operated_coordinates)
+
+            operator_measures.append(np.average(sub_operator_measures, axis=0))
+
+        return np.average(operator_measures, axis=0)
+
+    @property
     def orientation_angles(self):
         return self._angles
 
@@ -384,6 +399,63 @@ class SymmetryAtomDisplacements(SymmetryMolecule):
         self._mode_measures = np.array(self._mode_measures, dtype=object).flatten() - trans_rots
         total_state = pd.Series(self._mode_measures, index=self._pg.op_labels)
         super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
+
+
+class SymmetryAdaptedCoordinates(SymmetryMolecule):
+    """
+    get symmetry of atom displacements . This is equivalent to the sum of the symmetries of all
+    normal modes (gamma 3N).
+    """
+    def __init__(self, group, coordinates, symbols, orientation_angles=None):
+        """
+
+        :param group: symmetry group
+        :param coordinates: atomic coordinates
+        :param symbols: atomic symbols
+        :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
+        """
+
+        self._setup_structure(coordinates, symbols, group, None, orientation_angles)
+
+        if not self._pg.is_abelian:
+            raise Exception('Not implemented for non-Abelian groups')
+
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+        self._modes = []
+        self._op_overlaps = []
+        for traces_vector in self._pg.trans_matrix.T:
+            projection = np.zeros((3 * len(coordinates), len(coordinates), 3))
+            for operation, trace in zip(self._pg.operations, traces_vector):
+                projection += trace * operation.get_displacements_projection(self._coordinates,
+                                                                             self._symbols,
+                                                                             orientation=rotmol)
+
+            def linear_indepedent(vect):
+                for m in self._modes:
+                    dot = np.abs(np.abs(np.dot(m.flatten(), vect.flatten())) - 1)
+                    if dot < 1e-5:
+                        return False
+                return True
+
+            for m in projection:
+                norm = np.linalg.norm(m.flatten())
+                if abs(norm) > 1e-5 and linear_indepedent(m/norm):
+                    self._modes.append(m/norm)
+                    self._op_overlaps.append(traces_vector)
+
+        total_state = pd.Series(np.sum(self._op_overlaps, axis=0), index=self._pg.op_labels)
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
+
+    def get_symmetry_adapted_coordinates(self):
+        return np.array(self._modes).tolist()
+
+    def get_state_mode(self, n):
+        return SymmetryObject(group=self._group, rep=pd.Series(self._op_overlaps[n],
+                                                               index=self._pg.op_labels))
+
+    def get_number_of_modes(self):
+        return len(self._op_overlaps)
 
 
 class SymmetryGaussianLinear(SymmetryMolecule):
