@@ -7,7 +7,6 @@ from posym.config import Configuration
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-import time
 
 
 # remove warnings due to indeterminate Euler angles in some extreme geometries
@@ -15,8 +14,6 @@ warnings.simplefilter("ignore", UserWarning)
 
 # define a large pre-scan step to increase speed in expense of accuracy
 Configuration().scan_steps = 50
-
-t_1 = time.time()
 
 d_range = np.linspace(0, 5.0, 50)
 
@@ -48,8 +45,4 @@ for group in ['Ci', 'Cs', 'C3h', 'Td']:
 plt.xlabel('distance')
 plt.ylabel('CSM [Asymmetry]')
 plt.legend()
-#plt.show()
-
-t_2 = time.time()
-
-print('\n\nTotal time: {:.2f}: '.format(t_2 - t_1))
+plt.show()
