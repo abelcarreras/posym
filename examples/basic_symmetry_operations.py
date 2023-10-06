@@ -1,3 +1,4 @@
+# This example illustrates the use of SymmetryObject to make symmetry operations
 from posym import PointGroup, SymmetryObject
 
 # Print symmetry IR table of C2h group

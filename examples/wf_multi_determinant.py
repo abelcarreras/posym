@@ -1,14 +1,14 @@
-# Example of methane excited states constructed by CI of
-# a set of HF restricted molecular orbitals
+# Analysis of the symmetry of the multi-reference wave functions
+# of the excited states of methane molecule computed using RAS-CI method
+# This example requires PyQchem to do the electronic structure calculations
 
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.parser_optimization import basic_optimization
 from pyqchem.parsers.parser_rasci import parser_rasci
 from pyqchem.file_io import write_to_fchk
-
-from posym import SymmetryGaussianLinear, SymmetrySingleDeterminant
-import numpy as np
+from posym import SymmetryMultiDeterminant, SymmetryGaussianLinear
 from posym.tools import get_basis_set, build_orbital
+import posym.algebra as al
 
 # define molecular structure
 methane = Structure(coordinates=[[ 0.0000000000,  0.0000000000,  0.0000000000],
@@ -41,17 +41,21 @@ qc_input = QchemInput(data_methane['optimized_molecule'],
                       basis='sto-3g',
                       correlation='rasci',
                       purecart=False,
-                      ras_roots=10,
+                      ras_roots=12,
                       ras_elec_alpha=1,
                       ras_elec_beta=1,
                       ras_act=3,
                       ras_occ=2,
                       ras_do_hole=False,
                       ras_do_part=False,
-                      cis_convergence=15,
+                      cis_convergence=10,
                       sym_tol=2,
                       ras_spin_mult=0,
+                      extra_rem_keywords={'set_maxsize': 600,
+                                          'RAS_AMPL_PRINT': 2},
+                      set_iter=100,
                       )
+
 
 data_methane, ee_methane = get_output_from_qchem(qc_input,
                                                  return_electronic_structure=True,
@@ -64,50 +68,35 @@ data_methane, ee_methane = get_output_from_qchem(qc_input,
 write_to_fchk(ee_methane, 'methane.fchk')
 
 # read electronic structure information
-# overlap = np.round(np.array(ee_methane['overlap']), decimals=6)
 coefficients = ee_methane['coefficients']
-coordinates = np.array(ee_methane['structure'].get_coordinates())
+coordinates = ee_methane['structure'].get_coordinates()
 basis = ee_methane['basis']
 
-# print excited states configurations
-for istate, state in enumerate(data_methane['excited_states']):
-    print('\nState', istate +1, '(', state['multiplicity'], ')')
-    print('excitation_energy: ', state['excitation_energy'])
-    for configuration in state['configurations']:
-        print(configuration['amplitude'], configuration['occupations'])
+basis_set = get_basis_set(coordinates, basis)
 
 # build molecular orbitals
-print('\nMolecular orbitals symmetry')
-basis_set = get_basis_set(coordinates, basis)
-orbital1 = build_orbital(basis_set, coefficients['alpha'][0])
-orbital2 = build_orbital(basis_set, coefficients['alpha'][1])
+print('Molecular Orbitals')
+for i, mo_coeff in enumerate(ee_methane['coefficients']['alpha']):
+    mo_orbital = build_orbital(basis_set, mo_coeff)
+    print(i + 1, ':', SymmetryGaussianLinear('Td', mo_orbital))
 
-orbital3 = build_orbital(basis_set, coefficients['alpha'][2])
-orbital4 = build_orbital(basis_set, coefficients['alpha'][3])
-orbital5 = build_orbital(basis_set, coefficients['alpha'][4])
+orbitals = []
+for orbital_coefficients in coefficients['alpha']:
+    orbitals.append(build_orbital(basis_set, orbital_coefficients))
 
-# compute symmetry of molecular orbitals
-sym_orbital1 = SymmetryGaussianLinear('Td', orbital1)
-sym_orbital2 = SymmetryGaussianLinear('Td', orbital2)
-sym_orbital3 = SymmetryGaussianLinear('Td', orbital3)
-sym_orbital4 = SymmetryGaussianLinear('Td', orbital4)
-sym_orbital5 = SymmetryGaussianLinear('Td', orbital5)
+# print excited states configurations and compute the symmetry of the full multi-configurational wave function
+for istate, state in enumerate(data_methane['excited_states']):
+    print('\nState', istate + 1, '(', state['multiplicity'], ')')
+    print('Excitation energy: {:8.4f}'.format(state['excitation_energy']))
 
-for i, s in enumerate([sym_orbital1, sym_orbital2, sym_orbital3, sym_orbital4, sym_orbital5]):
-    print('Orbital {}: {}'.format(i+1, s))
+    for configuration in state['configurations']:
+        print('amplitude: {:12.8f} '.format(configuration['amplitude']), configuration['occupations'])
 
-print('\nWave function symmetry')
-# compute symmetry of sample configuration (in T states)
-wf_1 = SymmetrySingleDeterminant('Td',
-                                 alpha_orbitals=[orbital1, orbital2, orbital5],
-                                 beta_orbitals=[orbital1, orbital2, orbital4])
+    wf = SymmetryMultiDeterminant('Td',
+                                  orbitals=orbitals,
+                                  configurations=state['configurations'],
+                                  center=[0, 0, 0])
 
-print('Configuration 1: ', wf_1)
-
-# compute symmetry of sample configuration (in A & E states)
-wf_2 = SymmetrySingleDeterminant('Td',
-                                 alpha_orbitals=[orbital1, orbital2, orbital3],
-                                 beta_orbitals=[orbital1, orbital2, orbital3])
-
-print('Configuration 2: ', wf_2)
-
+    print(wf.get_ir_representation())
+    print(wf)
+    print('Norm: ', al.norm(wf))

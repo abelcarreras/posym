@@ -1,5 +1,7 @@
 # Example of a simple wave function analysis of the butadiene molecule
 # This example makes use of pyQChem to automatize the calculation of the wave function
+# This example requires PyQchem to do the electronic structure calculations
+
 from pyqchem import get_output_from_qchem, QchemInput, Structure
 from pyqchem.parsers.basic import basic_parser_qchem
 from posym import SymmetryGaussianLinear, SymmetryObject

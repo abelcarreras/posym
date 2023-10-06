@@ -1,3 +1,6 @@
+# Example of calculation of the symmetry of electronic properties of water
+# This example requires PyQchem to do the electronic structure calculations
+
 from posym.basis import PrimitiveGaussian, BasisFunction
 from posym import SymmetryGaussianLinear
 from posym.tools import build_orbital, build_density, get_basis_set

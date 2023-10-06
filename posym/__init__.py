@@ -5,11 +5,11 @@ from posym.tools import list_round, get_principal_axis_angles
 from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from posym.config import Configuration
+from posym.tools import uniform_euler_scan
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import numpy as np
 import pandas as pd
-import itertools
 
 
 cache_orientation = {}
@@ -188,6 +188,7 @@ class SymmetryMolecule(SymmetryObject):
         if hash_num in cache_orientation:
             return cache_orientation[hash_num]
 
+        # optimization functions
         def optimization_function_simple(angles):
             """
             This function uses only one operation of each type (described in the IR table).
@@ -230,16 +231,15 @@ class SymmetryMolecule(SymmetryObject):
 
         # preliminary scan
         if guess_angles is None:
-            ranges = np.arange(-90, 90+scan_step, scan_step)
             guess_angles = ref_value = None
-            for angles in itertools.product(ranges, ranges, ranges):
+            for angles in uniform_euler_scan(90, scan_step):
                 angles -= pai_angles
                 value = optimization_function(angles)
                 if ref_value is None or value < ref_value:
                     ref_value = value
                     guess_angles = angles
 
-        result = minimize(optimization_function, guess_angles, method='CG',)
+        result = minimize(optimization_function, guess_angles, method='CG')
 
         cache_orientation[hash_num] = result.x
         return cache_orientation[hash_num]
@@ -465,14 +465,14 @@ class SymmetryAdaptedCoordinates(SymmetryMolecule):
 
 class SymmetryGaussianLinear(SymmetryMolecule):
     """
-    get symmetry from a function defined in the basis of Gaussian functions (BaseFunction object)
+    get symmetry from a function defined in the basis of Gaussian functions (BasisFunction object)
 
     """
     def __init__(self, group, function, orientation_angles=None, center=None):
         """
 
         :param group: symmetry group
-        :param function: the function (BaseFunction object)
+        :param function: the function (BasisFunction object)
         :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
         :param center: center of symmetry group [x, y, z]
         """
@@ -606,13 +606,12 @@ class SymmetryMultiDeterminant(SymmetryMolecule):
     def __init__(self, group, orbitals, configurations, orientation_angles=None, center=None):
         """
 
-        :param group:
-        :param orbitals:
-        :param configurations:
-        :param orientation_angles:
-        :param center:
+        :param group: symmetry group
+        :param orbitals: list BasisFunction objects
+        :param configurations: dictionary that contains the electronic configuration (see README for example)
+        :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
+        :param center: center of symmetry group [x, y, z]
         """
-
         # generate copy to not modify original orbitals
         orbitals = [f.copy() for f in orbitals]
 
@@ -696,9 +695,7 @@ class SymmetryMultiDeterminant(SymmetryMolecule):
 
 if __name__ == '__main__':
 
-    from pyqchem import get_output_from_qchem, Structure
-    from pyqchem.tools import get_geometry_from_pubchem
-
+    from posym.algebra import norm
 
     coordinates = [[ 0.000000000+00,  0.000000000+00,  2.40297090e-01],
                    [-1.43261539e+00, -1.75444785e-16, -9.61188362e-01],
@@ -706,160 +703,8 @@ if __name__ == '__main__':
 
     symbols = ['O', 'H', 'H']
 
-    coordinates_ = [[0, 0, 0],
-                   [ np.sqrt(8/9), 0, -1/3],
-                   [-np.sqrt(2/9), np.sqrt(2/3), -1/3],
-                   [-np.sqrt(2/9), -np.sqrt(2/3), -1/3],
-                   [0, 0, 1]]
-
-    coordinates_ = [[-3.11301739e-06,  1.12541091e-05, -7.97835696e-06],
-                   [-6.58614327e-02, -7.77865103e-01, -7.63860353e-01],
-                   [-3.64119514e-02,  9.82136003e-01, -4.76386979e-01],
-                   [-8.37587195e-01, -9.93456888e-02,  6.93899368e-01],
-                   [ 9.39879258e-01, -1.04992740e-01,  5.46395830e-01]]
-
-    symbols_ = ['C', 'H', 'H', 'H', 'H']
-
     sm = SymmetryAtomDisplacements('c2v', coordinates, symbols)
     print(sm.get_point_group())
     print(sm)
     mb = SymmetryMolecule('c2v', coordinates, symbols)
-    from posym.algebra import norm
     print('Coor measure: ', mb, '(', norm(mb), ')')
-
-    exit()
-
-
-    if False:
-        #mol = get_geometry_from_pubchem('methane')
-        from pyqchem.file_io import read_structure_from_xyz
-
-        # mol = get_geometry_from_pubchem('Buckminsterfullerene')
-        mol = read_structure_from_xyz('../c60.xyz')
-
-        coordinates = mol.get_coordinates()
-        symbols = mol.get_symbols()
-
-    from posym.operations.rotation import Rotation, rotation
-    from posym.operations.reflection import Reflection, reflection
-    from posym.operations.irotation import ImproperRotation
-    from posym.operations import get_permutation_simple, get_cross_distance_table
-
-    coordinates = np.array(coordinates)
-    operation = Rotation(label='C2', axis=[0, 0, 1], order=2)
-    operation = Reflection(label='C2', axis=[0, 0, 1])
-
-    a = operation.get_measure_xyz(coordinates, symbols)
-    print(a)
-
-    exit()
-
-    import matplotlib.pyplot as plt
-
-    if True:
-        def optimization_function(angles):
-            rotmol = R.from_euler('zyx', angles, degrees=True)
-            operation = Rotation(label='C2', axis=[0, 0, 1], order=2)
-            # print(operation._axis, operation._order)
-            coor_m = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
-            operation = Reflection(label='s', axis=[0, 1, 0])
-            # print(operation._axis, operation._order)
-            coor_m2 = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
-            operation = Rotation(label='C2', axis=[np.sqrt(2/9), 0, 1/3], order=2)
-            coor_m3 = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
-            operation = ImproperRotation(label='S4', axis=[np.sqrt(2/9), 0, 1/3], order=4)
-            coor_m4 = operation.get_measure_pos(np.array(coordinates), symbols, orientation=rotmol)
-
-            print(coor_m)
-            #print(coor_m + coor_m2 + coor_m3 + coor_m4)
-            return coor_m # + coor_m2 + coor_m3 + coor_m4
-            #return np.product([coor_m, coor_m2, coor_m3, coor_m4])
-
-
-        #exit()
-
-        list_m = []
-        list_a = []
-        for i in np.arange(0, 180, 36):
-            for j in np.arange(0, 180, 36):
-                for k in np.arange(0, 180, 36):
-                    list_m.append(optimization_function([i, j, k]))
-                    list_a.append([i, j, k])
-
-        print(np.sort(list_m))
-        exit()
-        print('------')
-        initial = np.array(list_a[np.nanargmin(list_m)])
-        #initial = [143.63674808,  -4.31338625,  70.70307201]
-        # initial = [43.22189286,  43.86797247, 103.83908054]
-        res = minimize(optimization_function, initial, method='CG',
-                       #tol=1e20
-                       )
-
-        print('res', res.x)
-        print('test', optimization_function(res.x))
-
-        # res.x = [43.22189286,  43.86797247, 103.83908054]
-
-        rotmol = R.from_euler('zyx', res.x, degrees=True)
-
-    else:
-        angles = [43.22189286,  43.86797247, 103.83908054]
-        rotmol = R.from_euler('zyx', angles, degrees=True)
-
-
-        #print(optimization_function(res.x))
-        #rotmol = R.from_euler('zyx', res.x, degrees=True)
-
-
-    #operation = Rotation(label='C3', axis=[0, 0, 1], order=3)
-    #rotmol = R.from_euler('zyx', [0, 0, 0], degrees=True)
-    #mode_m, coor_m = operation.get_measure(np.array(coordinates), modes, symbols, orientation=rotmol)
-    #print('measure', coor_m)
-    #rotmol = R.from_euler('zyx', [360./3, 0, 0], degrees=True)
-    #print('---')
-
-    print(Structure(coordinates, symbols))
-
-    # rotations
-    rotated_axis = rotmol.apply([0, 0, 1])
-    operation = rotation(2*np.pi/2, rotated_axis)
-    print('axis', rotated_axis)
-
-    # reflection
-    #rotated_axis_r = rotmol.apply([0, 1,  0])
-    #operation = reflection(rotated_axis_r)
-    #print('axis_r', rotated_axis_r)
-
-    # C2 rotation
-    # rotated_axis_i = rotmol.apply([(np.sqrt(8 / 9))/2, 0, (1-1 / 3)/2])
-
-    # S4 rotation
-    #rotated_axis_i = rotmol.apply([np.sqrt(2 / 9), 0, 1 / 3])
-    #operation1 = rotation(2*np.pi/4, rotated_axis_i)
-    #operation2 = reflection(rotated_axis_i)
-    #operation = np.dot(operation2, operation1)
-    #print('axis_i', rotated_axis_i)
-
-    #coordinates = rotmol.apply(coordinates)
-    #print(Structure(coordinates, symbols))
-
-    print('det:', np.linalg.det(operation))
-    permu_coor = np.dot(operation, np.array(coordinates).T).T
-
-    print(Structure(permu_coor, symbols))
-
-
-    distance_table = get_cross_distance_table(coordinates, permu_coor)
-    perm = get_permutation_simple(distance_table, symbols)
-    #print(np.round(distance_table[perm], 3))
-    print(perm)
-
-    permu_coor = permu_coor[perm]
-
-    print(Structure(permu_coor, symbols))
-
-    print('****')
-    print(permu_coor)
-    a = np.average(np.linalg.norm(np.subtract(coordinates, permu_coor), axis=0))
-    print(a)

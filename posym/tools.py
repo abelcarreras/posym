@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 from posym.basis import BasisFunction, PrimitiveGaussian
 from scipy.spatial.transform import Rotation as R
+import itertools
 
 
 def list_round(elements_list, decimals=2):
@@ -47,9 +48,9 @@ def standardize_vector(vector, prec=1e-5):
 
 def rotate_basis_set(basis_set, angle, axis):
     """
-    rotate a list of BaseFunctions object
+    rotate a list of BasisFunction object
 
-    :param basis_set: list of BaseFunction objects
+    :param basis_set: list of BasisFunction objects
     :param angle: angle to rotate
     :param axis: rotation axis
     :return: rotated basis set
@@ -62,9 +63,9 @@ def rotate_basis_set(basis_set, angle, axis):
 
 def translate_basis_set(basis_set, translation):
     """
-    translate a list of BaseFunctions object
+    translate a list of BasisFunction object
 
-    :param basis_set: list of BaseFunction objects
+    :param basis_set: list of BasisFunction objects
     :param translation: displacement vector
     :return: translated basis set
     """
@@ -78,7 +79,7 @@ def get_self_similarity(basis_set, density_matrix):
     """
     compute the self similarity of a density matrix expressed in the basis_set basis
 
-    :param basis_set: list of BaseFunction objects
+    :param basis_set: list of BasisFunction objects
     :param density_matrix: density matrix
     :return: the self similarity
     """
@@ -102,9 +103,9 @@ def build_density(basis_set, density_matrix):
     """
     helper function to build a density function from a basis and a coefficients matrix (density matrix)
 
-    :param basis_set: list of BaseFunction objects
+    :param basis_set: list of BasisFunction objects
     :param density_matrix: density matrix
-    :return: the density matrix (BaseFunction object)
+    :return: the density matrix (BasisFunction object)
     """
     density_matrix = np.array(density_matrix)
     density = BasisFunction([], [])
@@ -119,9 +120,9 @@ def build_orbital(basis_set, mo_coefficients):
     """
     helper function to build an orbital from a basis and coefficients
 
-    :param basis_set: list of BaseFunction objects
+    :param basis_set: list of BasisFunction objects
     :param mo_coefficients: Molecular Orbital coefficients
-    :return: the orbitals (BaseFunction object)
+    :return: the orbitals (BasisFunction object)
     """
     orbital = BasisFunction([], [])
     for mo_coeff, basis in zip(mo_coefficients, basis_set):
@@ -388,3 +389,33 @@ def get_principal_axis_angles(cm_vectors, masses=None):
 
     # return align euler angles
     return R.from_matrix(axis_of_inertia).as_euler('zyx', degrees=True)
+
+
+# grid generators
+def uniform_euler_scan(val, step):
+    """
+    generates a uniform scan of Euler angles from -val to +val in 3d
+
+    :param val: scan bounds
+    :param step: step of the scan
+    :return: list of 3 Euler angles
+    """
+    ranges = np.arange(-val, val + step, step)
+    for angles in itertools.product(ranges, ranges, ranges):
+        yield angles
+
+
+def skewed_euler_scan(val, step):
+    """
+    generates a skewed scan of Euler angles from -val to +val in 3d.
+    This tries to approximate a uniform spherical grid around a point
+
+    :param val: scan bounds
+    :param step: step of the scan
+    :return: list of 3 Euler angles
+    """
+    ranges = np.arange(-val, val + step, step)
+    for angles_2d in itertools.product(ranges, ranges):
+        step_final = step / np.max([np.sin(np.deg2rad(angles_2d[1])), step / 180])
+        for angle in np.arange(-val, val + step_final, step_final):
+            yield np.array(list(angles_2d) + [angle], dtype=float)
