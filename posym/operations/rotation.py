@@ -133,6 +133,9 @@ class Rotation(Operation):
 
             measure_coor.append(mesure_coor)
 
+        # np.testing.assert_almost_equal(measure_coor[0], measure_coor[1], decimal=3,
+        #                                err_msg='Error in pair operations equivalence: {}'.format(measure_coor))
+
         measure_coor_total = np.average(measure_coor)
 
         if normalized:
@@ -149,7 +152,10 @@ class Rotation(Operation):
             operation = rotation(angle, rotated_axis)
             operated_coordinates.append(self._get_operated_coordinates(operation, coordinates, symbols))
 
-        return np.average(operated_coordinates, axis=0)
+        if self._order <= 2:
+            return [operated_coordinates[0]]
+
+        return operated_coordinates
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 

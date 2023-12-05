@@ -1,5 +1,9 @@
 import numpy as np
 from functools import lru_cache
+# from posym.permutations import get_cross_distance_table
+from posym.permutations import get_permutation_annealing, get_permutation_brute  # noqa
+from scipy.optimize import linear_sum_assignment
+from posym.config import Configuration
 
 
 @lru_cache(maxsize=100)
@@ -12,18 +16,11 @@ def get_submatrix_indices(symbols):
     return submatrices_indices
 
 
-def get_permutation_hungarian(distance_table, symbols):
+def get_permutation_labels(distance_table, symbols, permutation_function):
     """
-    This function takes distance_table and returns the permutation vector
-    that minimizes its trace, using the Hungarian method.
+    This function restricts permutations by the use of atom labels
+    returns the permutation vector that minimizes its trace using custom algorithms.
     """
-    from scipy.optimize import linear_sum_assignment
-
-    def get_perm_submatrix(sub_matrix):
-        row_ind, col_ind = linear_sum_assignment(sub_matrix)
-        perm = np.zeros_like(row_ind)
-        perm[row_ind] = col_ind
-        return perm
 
     submatrices_indices = get_submatrix_indices(symbols)
 
@@ -31,7 +28,7 @@ def get_permutation_hungarian(distance_table, symbols):
     perm_submatrices = []
     for index in submatrices_indices:
         submatrix = np.array(distance_table)[index, :][:, index]
-        perm_sub = get_perm_submatrix(submatrix)
+        perm_sub = permutation_function(submatrix)
         perm_submatrices.append(perm_sub)
 
     # restore global permutation by joining permutations of submatrices
@@ -40,7 +37,7 @@ def get_permutation_hungarian(distance_table, symbols):
         index = np.array(index)
         global_permutation[index] = index[perm]
 
-    return list(global_permutation)
+    return np.array(global_permutation)
 
 
 def cache_permutation(func):
@@ -61,6 +58,8 @@ def cache_permutation(func):
 class Operation:
     def __init__(self, label):
         self._label = label
+        self._order = 1
+        self._exp = 1
 
     @cache_permutation
     def _get_permutation(self, operation, coordinates, symbols):
@@ -68,11 +67,29 @@ class Operation:
         symbols = tuple(int.from_bytes(num.encode(), 'big') for num in symbols)
 
         dot_table = -np.dot(coordinates, operated_coor.T)
-        permutation = get_permutation_hungarian(dot_table, symbols)
+        # dot_table = get_cross_distance_table(coordinates, operated_coor)
 
-        return permutation
+        # permutation algorithms functions
+        def hungarian_algorithm(sub_matrix):
+            row_ind, col_ind = linear_sum_assignment(sub_matrix)
+            perm = np.zeros_like(row_ind)
+            perm[row_ind] = col_ind
+            return perm
 
-    def _get_operated_coordinates(self, operation, coordinates, symbols):
+        def annealing_algorithm(dot_matrix):
+            return get_permutation_annealing(dot_matrix, self._order, self._exp)
+
+        def brute_force_algorithm(dot_matrix):
+            return get_permutation_brute(dot_matrix, self._order, self._exp)
+
+        # algorithms list
+        algorithm_dict = {'hungarian': hungarian_algorithm,
+                          'annealing': annealing_algorithm,
+                          'brute_force': brute_force_algorithm}
+
+        return get_permutation_labels(dot_table, symbols, algorithm_dict[Configuration().algorithm])
+
+    def _get_operated_coordinates(self, operation, coordinates, symbols, return_perm=False):
         """
         get coordinates operated and permuted
 
@@ -84,6 +101,10 @@ class Operation:
         operated_coor = np.dot(operation, coordinates.T).T
         permutation = self._get_permutation(operation, coordinates, symbols)
         permu_coor = operated_coor[permutation]
+
+        if return_perm:
+            return permutation, permu_coor
+
         return permu_coor
 
     @property

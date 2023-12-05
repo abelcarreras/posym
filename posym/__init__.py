@@ -152,6 +152,11 @@ class SymmetryMolecule(SymmetryObject):
 
             total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
 
+        if not self.check_permutation_coherence:
+            import warnings
+            warnings.warn('Incoherence found in symmetrized structure.\n'
+                          'Geometric measure and group orientation may be incorrect.\n')
+
         super().__init__(group, total_state)
 
     def _setup_structure(self, coordinates, symbols, group, center, orientation_angles):
@@ -280,6 +285,32 @@ class SymmetryMolecule(SymmetryObject):
         return 100 * (1 - ir_rep_diff)
 
     @property
+    def check_permutation_coherence(self, tolerance=0.95):
+        """
+        check coherence of the permutation by checking the symmetry measure of
+        the symmetrized structure.  This function only checks the symmetrized structure.
+        The measure may still be correct.
+
+        :param tolerance: tolenrece value for the final overlap measure of the structure
+        :return: True or False
+        """
+
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+        operator_measures = []
+        for operation in self._pg.operations:
+            sub_operator_measures = []
+            for op in self._pg.get_sub_operations(operation.label):
+                overlap = op.get_measure_pos(self.symmetrized_coordinates, self._symbols, orientation=rotmol)
+                sub_operator_measures.append(overlap)
+            operator_measures.append(np.average(sub_operator_measures))
+
+        # get most symmetric IR value
+        ir_rep_diff = np.dot(operator_measures, self._pg.trans_matrix_inv[0])
+
+        return ir_rep_diff > tolerance
+
+    @property
     def opt_coordinates(self):
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
         return rotmol.apply(self._coordinates)
@@ -290,12 +321,8 @@ class SymmetryMolecule(SymmetryObject):
 
         operator_measures = []
         for operation in self._pg.operations:
-            sub_operator_measures = []
             for op in self._pg.get_sub_operations(operation.label):
-                operated_coordinates = op.get_operated_coordinates(self._coordinates, self._symbols, orientation=rotmol)
-                sub_operator_measures.append(operated_coordinates)
-
-            operator_measures.append(np.average(sub_operator_measures, axis=0))
+                operator_measures += op.get_operated_coordinates(self._coordinates, self._symbols, orientation=rotmol)
 
         return np.average(operator_measures, axis=0)
 

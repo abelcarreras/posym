@@ -13,6 +13,7 @@ def inversion():
 class Inversion(Operation):
     def __init__(self, label):
         super().__init__(label)
+        self._order = 2
 
     def __hash__(self):
         return hash((self._label))
@@ -79,14 +80,17 @@ class Inversion(Operation):
         mesure_coor = np.einsum('ij, ij -> ', coordinates, permu_coor)
 
         if normalized:
-            mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)
+            normalization = np.einsum('ij, ij -> ', coordinates, coordinates)
+            if abs(normalization) < 1e-10:
+                return 1
+            mesure_coor /= normalization
 
         return mesure_coor
 
     def get_operated_coordinates(self, coordinates, symbols, orientation=None):
 
         operation = inversion()
-        return self._get_operated_coordinates(operation, coordinates, symbols)
+        return [self._get_operated_coordinates(operation, coordinates, symbols)]
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 

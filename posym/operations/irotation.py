@@ -156,7 +156,11 @@ class ImproperRotation(Operation):
 
             operated_coordinates.append(self._get_operated_coordinates(operation, coordinates, symbols))
 
-        return np.average(operated_coordinates, axis=0)
+        if self._order <= 2:
+            return [operated_coordinates[0]]
+
+        return operated_coordinates
+        # return np.average(operated_coordinates, axis=0)
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 

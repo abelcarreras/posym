@@ -13,7 +13,7 @@ def reflection(reflection_axis):
 class Reflection(Operation):
     def __init__(self, label, axis):
         super().__init__(label)
-
+        self._order = 2
         self._axis = standardize_vector(axis)
 
     def __hash__(self):
@@ -101,7 +101,7 @@ class Reflection(Operation):
 
         operation = reflection(rotated_axis)
 
-        return self._get_operated_coordinates(operation, coordinates, symbols)
+        return [self._get_operated_coordinates(operation, coordinates, symbols)]
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 

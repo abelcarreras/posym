@@ -23,7 +23,8 @@ def get_cn(n):
 
     operations = [Identity(label='E')]
     for i in range(n//2):
-        j = gcd(i+1, n)
+        # j = gcd(i+1, n)
+        j = 1
         up = (i+1)//j
         down = n//j
         label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
