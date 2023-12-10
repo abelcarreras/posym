@@ -77,10 +77,10 @@ class Operation:
             return perm
 
         def annealing_algorithm(dot_matrix):
-            return get_permutation_annealing(dot_matrix, self._order, self._exp)
+            return get_permutation_annealing(dot_matrix, self._order, 1)
 
         def brute_force_algorithm(dot_matrix):
-            return get_permutation_brute(dot_matrix, self._order, self._exp)
+            return get_permutation_brute(dot_matrix, self._order, 1)
 
         # algorithms list
         algorithm_dict = {'hungarian': hungarian_algorithm,

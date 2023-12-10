@@ -1,6 +1,7 @@
 from posym.operations import Operation
 from scipy.spatial.transform import Rotation as R
 from posym.tools import standardize_vector
+from posym.operations.permutation import roll_permutation
 import numpy as np
 import hashlib
 
@@ -122,40 +123,51 @@ class Rotation(Operation):
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+        angle = 2 * np.pi / self._order # * self._exp
+        operation = rotation(angle, rotated_axis)
 
-        measure_coor = []
-        # for angle in np.linspace(2*np.pi/self._order, 2*np.pi, self._order)[:-1]:
-        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
-            operation = rotation(angle, rotated_axis)
+        permutation = self._get_permutation(operation, coordinates, symbols)
 
-            permu_coor = self._get_operated_coordinates(operation, coordinates, symbols)
-            mesure_coor = np.einsum('ij, ij -> ', coordinates, permu_coor)
+        permutation = roll_permutation(permutation, self._exp)
 
-            measure_coor.append(mesure_coor)
+        angle = 2 * np.pi / self._order * self._exp
+        operation = rotation(angle, rotated_axis)
+        operated_coor = np.dot(operation, coordinates.T).T
 
-        # np.testing.assert_almost_equal(measure_coor[0], measure_coor[1], decimal=3,
-        #                                err_msg='Error in pair operations equivalence: {}'.format(measure_coor))
-
-        measure_coor_total = np.average(measure_coor)
+        measure_coor_total = np.einsum('ij, ij -> ', coordinates, operated_coor[permutation])
 
         if normalized:
             measure_coor_total /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
+        # print('measure_coor_total', measure_coor_total)
         return measure_coor_total
 
     def get_operated_coordinates(self, coordinates, symbols, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+        angle = 2 * np.pi / self._order
+        operation = rotation(angle, rotated_axis)
 
-        operated_coordinates = []
-        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
-            operation = rotation(angle, rotated_axis)
-            operated_coordinates.append(self._get_operated_coordinates(operation, coordinates, symbols))
+        permutation = self._get_permutation(operation, coordinates, symbols)
 
-        if self._order <= 2:
-            return [operated_coordinates[0]]
+        permutation = roll_permutation(permutation, self._exp)
 
-        return operated_coordinates
+        angle = 2 * np.pi / self._order * self._exp
+        operation = rotation(angle, rotated_axis)
+        operated_coor = np.dot(operation, coordinates.T).T
+
+
+        angle = -2 * np.pi / self._order * self._exp
+        operation_2 = rotation(angle, rotated_axis)
+        operated_coor_2 = np.dot(operation_2, coordinates.T).T
+
+        permutation_2 = np.argsort(permutation)
+
+        # print('boor: ', np.linalg.norm(operation - operation_2))
+        if np.linalg.norm(operation - operation_2) < 1e-2:
+            return [operated_coor[permutation]]
+        else:
+            return [operated_coor[permutation], operated_coor_2[permutation_2]]
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 
