@@ -255,7 +255,8 @@ def get_sn(n):
 
         operations = [Identity(label='E')]
         for i in range(n//2):
-            j = gcd(i+1, n)
+            # j = gcd(i+1, n)
+            j = 1
             up = (i+1)//j
             down = n//j
             if np.mod(i, 2) == 0:
@@ -263,7 +264,7 @@ def get_sn(n):
                 operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
             else:
                 label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
-                operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
+                operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
         ir_data = {'A': pd.Series([1] * ndim)}
         if r == 1:
@@ -290,7 +291,8 @@ def get_sn(n):
 
         operations = [Identity(label='E')]
         for i in range(n//2):
-            j = gcd(i+1, n)
+            # j = gcd(i+1, n)
+            j = 1
             up = (i+1)//j
             down = n//j
             if np.mod(i, 2) == 0:
@@ -302,7 +304,7 @@ def get_sn(n):
                     operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
             else:
                 label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
-                operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
+                operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
         ir_data = {'Ag': pd.Series([1] * ndim)}
         traces = [1]

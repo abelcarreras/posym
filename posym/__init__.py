@@ -5,7 +5,7 @@ from posym.tools import list_round, get_principal_axis_angles
 from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from posym.config import Configuration
-from posym.tools import uniform_euler_scan
+from posym.tools import uniform_euler_scan, collapse_limit
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import numpy as np
@@ -145,6 +145,11 @@ class SymmetryMolecule(SymmetryObject):
             for operation in self._pg.operations:
                 operator_measures = []
                 for op in self._pg.get_sub_operations(operation.label):
+                    # check if all atoms are collapsed in a point
+                    if collapse_limit(self._coordinates):
+                        operator_measures.append(1)
+                        continue
+
                     overlap = op.get_measure_pos(self._coordinates, symbols, orientation=rotmol)
                     operator_measures.append(overlap)
 
@@ -152,7 +157,7 @@ class SymmetryMolecule(SymmetryObject):
 
             total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
 
-        if not self.check_permutation_coherence:
+        if not self.check_permutation_coherence and not collapse_limit(self.symmetrized_coordinates):
             import warnings
             warnings.warn('Incoherence found in symmetrized structure.\n'
                           'Geometric measure and group orientation may be incorrect.\n')

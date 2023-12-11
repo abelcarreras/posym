@@ -419,3 +419,10 @@ def skewed_euler_scan(val, step):
         step_final = step / np.max([np.sin(np.deg2rad(angles_2d[1])), step / 180])
         for angle in np.arange(-val, val + step_final, step_final):
             yield np.array(list(angles_2d) + [angle], dtype=float)
+
+
+def collapse_limit(coordinates, tolerance=1e-5):
+    if np.average(np.linalg.norm(coordinates, axis=1)) < tolerance:
+        return True
+    else:
+        return False
