@@ -39,7 +39,7 @@ class ImproperRotation(Operation):
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
         # for angle in np.arange(2*np.pi/self._order, 2*np.pi, 2*np.pi/self._order)[::2]:
             operation1 = rotation(angle, rotated_axis)
-            operation2 = reflection(rotated_axis)
+            operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
             operation = np.dot(operation2, operation1)
 
             operated_coor = np.dot(operation, coordinates.T).T
@@ -67,7 +67,7 @@ class ImproperRotation(Operation):
 
         angle = 2 * np.pi / self._order * self._exp
         operation1 = rotation(angle, rotated_axis)
-        operation2 = reflection(rotated_axis)
+        operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
         operation = np.dot(operation2, operation1)
 
         permu = self._get_permutation(operation, coordinates, symbols)
@@ -83,7 +83,7 @@ class ImproperRotation(Operation):
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
 
             operation1 = rotation(angle, rotated_axis)
-            operation2 = reflection(rotated_axis)
+            operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
             operation = np.dot(operation2, operation1)
 
             measure_mode_list = []
@@ -105,7 +105,7 @@ class ImproperRotation(Operation):
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
 
             operation1 = rotation(angle, rotated_axis)
-            operation2 = reflection(rotated_axis)
+            operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
             operation = np.dot(operation2, operation1)
 
             permu = self._get_permutation(operation, coordinates, symbols)
@@ -126,7 +126,7 @@ class ImproperRotation(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         angle = 2 * np.pi / self._order # * self._exp
         operation1 = rotation(angle, rotated_axis)
-        operation2 = reflection(rotated_axis)
+        operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
         operation = np.dot(operation2, operation1)
 
         permutation = self._get_permutation(operation, coordinates, symbols)
@@ -146,7 +146,7 @@ class ImproperRotation(Operation):
 
         return measure_coor_total
 
-    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
+    def get_operated_coordinates_(self, coordinates, symbols, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         angle = 2 * np.pi / self._order
@@ -178,13 +178,41 @@ class ImproperRotation(Operation):
         else:
             return [operated_coor[permutation], operated_coor_2[permutation_2]]
 
+    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+        angle = 2 * np.pi / self._order
+        operation1 = rotation(angle, rotated_axis)
+        operation2 = reflection(rotated_axis)
+        operation = np.dot(operation2, operation1)
+
+        permutation = self._get_permutation(operation, coordinates, symbols)
+
+        permutation = roll_permutation(permutation, self._exp)
+
+        operated_coor_perm = []
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+            operation1 = rotation(angle, rotated_axis)
+            operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
+            operation = np.dot(operation2, operation1)
+
+            operated_coor = np.dot(operation, coordinates.T).T
+            operated_coor_perm.append(operated_coor[permutation])
+
+            if self._order / self._exp == 2:
+                break
+
+            permutation = np.argsort(permutation)
+
+        return operated_coor_perm
+
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         angle = 2 * np.pi / self._order * self._exp
         operation1 = rotation(angle, rotated_axis)
-        operation2 = reflection(rotated_axis)
+        operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
         operation = np.dot(operation2, operation1)
 
         op_function_ir = op_function1.copy()
@@ -213,7 +241,7 @@ class ImproperRotation(Operation):
         op_matrix_list = []
         for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
             operation1 = rotation(angle, self._axis)
-            operation2 = reflection(self._axis)
+            operation2 = reflection(self._axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
             operation = np.dot(operation2, operation1)
             op_matrix_list.append(operation)
         return op_matrix_list

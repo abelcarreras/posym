@@ -3,7 +3,6 @@ from scipy.spatial.transform import Rotation as R
 from posym.tools import standardize_vector
 from posym.operations.permutation import roll_permutation
 import numpy as np
-import hashlib
 
 
 def rotation(angle, rotation_axis):
@@ -123,8 +122,7 @@ class Rotation(Operation):
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-        angle = 2 * np.pi / self._order # * self._exp
-        operation = rotation(angle, rotated_axis)
+        operation = rotation(2 * np.pi / self._order, rotated_axis)
 
         permutation = self._get_permutation(operation, coordinates, symbols)
 
@@ -139,35 +137,29 @@ class Rotation(Operation):
         if normalized:
             measure_coor_total /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
-        # print('measure_coor_total', measure_coor_total)
         return measure_coor_total
 
     def get_operated_coordinates(self, coordinates, symbols, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-        angle = 2 * np.pi / self._order
-        operation = rotation(angle, rotated_axis)
+        operation = rotation(2 * np.pi / self._order, rotated_axis)
 
         permutation = self._get_permutation(operation, coordinates, symbols)
 
         permutation = roll_permutation(permutation, self._exp)
 
-        angle = 2 * np.pi / self._order * self._exp
-        operation = rotation(angle, rotated_axis)
-        operated_coor = np.dot(operation, coordinates.T).T
+        operated_coor_perm = []
+        for angle in [2 * np.pi / self._order * self._exp, -2 * np.pi / self._order * self._exp]:
+            operation = rotation(angle, rotated_axis)
+            operated_coor = np.dot(operation, coordinates.T).T
+            operated_coor_perm.append(operated_coor[permutation])
 
+            if self._order / self._exp == 2:
+                break
 
-        angle = -2 * np.pi / self._order * self._exp
-        operation_2 = rotation(angle, rotated_axis)
-        operated_coor_2 = np.dot(operation_2, coordinates.T).T
+            permutation = np.argsort(permutation)
 
-        permutation_2 = np.argsort(permutation)
-
-        # print('boor: ', np.linalg.norm(operation - operation_2))
-        if np.linalg.norm(operation - operation_2) < 1e-2:
-            return [operated_coor[permutation]]
-        else:
-            return [operated_coor[permutation], operated_coor_2[permutation_2]]
+        return operated_coor_perm
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 
