@@ -146,38 +146,6 @@ class ImproperRotation(Operation):
 
         return measure_coor_total
 
-    def get_operated_coordinates_(self, coordinates, symbols, orientation=None):
-
-        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-        angle = 2 * np.pi / self._order
-        operation1 = rotation(angle, rotated_axis)
-        operation2 = reflection(rotated_axis)
-        operation = np.dot(operation2, operation1)
-
-        permutation = self._get_permutation(operation, coordinates, symbols)
-        permutation = roll_permutation(permutation, self._exp)
-
-        angle = 2 * np.pi / self._order * self._exp
-        operation1 = rotation(angle, rotated_axis)
-        operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
-        operation = np.dot(operation2, operation1)
-
-        operated_coor = np.dot(operation, coordinates.T).T
-
-        angle = -2 * np.pi / self._order * self._exp
-        operation1 = rotation(angle, rotated_axis)
-        operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
-        operation_2 = np.dot(operation2, operation1)
-        operated_coor_2 = np.dot(operation_2, coordinates.T).T
-
-        permutation_2 = np.argsort(permutation)
-
-        # print('boor: ', np.linalg.norm(operation - operation_2))
-        if np.linalg.norm(operation - operation_2) < 1e-2:
-            return [operated_coor[permutation]]
-        else:
-            return [operated_coor[permutation], operated_coor_2[permutation_2]]
-
     def get_operated_coordinates(self, coordinates, symbols, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
