@@ -32,6 +32,9 @@ class Identity(Operation):
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
         return (op_function1*op_function2).integrate
 
+    def get_permutation_pos(self, coordinates, symbols, orientation=None):
+        return np.array(range(len(symbols)))
+
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
         if normalized:
             return 1.0

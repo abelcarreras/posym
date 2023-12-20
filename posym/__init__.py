@@ -267,6 +267,31 @@ class SymmetryMolecule(SymmetryObject):
 
         return operations_list
 
+    def print_operations_info(self):
+        from posym.operations.permutation import Permutation
+
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+        for operation in self._pg.operations:
+            for op in self._pg.get_sub_operations(operation.label):
+
+                print('Operation object: ', op)
+                print('label:', op.label)
+                try:
+                    print('Order:', op.order)
+                    print('Axis:', op.axis)
+                except AttributeError:
+                    pass
+
+                permutation = op.get_permutation_pos(self._coordinates, self._symbols, orientation=rotmol)
+                print('permutation:', permutation)
+                permutation = Permutation(permutation)
+                print('orbits: ', permutation.get_orbits())
+
+                print('Operation matrices:')
+                for matrix in op.operation_matrix_list:
+                    print(np.round(matrix, decimals=3),'\n')
+
     @property
     def measure(self):
         return 100*(1-self.get_ir_representation().values[0])

@@ -3,7 +3,7 @@ from functools import lru_cache
 # from posym.permutations import get_cross_distance_table
 from posym.permutations import get_permutation_annealing, get_permutation_brute  # noqa
 from scipy.optimize import linear_sum_assignment
-from posym.config import Configuration
+from posym.config import Configuration, CustomPerm
 
 
 @lru_cache(maxsize=100)
@@ -63,6 +63,11 @@ class Operation:
 
     @cache_permutation
     def _get_permutation(self, operation, coordinates, symbols):
+
+        # temp interface for custom permutation
+        if CustomPerm().perm_list is not None:
+            return CustomPerm().perm_list.pop(0)
+
         operated_coor = np.dot(operation, coordinates.T).T
         symbols = tuple(int.from_bytes(num.encode(), 'big') for num in symbols)
 

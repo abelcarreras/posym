@@ -484,7 +484,8 @@ def get_dnh(n):
         ir_data_new.update(ir_data_new_u)
 
         for i in range((n-1)//2):
-            j = gcd(i+1, n)
+            # j = gcd(i+1, n)
+            j = 1
             up = (i+1)//j
             down = n//j
             if up == 1:

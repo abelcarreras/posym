@@ -82,6 +82,11 @@ class Reflection(Operation):
 
         return np.array(projected_modes)
 
+    def get_permutation_pos(self, coordinates, symbols, orientation=None):
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+        operation = reflection(rotated_axis)
+        return self._get_permutation(operation, coordinates, symbols)
+
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)

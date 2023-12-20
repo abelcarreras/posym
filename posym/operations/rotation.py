@@ -119,6 +119,14 @@ class Rotation(Operation):
 
         return total_project/2
 
+    def get_permutation_pos(self, coordinates, symbols, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+        operation = rotation(2 * np.pi / self._order, rotated_axis)
+        permutation = self._get_permutation(operation, coordinates, symbols)
+
+        return roll_permutation(permutation, self._exp)
+
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)

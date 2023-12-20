@@ -121,12 +121,25 @@ class ImproperRotation(Operation):
 
         return total_project/2
 
+    def get_permutation_pos(self, coordinates, symbols, orientation=None):
+
+        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
+
+        operation1 = rotation(np.pi / self._order, rotated_axis)
+        operation2 = reflection(rotated_axis)
+        operation = np.dot(operation2, operation1)
+
+        permutation = self._get_permutation(operation, coordinates, symbols)
+        permutation = roll_permutation(permutation, self._exp)
+
+        return roll_permutation(permutation, self._exp)
+
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-        angle = 2 * np.pi / self._order # * self._exp
+        angle = 2 * np.pi / self._order
         operation1 = rotation(angle, rotated_axis)
-        operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
+        operation2 = reflection(rotated_axis)
         operation = np.dot(operation2, operation1)
 
         permutation = self._get_permutation(operation, coordinates, symbols)

@@ -73,6 +73,10 @@ class Inversion(Operation):
 
         return np.array(projected_modes)
 
+    def get_permutation_pos(self, coordinates, symbols, orientation=None):
+        operation = inversion()
+        return self._get_permutation(operation, coordinates, symbols)
+
     def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
 
         operation = inversion()
