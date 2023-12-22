@@ -46,6 +46,8 @@ def make_test_function(filename, group):
 
         pos_measure = sm.measure_pos
         print('fun: ', pos_measure)
+        print(sm.get_point_group())
+
         total_loc = []
         for i in range(len(modes)):
             print('m {:2}: {:8.3f} :'.format(i + 1, freqs[i]), sm.get_state_mode(i))

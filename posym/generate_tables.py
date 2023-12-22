@@ -23,11 +23,10 @@ def get_cn(n):
 
     operations = [Identity(label='E')]
     for i in range(n//2):
-        # j = gcd(i+1, n)
-        j = 1
-        up = (i+1)//j
-        down = n//j
-        label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
+        j = gcd(i+1, n)
+        up = (i+1)
+        down = n
+        label = 'C{}'.format(down//j) if up//j == 1 else 'C^{}_{}'.format(up//j, down//j)
 
         operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
@@ -150,12 +149,12 @@ def get_cnh(n):
 
         for i in range((n-1)//2):
             j = gcd(i+1, n)
-            up = (i+1)//j
-            down = n//j
-            if up == 1:
-                operations_new += [ImproperRotation(label='S_{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
+            up = (i+1)
+            down = n
+            if up//j == 1:
+                operations_new += [ImproperRotation(label='S_{}'.format(down//j), axis=[0, 0, 1], order=down, exp=up)]
             else:
-                operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
+                operations_new += [ImproperRotation(label='S^{}_{}'.format(up//j, down//j), axis=[0, 0, 1], order=down, exp=up)]
 
             for data in ir_data_new.keys():
                 element = list(ir_data_new[data])[1+i] * np.sign(list(ir_data_new[data])[(n-1)//2+3])
@@ -199,13 +198,13 @@ def get_cnh(n):
 
         for i in range((n-1)//2):
             j = gcd(2*i+1, n)
-            up = (2*i+1)//j
+            up = (2*i+1)
             #print('----------------', n, i*2+1, ':', (2*i+1)//j, n//j)
-            down = n//j
-            if up == 1:
-                operations_new += [ImproperRotation(label='S_{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
+            down = n
+            if up//j == 1:
+                operations_new += [ImproperRotation(label='S_{}'.format(down//j), axis=[0, 0, 1], order=down, exp=up)]
             else:
-                operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
+                operations_new += [ImproperRotation(label='S^{}_{}'.format(up//j, down//j), axis=[0, 0, 1], order=down, exp=up)]
 
             for l, data in enumerate(ir_data_new.keys()):
                 # real_radical((i + 1) * (k + 1), n)
@@ -255,15 +254,14 @@ def get_sn(n):
 
         operations = [Identity(label='E')]
         for i in range(n//2):
-            # j = gcd(i+1, n)
-            j = 1
-            up = (i+1)//j
-            down = n//j
+            j = gcd(i+1, n)
+            up = (i+1)
+            down = n
             if np.mod(i, 2) == 0:
-                label = 'S{}'.format(down) if up == 1 else 'S^{}_{}'.format(up, down)
+                label = 'S{}'.format(down//j) if up//j == 1 else 'S^{}_{}'.format(up//j, down//j)
                 operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
             else:
-                label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
+                label = 'C{}'.format(down//j) if up//j == 1 else 'C^{}_{}'.format(up//j, down//j)
                 operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
         ir_data = {'A': pd.Series([1] * ndim)}
@@ -291,19 +289,18 @@ def get_sn(n):
 
         operations = [Identity(label='E')]
         for i in range(n//2):
-            # j = gcd(i+1, n)
-            j = 1
-            up = (i+1)//j
-            down = n//j
+            j = gcd(i+1, n)
+            up = (i+1)
+            down = n
             if np.mod(i, 2) == 0:
-                if up == 1 and down == 2:
-                    label = 'i'.format(down)
+                if up//j == 1 and down//j == 2:
+                    label = 'i'.format(down//j)
                     operations.append(Inversion(label=label))
                 else:
-                    label = 'S{}'.format(down) if up == 1 else 'S^{}_{}'.format(up, down)
+                    label = 'S{}'.format(down//j) if up//j == 1 else 'S^{}_{}'.format(up//j, down//j)
                     operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
             else:
-                label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
+                label = 'C{}'.format(down//j) if up//j == 1 else 'C^{}_{}'.format(up//j, down//j)
                 operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
         ir_data = {'Ag': pd.Series([1] * ndim)}
@@ -484,8 +481,7 @@ def get_dnh(n):
         ir_data_new.update(ir_data_new_u)
 
         for i in range((n-1)//2):
-            # j = gcd(i+1, n)
-            j = 1
+            j = gcd(i+1, n)
             up = (i+1)//j
             down = n//j
             if up == 1:
@@ -651,12 +647,12 @@ def get_dnd(n):
 
         for i in range((n-1)//2):
             j = gcd(2*i+1, 2*n)
-            up = (2*i+1)//j
-            down = 2*n//j
-            if up == 1:
-                operations_new += [ImproperRotation(label='S{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
+            up = (2*i+1)
+            down = 2*n
+            if up//j == 1:
+                operations_new += [ImproperRotation(label='S{}'.format(down//j), axis=[0, 0, 1], order=down, exp=up)]
             else:
-                operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
+                operations_new += [ImproperRotation(label='S^{}_{}'.format(up//j, down//j), axis=[0, 0, 1], order=down, exp=up)]
 
             for data in ir_data_new.keys():
                 sign = np.sign(list(ir_data_new[data])[(n - 1) // 2 + 2])
@@ -667,7 +663,6 @@ def get_dnd(n):
                     except ValueError:
                         k = 0
 
-                    #element = [real_radical((k + 1) * (m + 1), n) for m in range(0, n//2)][-i-1] * sign
                     element = real_radical((k + 1) * (n // 2 + i + 1), n) * sign
 
                 ir_data_new[data] = pd.Series(list(ir_data_new[data]) + [element])
