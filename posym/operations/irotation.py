@@ -126,7 +126,7 @@ class ImproperRotation(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
 
         operation1 = rotation(np.pi / self._order, rotated_axis)
-        operation2 = reflection(rotated_axis)
+        operation2 = reflection(rotated_axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
         operation = np.dot(operation2, operation1)
 
         permutation = self._get_permutation(operation, coordinates, symbols)
