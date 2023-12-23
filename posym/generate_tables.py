@@ -543,7 +543,7 @@ def get_dnh(n):
             up = (2*i+1)//j
             down = n//j
             if up == 1:
-                operations_new += [ImproperRotation(label='S_{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
+                operations_new += [ImproperRotation(label='S{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
             else:
                 operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
 
