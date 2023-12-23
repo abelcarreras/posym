@@ -294,8 +294,7 @@ def get_sn(n):
             down = n
             if np.mod(i, 2) == 0:
                 if up//j == 1 and down//j == 2:
-                    label = 'i'.format(down//j)
-                    operations.append(Inversion(label=label))
+                    operations.append(ImproperRotation(label='i', axis=[0, 0, 1], order=down, exp=up))
                 else:
                     label = 'S{}'.format(down//j) if up//j == 1 else 'S^{}_{}'.format(up//j, down//j)
                     operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))

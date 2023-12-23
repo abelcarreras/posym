@@ -225,6 +225,9 @@ class ImproperRotation(Operation):
             operation2 = reflection(self._axis) if np.mod(self._exp, 2) != 0 else np.identity(3)
             operation = np.dot(operation2, operation1)
             op_matrix_list.append(operation)
+
+            if self._order / self._exp == 2:
+                break
         return op_matrix_list
 
     def __mul__(self, other):
