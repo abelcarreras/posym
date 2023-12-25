@@ -395,7 +395,7 @@ void breakPerm(OrbitsData orbits, int iBreak) {
     int numRows = orbits.numRows;
     int numColumns = orbits.numColumns;
 
-    //printMatrix(orbits);
+    // printMatrix(orbits);
     int lenBreak = orbitsLen[iBreak];
     // printMatrix(orbits);
     // printf("len break %i: %i\n", iBreak, lenBreak);
@@ -504,12 +504,12 @@ void updatePerm(OrbitsData orbits, int exponent) {
     */
 
     // printMatrix(orbits);
-    int sumTot = multiOrbitsNum + multiOrbitsNum/exponent + singleOrbitsNum/exponent;
+    int sumTot = multiOrbitsNum + multiOrbitsNum + singleOrbitsNum;
     double pMix = (1.0 * multiOrbitsNum)/sumTot;
-    double pJoin = (1.0 * singleOrbitsNum/exponent)/sumTot;
-    double pBreak = (1.0 * multiOrbitsNum/exponent)/sumTot;
+    double pJoin = (1.0 * singleOrbitsNum)/sumTot;
+    double pBreak = (1.0 * multiOrbitsNum)/sumTot;
     // printf("Probabilities: %f %f %f\n", pMix, pJoin, pBreak);
-    // printf("pjoin %i | %i\n", singleOrbitsNum, singleOrbitsNum/exponent);
+    // printf("pjoin %i | %i\n", singleOrbitsNum, singleOrbitsNum);
 
     double r = (1.0*rand())/RAND_MAX;
 
@@ -521,8 +521,8 @@ void updatePerm(OrbitsData orbits, int exponent) {
 
         int iOrbit1 = rand() % multiOrbitsNum;
         int iOrbit2 = rand() % multiOrbitsNum;
-        int iPos1 = rand() % numColumns;
-        int iPos2 = rand() % numColumns;
+        int iPos1 = rand() % orbitsLen[iOrbit1];
+        int iPos2 = rand() % orbitsLen[iOrbit2];
 
         // printf("Mix chosen\n Select: %i %i %i %i\n", iOrbit1, iOrbit2, iPos1, iPos2);
         mixPerm(orbits, multiOrbits[iOrbit1], multiOrbits[iOrbit2], iPos1, iPos2);
@@ -532,53 +532,39 @@ void updatePerm(OrbitsData orbits, int exponent) {
     if (r > pMix && r <= (pJoin + pMix)) {
         // join orbits
         // printf("\nJoin! %i, %i\n", singleOrbitsNum, numColumns);
-        if (singleOrbitsNum < numColumns*exponent) return;
-
-        int* joinList = malloc(sizeof(int) * numColumns * exponent);
+        if (singleOrbitsNum < exponent) return;
 
         int iChose;
-        for (int i=0; i<numColumns*exponent; i++) {
+        int numJoin = exponent;
+
+        if (singleOrbitsNum >= numColumns) {
+            iChose = rand() % 2;
+            if (iChose) numJoin = numColumns;
+        }
+
+        int* joinList = malloc(sizeof(int) * numJoin);
+
+        for (int i=0; i<numJoin; i++) {
             iChose = rand() % (singleOrbitsNum - i);
             joinList[i] = singleOrbits[iChose];
             singleOrbits[iChose] = singleOrbits[singleOrbitsNum-i-1];
 
         }
 
-        // printf("Join orbit list:\n");
-        for (int k=0; k<exponent; k++) {
-            // for (int j=0; j<numColumns; j++) printf(" %i",  (joinList+k*exponent)[j]); printf("\n");
-            joinPerm(joinList+k*exponent, orbits, numColumns);
-        }
+        joinPerm(joinList, orbits, numJoin);
 
         free(joinList);
-
     }
 
     if (r > (pJoin + pMix)) {
-        int* breakList = malloc(sizeof(int) * exponent);
 
-        // printf("initial\n");
         // printMatrix(orbits);
-        int iChose;
-        for (int i=0; i<exponent; i++) {
-            iChose = rand() % (multiOrbitsNum - i);
-            breakList[i] = orbitsMatrix[two2one(multiOrbits[iChose], 0, numColumns)];
-            multiOrbits[iChose] = multiOrbits[multiOrbitsNum-i-1];
-        }
 
-        // printf("Break list: "); for (int k=0; k<exponent; k++) printf(" %i",  breakList[k]); printf("\n");
+        int iChose = rand() % multiOrbitsNum;
+        int iBreak = multiOrbits[iChose];
 
-        // break orbits
-        for (int k=0; k<exponent; k++){
-            for (int i=0; i<numRows; i++) {
-                if (orbitsMatrix[two2one(i, 0, numColumns)] == breakList[k]) {
-                    breakPerm(orbits, i);
-                    break;
-                }
-            }
-        }
+        breakPerm(orbits, iBreak);
 
-        free(breakList);
         // printMatrix(orbits);
         // printf("final\n");
         //exit(0);
@@ -710,13 +696,6 @@ static PyObject* getPermutationAnnealing(PyObject* self, PyObject *arg, PyObject
     // Initial params
     // printf("\n\norder/exponent: %i %i\n", order, exponent);
 
-    // printf(" %i \n", order % exponent);
-    if (order % exponent == 0) {
-        order = order / exponent;
-    } else {
-        exponent = 1;
-    }
-
     // initialize permutation
     for (int i=0; i<n; i++ ) perm[i] = i;
 
@@ -817,15 +796,15 @@ void generatePermutations(int *perm, int start, int end, int exp, double*distanc
         int numHighOrbits = 0;
         for (int i=0; i<orbits.numColumns; i++){
             if (orbits.orbitsLen[i] == 0) break;
-            if (orbits.orbitsLen[i] != orbits.numColumns && orbits.orbitsLen[i] != 1) {
+            if (orbits.orbitsLen[i] != orbits.numColumns && orbits.orbitsLen[i] != 1 && orbits.orbitsLen[i] != exp) {
                 numHighOrbits = -1;
                 break;
             }
-            if (orbits.orbitsLen[i] == orbits.numColumns) numHighOrbits++;
+            numHighOrbits++;
         }
         // printf("perm outside: "); for (int i=0; i<orbits.numRows; i++) printf("%i ", perm[i]); printf("\n");
         // printf("numHighOrbits: %i\n", numHighOrbits);
-        if (numHighOrbits > 0 && (numHighOrbits % exp) == 0) {
+        if (numHighOrbits > 0) {
             // printf("perm inside: "); for (int i=0; i<orbits.numRows; i++) printf("%i ", perm[i]); printf("\n");
 
             evaluation = evaluationPerm(distanceTable, perm, end+1);
@@ -836,13 +815,7 @@ void generatePermutations(int *perm, int start, int end, int exp, double*distanc
 
                 for (int k=0; k<orbits.numRows; k++) maxPerm[k] = perm[k];
             }
-
         }
-
-        //evaluation = evaluationPerm(distanceTable, perm, end);
-        //printf("evaluation %f\n", maxEval);
-
-        //return *maxEval;
 
     } else {
         // Recursive permutation generation
@@ -897,12 +870,6 @@ static PyObject* getPermutationBruteForce(PyObject* self, PyObject *arg, PyObjec
     srand(time(NULL));   // Initialization, should only be called once.
 
     // Initial params
-    //printf("order/exponent: %i %i\n", order, exponent);
-
-    // printf(" %i \n", order % exponent);
-    if (order % exponent == 0) {
-        order = order / exponent;
-    }
     //printf("order/exponent: %i %i\n", order, exponent);
 
     // initialize permutation

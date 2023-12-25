@@ -17,6 +17,7 @@ class ImproperRotation(Operation):
         self._axis = standardize_vector(axis)
         self._order = order
         self._exp = exp
+        self._num_op = 2
 
     def __hash__(self):
         axis = np.round(self._axis, decimals=6)

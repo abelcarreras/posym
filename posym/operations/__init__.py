@@ -60,6 +60,7 @@ class Operation:
         self._label = label
         self._order = 1
         self._exp = 1
+        self._num_op = 1
 
     @cache_permutation
     def _get_permutation(self, operation, coordinates, symbols):
@@ -82,10 +83,10 @@ class Operation:
             return perm
 
         def annealing_algorithm(dot_matrix):
-            return get_permutation_annealing(dot_matrix, self._order, 1)
+            return get_permutation_annealing(dot_matrix, self._order, self._num_op)
 
         def brute_force_algorithm(dot_matrix):
-            return get_permutation_brute(dot_matrix, self._order, 1)
+            return get_permutation_brute(dot_matrix, self._order, self._num_op)
 
         # algorithms list
         algorithm_dict = {'hungarian': hungarian_algorithm,
