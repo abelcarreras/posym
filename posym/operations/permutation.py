@@ -16,23 +16,6 @@ class Permutation:
     def __getitem__(self, item):
         return self._permutation.__getitem__(item)
 
-    def get_orbits_old(self):
-        if self._orbits is None:
-            self._orbits = set()
-
-            for p in self._permutation:
-                orbit = [p]
-                p2 = self._permutation[p]
-                while p2 != orbit[0]:
-                    orbit.append(p2)
-                    p2 = self._permutation[p2]
-
-                index_min = np.argmin(orbit)
-                orbit = np.roll(orbit, -index_min)
-                self._orbits.add(tuple(orbit))
-
-        return self._orbits
-
     def get_orbits(self):
         if self._orbits is None:
             self._orbits = []
@@ -53,7 +36,6 @@ class Permutation:
 
 
         return self._orbits
-
 
     def len_orbits(self):
         len_orbits = []
