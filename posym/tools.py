@@ -32,16 +32,10 @@ def standardize_vector(vector, prec=1e-5):
     :param prec: precision
     :return: standard vector
     """
-    vector = np.array(vector, dtype=float)
-    if np.abs(vector[0]) > prec:
-        if vector[0] < 0:
-            vector = np.array(vector) * -1
-    elif np.abs(vector[1]) > prec:
-        if vector[1] < 0:
-            vector = np.array(vector) * -1
-    else:
-        if vector[2] < 0:
-            vector = np.array(vector) * -1
+
+    vector = np.array(vector) / np.linalg.norm(vector)  # 0.9999 # np.round(np.linalg.norm(axis), decimals=3)
+    if abs(np.linalg.norm(vector)) < prec:
+        raise Exception('Axis is too small, cannot normalize')
 
     return vector.tolist()
 

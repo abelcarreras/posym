@@ -1,9 +1,10 @@
 import numpy as np
 from functools import lru_cache
 # from posym.permutations import get_cross_distance_table
-from posym.permutations import get_permutation_annealing, get_permutation_brute  # noqa
+from posym.permutations import get_permutation_annealing, get_permutation_brute, fix_permutation  # noqa
 from scipy.optimize import linear_sum_assignment
 from posym.config import Configuration, CustomPerm
+from posym.operations.permutation import Permutation
 
 
 @lru_cache(maxsize=100)
@@ -21,7 +22,6 @@ def get_permutation_labels(distance_table, symbols, permutation_function):
     This function restricts permutations by the use of atom labels
     returns the permutation vector that minimizes its trace using custom algorithms.
     """
-
     submatrices_indices = get_submatrix_indices(symbols)
 
     # determine the permutation for each submatrix
@@ -43,16 +43,61 @@ def get_permutation_labels(distance_table, symbols, permutation_function):
 def cache_permutation(func):
     cache_dict = {}
 
-    def wrapper_cache(self, operation, coordinates, symbols):
-
+    def wrapper_cache(operation, coordinates, symbols, order):
         hash_key = (np.array2string(operation), np.array2string(coordinates), tuple(symbols))
         if hash_key in cache_dict:
             return cache_dict[hash_key]
 
-        cache_dict[hash_key] = func(self, operation, coordinates, symbols)
+        cache_dict[hash_key] = func(operation, coordinates, symbols, order)
         return cache_dict[hash_key]
 
     return wrapper_cache
+
+
+def cache_permutation_new(func):
+    cache_dict = {}
+
+    def wrapper_cache(self, permutation_set, symbols):
+        perm_tuple = tuple([tuple(p) for p in permutation_set.values()])
+        symbols_tuple = tuple(symbols)
+
+        hash_key = (perm_tuple, symbols_tuple)
+        if hash_key in cache_dict:
+            return cache_dict[hash_key]
+
+        cache_dict[hash_key] = func(self, permutation_set, symbols)
+        return cache_dict[hash_key]
+
+    return wrapper_cache
+
+@cache_permutation
+def get_permutation_aprox(operation, coordinates, symbols, order):
+
+    operated_coor = np.dot(operation, coordinates.T).T
+    symbols = tuple(int.from_bytes(num.encode(), 'big') for num in symbols)
+
+    dot_table = -np.dot(coordinates, operated_coor.T)
+    # dot_table = get_cross_distance_table(coordinates, operated_coor)
+
+    # permutation algorithms functions
+    def hungarian_algorithm(sub_matrix):
+        row_ind, col_ind = linear_sum_assignment(sub_matrix)
+        perm = np.zeros_like(row_ind)
+        perm[row_ind] = col_ind
+        return perm
+
+    def annealing_algorithm(dot_matrix):
+        return get_permutation_annealing(dot_matrix, order, 1)
+
+    def brute_force_algorithm(dot_matrix):
+        return get_permutation_brute(dot_matrix, order, 1)
+
+    # algorithms list
+    algorithm_dict = {'hungarian': hungarian_algorithm,
+                      'annealing': annealing_algorithm,
+                      'brute_force': brute_force_algorithm}
+
+    return get_permutation_labels(dot_table, symbols, algorithm_dict[Configuration().algorithm])
 
 
 class Operation:
@@ -60,59 +105,95 @@ class Operation:
         self._label = label
         self._order = 1
         self._exp = 1
-        self._num_op = 1
+        self._determinant = 1
+        self._gen_rep = []
+        self._permutation = None
 
-    @cache_permutation
-    def _get_permutation(self, operation, coordinates, symbols):
+    def __hash__(self):
+        vector = np.round(np.array(self.matrix_representation).flatten(), decimals=6)
+        return hash(np.array(vector * 1e5, dtype=int).tobytes())
 
-        # temp interface for custom permutation
-        if CustomPerm().perm_list is not None:
-            return CustomPerm().perm_list.pop(0)
+    def __eq__(self, other):
+        return hash(self) == hash(other)
 
-        operated_coor = np.dot(operation, coordinates.T).T
-        symbols = tuple(int.from_bytes(num.encode(), 'big') for num in symbols)
+    def get_type(self):
+        normalized_exp = np.mod(self._exp, self._order)
+        if normalized_exp > self._order//2:
+            normalized_exp = self._order - normalized_exp
 
-        dot_table = -np.dot(coordinates, operated_coor.T)
-        # dot_table = get_cross_distance_table(coordinates, operated_coor)
+        return '{} : {} / {}'.format(type(self).__name__, abs(normalized_exp), self._order)
 
-        # permutation algorithms functions
-        def hungarian_algorithm(sub_matrix):
-            row_ind, col_ind = linear_sum_assignment(sub_matrix)
-            perm = np.zeros_like(row_ind)
-            perm[row_ind] = col_ind
-            return perm
+    def set_permutation(self, permutation):
+        self._permutation = permutation
 
-        def annealing_algorithm(dot_matrix):
-            return get_permutation_annealing(dot_matrix, self._order, self._num_op)
+    # @cache_permutation_new
+    def set_permutation_set(self, permutation_set, symbols, ignore_compatibility=False):
 
-        def brute_force_algorithm(dot_matrix):
-            return get_permutation_brute(dot_matrix, self._order, self._num_op)
+        def apply_op(permut, base):
+            new = []
+            for p, b in zip(permut, base):
+                new.append(permut[b])
+            return new
 
-        # algorithms list
-        algorithm_dict = {'hungarian': hungarian_algorithm,
-                          'annealing': annealing_algorithm,
-                          'brute_force': brute_force_algorithm}
+        n_atoms = len(symbols)
+        permutation = list(range(n_atoms))
+        for op in self._gen_rep:
+            permutation = apply_op(permutation, permutation_set[op])
 
-        return get_permutation_labels(dot_table, symbols, algorithm_dict[Configuration().algorithm])
+        if ignore_compatibility:
+            self._permutation = permutation
+            return True
 
-    def _get_operated_coordinates(self, operation, coordinates, symbols, return_perm=False):
-        """
-        get coordinates operated and permuted
+        len_orbits = Permutation(permutation).len_orbits()
+        if sum(np.mod(self._order, len_orbits)) == 0:
+            self._permutation = permutation
+            return True
 
-        :param operation: operator matrix representation (3x3)
-        :param coordinates: coordinates to be operated
-        :param symbols: atomic symbols
-        :return: operated and permuted coordinates
-        """
-        operated_coor = np.dot(operation, coordinates.T).T
-        permutation = self._get_permutation(operation, coordinates, symbols)
-        permu_coor = operated_coor[permutation]
+        if self._determinant < 0:
+            allowed_orbits = [2, self._order, self._order * 2]
 
-        if return_perm:
-            return permutation, permu_coor
+            vector = np.ones_like(len_orbits)
+            for o in np.unique(allowed_orbits):
+                vector = np.multiply(vector, np.mod(o, len_orbits))
 
-        return permu_coor
+            if np.sum(vector) == 0:
+                self._permutation = permutation
+                return True
+
+        return None
+
+    def inverse(self):
+        return self
+
+    @property
+    def permutation(self):
+        if self._permutation is None:
+            raise Exception('No permutation has been defined in', self)
+        return self._permutation
 
     @property
     def label(self):
         return self._label
+
+    @property
+    def matrix_representation(self):
+        raise NotImplementedError('Not implemented')
+
+    def __mul__(self, other):
+        if not other.__class__.__bases__[0] is Operation:
+            raise Exception('Product only defined between Operation subclasses')
+        else:
+            from posym.operations.products import get_operation_from_matrix, get_operation_from_matrix_test
+            matrix_product = self.matrix_representation @ other.matrix_representation
+
+            new_operator = get_operation_from_matrix(matrix_product)
+            if not np.allclose(new_operator.matrix_representation, matrix_product):
+                print(self, ' * ',  other, ' = ', new_operator)
+                print(new_operator.matrix_representation)
+                print(matrix_product)
+                get_operation_from_matrix_test(matrix_product)
+
+                raise Exception('Product error!')
+
+            new_operator._gen_rep = list(other._gen_rep) + list(self._gen_rep)
+            return new_operator

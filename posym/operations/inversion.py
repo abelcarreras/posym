@@ -13,28 +13,22 @@ def inversion():
 class Inversion(Operation):
     def __init__(self, label):
         super().__init__(label)
-        self._order = 2
+        self._order = 1
+        self._determinant = -1
 
-    def __hash__(self):
-        return hash((self._label))
-
-    def __eq__(self, other):
-        return hash(self) == hash(other)
-
-
+    def __str__(self):
+        return 'SymOp.Inversion {} <{}>'.format(self._label, hex(id(self)))
 
     def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
 
         operation = inversion()
         operated_coor = np.dot(operation, coordinates.T).T
 
-        permu = self._get_permutation(operation, coordinates, symbols)
-
         measure_mode = []
         for mode in modes:
             operated_mode = np.dot(operation, prepare_vector(coordinates, mode).T).T - operated_coor
             norm = np.linalg.norm(mode)
-            permu_mode = np.array(operated_mode)[permu]
+            permu_mode = np.array(operated_mode)[self.permutation]
 
             measure_mode.append(np.trace(np.dot(mode, permu_mode.T))/norm)
 
@@ -42,9 +36,7 @@ class Inversion(Operation):
 
     def get_measure_atom(self, coordinates, symbols, orientation=None):
 
-        operation = inversion()
-        permu = self._get_permutation(operation, coordinates, symbols)
-        measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
+        measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(self.permutation)])
 
         return np.sum(measure_atoms)
 
@@ -64,37 +56,31 @@ class Inversion(Operation):
         operation = inversion()
 
         projected_modes = []
-        permu = self._get_permutation(operation, coordinates, symbols)
         cartesian_modes = np.identity(3 * len(symbols)).reshape(3 * len(symbols), len(symbols), 3)
 
         for i, mode in enumerate(cartesian_modes):
             operated_mode = np.dot(operation, np.array(mode).T).T
-            projected_modes.append(operated_mode[permu])
+            projected_modes.append(operated_mode[self.permutation])
 
         return np.array(projected_modes)
 
-    def get_permutation_pos(self, coordinates, symbols, orientation=None):
-        operation = inversion()
-        return self._get_permutation(operation, coordinates, symbols)
-
-    def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
+    def get_measure_pos(self, coordinates, symbols, permutation_set=None, orientation=None, normalized=True):
 
         operation = inversion()
-        permu_coor = self._get_operated_coordinates(operation, coordinates, symbols)
-        mesure_coor = np.einsum('ij, ij -> ', coordinates, permu_coor)
+        operated_coor = np.dot(operation, coordinates.T).T
+        mesure_pos = np.einsum('ij, ij -> ', coordinates, operated_coor[self.permutation])
 
         if normalized:
-            normalization = np.einsum('ij, ij -> ', coordinates, coordinates)
-            if abs(normalization) < 1e-10:
-                return 1
-            mesure_coor /= normalization
+            mesure_pos /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
-        return mesure_coor
+        return mesure_pos
 
-    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
+    def get_operated_coordinates(self, coordinates, symbols, permutation_set=None, orientation=None):
 
         operation = inversion()
-        return [self._get_operated_coordinates(operation, coordinates, symbols)]
+        operated_coor = np.dot(operation, coordinates.T).T
+
+        return operated_coor[self.permutation]
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 
@@ -112,8 +98,6 @@ class Inversion(Operation):
     def operation_matrix_list(self):
         return [inversion()]
 
-    def __mul__(self, other):
-        if not other.__class__.__bases__[0] is Operation:
-            raise Exception('Product only defined between Operation subclasses')
-        else:
-            return [Inversion(self._label)]
+    @property
+    def matrix_representation(self):
+        return inversion()

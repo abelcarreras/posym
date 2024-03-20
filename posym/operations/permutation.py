@@ -34,7 +34,6 @@ class Permutation:
                         orbit.append(p)
                     self._orbits.append(orbit)
 
-
         return self._orbits
 
     def len_orbits(self):
@@ -73,3 +72,18 @@ class Permutation:
 def roll_permutation(permutation, n):
     p = Permutation(permutation)
     return p.slide(n-1)
+
+
+def generate_permutation_set(generators, symbols):
+
+    from itertools import permutations, product
+
+    n_atoms = len(symbols)
+
+    def gen_perm(n_atoms, gen):
+        for p in permutations(range(n_atoms)):
+            yield p
+
+    # for perm_set in product(*gen_perm_list):
+    for perm_set in product(*[gen_perm(n_atoms, gen) for gen in generators]):
+        yield {k: pi for k, pi in zip(generators, perm_set)}

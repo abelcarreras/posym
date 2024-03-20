@@ -42,6 +42,17 @@ class PointGroup:
         return self._table.operations
 
     @property
+    def generators(self):
+        return self._table.generators
+
+    @property
+    def all_operations(self):
+        op_list = []
+        for op_class in self._table.get_all_operations().values():
+            op_list += op_class
+        return op_list
+
+    @property
     def ir_table(self):
         return self._table
 

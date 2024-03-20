@@ -221,7 +221,7 @@ class PrimitiveGaussian:
 
     @property
     def shape(self):
-        return hash((self.prefactor, self.alpha, self.poly_coeff.data.tobytes()))
+        return hash((self.prefactor, self.alpha, self.poly_coeff.data.tostring()))
 
     @property
     def integrate(self):

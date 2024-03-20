@@ -34,5 +34,4 @@ for operation in sm.get_oriented_operations():
         pass
 
     print('Operation matrices:')
-    for matrix in operation.operation_matrix_list:
-        print(np.round(matrix, decimals=3), '\n')
+    print(np.round(operation.matrix_representation, decimals=3), '\n')

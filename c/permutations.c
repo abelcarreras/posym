@@ -20,6 +20,7 @@ static PyObject* getCrossDistanceTable(PyObject* self, PyObject *arg, PyObject *
 static PyObject* getPermutationSimple(PyObject* self, PyObject *arg, PyObject *keywords);
 static PyObject* getPermutationAnnealing(PyObject* self, PyObject *arg, PyObject *keywords);
 static PyObject* getPermutationBruteForce(PyObject* self, PyObject *arg, PyObject *keywords);
+static PyObject* fixPermutationSimple(PyObject* self, PyObject *arg, PyObject *keywords);
 
 
 //  Python Interface
@@ -31,6 +32,8 @@ static char function_docstring_3[] =
     "get_permutation_annealing(distance_table, symbols)\n\n get permutation";
 static char function_docstring_4[] =
     "get_permutation_brute(distance_table, symbols)\n\n get permutation";
+static char function_docstring_5[] =
+    "fix_permutation(distance_table, permutation, symbols)\n\n get permutation";
 
 
 static PyMethodDef extension_funcs[] = {
@@ -38,6 +41,7 @@ static PyMethodDef extension_funcs[] = {
     {"get_permutation_simple",  (PyCFunction)getPermutationSimple, METH_VARARGS|METH_KEYWORDS, function_docstring_2},
     {"get_permutation_annealing", (PyCFunction)getPermutationAnnealing, METH_VARARGS|METH_KEYWORDS, function_docstring_3},
     {"get_permutation_brute", (PyCFunction)getPermutationBruteForce, METH_VARARGS|METH_KEYWORDS, function_docstring_4},
+    {"fix_permutation", (PyCFunction)fixPermutationSimple, METH_VARARGS|METH_KEYWORDS, function_docstring_5},
 
     {NULL, NULL, 0, NULL}
 };
@@ -920,6 +924,84 @@ static PyObject* getPermutationBruteForce(PyObject* self, PyObject *arg, PyObjec
     Py_DECREF(distanceTableArray);
 
     return(PyArray_Return(perm_obj));
+
+}
+
+
+static PyObject* fixPermutationSimple(PyObject* self, PyObject *arg, PyObject *keywords) {
+
+    //  Interface with Python
+    PyObject *distanceTable_obj;
+    PyObject *intialPermutation_obj;
+    int order;
+    int exponent=1;
+
+    static char *kwlist[] = {"distance_table", "permutation", "order", "exp", NULL};
+    if (!PyArg_ParseTupleAndKeywords(arg, keywords, "OOi|i", kwlist, &distanceTable_obj, &intialPermutation_obj,
+    &order, &exponent))  return NULL;
+
+    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *permutationArray = PyArray_FROM_OTF(intialPermutation_obj, NPY_INT, NPY_IN_ARRAY);
+
+    if (distanceTableArray == NULL || permutationArray == NULL) {
+        Py_XDECREF(distanceTableArray);
+        Py_XDECREF(permutationArray);
+        return NULL;
+    }
+
+    double *distanceTable = (double*)PyArray_DATA(distanceTableArray);
+    int *perm = (double*)PyArray_DATA(permutationArray);
+
+    int  nCoor1 = (int)PyArray_DIM(distanceTableArray, 0);
+    int  nCoor2 = (int)PyArray_DIM(distanceTableArray, 1);
+    int  n = (int)PyArray_DIM(permutationArray, 0);
+
+    if (n != nCoor1 || n != nCoor2){
+        Py_DECREF(distanceTableArray);
+        PyErr_SetString(PyExc_TypeError, "Dimensions error ");
+        return (PyObject *) NULL;
+    }
+
+    // Initial params
+    printf("order/exponent: %i %i\n", order, exponent);
+
+    // initialize permutation
+    printf("-> "); for(int i=0; i<n; i++) printf(" %i", perm[i]); printf("\n");
+
+    // initialize orbits
+    OrbitsData orbits;
+    orbits.orbitsMatrix = malloc(sizeof(int)*order*n);
+    orbits.orbitsLen = malloc(sizeof(int)*n);
+    orbits.numRows = n;
+    orbits.numColumns = order;
+
+    for (int i=0; i<n; i++) {
+        if (orbits.orbitsLen[i] <= 0) break;
+        if (orbits.orbitsLen[i] > 1) {
+            for (int j=0; j<orbits.orbitsLen[i]-order; j++) {
+                for (int k=0; k<orbits.orbitsLen[i]; k++) {
+                    // partialBreakPerm(orbits, i, k);
+
+
+                }
+
+            }
+        }
+    }
+
+
+
+    perm2orbit(perm, orbits);
+    printMatrix(orbits);
+
+    // Free c memory
+    free(orbits.orbitsMatrix);
+    free(orbits.orbitsLen);
+
+    // Free python memory
+    Py_DECREF(distanceTableArray);
+
+    return(PyArray_Return(intialPermutation_obj));
 
 }
 

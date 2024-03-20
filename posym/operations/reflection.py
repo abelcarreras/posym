@@ -1,31 +1,24 @@
 import numpy as np
 from posym.operations import Operation
 from posym.tools import standardize_vector
-from scipy.spatial.transform import Rotation as R
 
 
 def reflection(reflection_axis):
     uax = np.dot(reflection_axis, reflection_axis)
-
     return np.identity(3) - 2*np.outer(reflection_axis, reflection_axis)/uax
 
 
 class Reflection(Operation):
     def __init__(self, label, axis):
         super().__init__(label)
-        self._order = 2
+        self._order = 1
+        self._determinant = -1
+
         self._axis = standardize_vector(axis)
 
-    def __hash__(self):
-        axis = np.round(self._axis, decimals=6)
-        axis[axis == 0.] = 0.
-
-        return hash((self._label,
-                     np.array2string(axis)
-                     ))
-
-    def __eq__(self, other):
-        return hash(self) == hash(other)
+    def __str__(self):
+        axis_txt = '[{:8.3f} {:8.3f} {:8.3f}]'.format(*self._axis)
+        return 'SymOp.Reflection {} {} <{}>'.format(self._label, axis_txt, hex(id(self)))
 
     def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
 
@@ -33,13 +26,11 @@ class Reflection(Operation):
         operation = reflection(rotated_axis)
 
         measure_mode = []
-        permu = self._get_permutation(operation, coordinates, symbols)
-
         for i, mode in enumerate(modes):
 
             operated_mode = np.dot(operation, np.array(mode).T).T
             norm = np.linalg.norm(mode)
-            permu_mode = operated_mode[permu]
+            permu_mode = operated_mode[self.permutation]
 
             measure_mode.append(np.trace(np.dot(mode, permu_mode.T))/norm)
 
@@ -47,11 +38,7 @@ class Reflection(Operation):
 
     def get_measure_atom(self, coordinates, symbols, orientation=None):
 
-        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-        operation = reflection(rotated_axis)
-
-        permu = self._get_permutation(operation, coordinates, symbols)
-        measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(permu)])
+        measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(self.permutation)])
 
         return np.sum(measure_atoms)
 
@@ -72,41 +59,42 @@ class Reflection(Operation):
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         operation = reflection(rotated_axis)
 
-        projected_modes = []
-        permu = self._get_permutation(operation, coordinates, symbols)
         cartesian_modes = np.identity(3 * len(symbols)).reshape(3 * len(symbols), len(symbols), 3)
 
+        projected_modes = []
         for i, mode in enumerate(cartesian_modes):
             operated_mode = np.dot(operation, np.array(mode).T).T
-            projected_modes.append(operated_mode[permu])
+            projected_modes.append(operated_mode[self.permutation])
 
         return np.array(projected_modes)
 
-    def get_permutation_pos(self, coordinates, symbols, orientation=None):
-        rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-        operation = reflection(rotated_axis)
-        return self._get_permutation(operation, coordinates, symbols)
-
-    def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
+    def get_measure_pos(self, coordinates, symbols, permutation_set=None, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-
         operation = reflection(rotated_axis)
-        permu_coor = self._get_operated_coordinates(operation, coordinates, symbols)
-        mesure_coor = np.einsum('ij, ij -> ', coordinates, permu_coor)
+
+        if self._permutation is None:
+            self._permutation = self._get_permutation(operation, coordinates, symbols)
+
+        operated_coor = np.dot(operation, coordinates.T).T
+        mesure_coor = np.einsum('ij, ij -> ', coordinates, operated_coor[self._permutation])
 
         if normalized:
             mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
         return mesure_coor
 
-    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
+    def get_operated_coordinates(self, coordinates, symbols, permutation_set=None, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-
         operation = reflection(rotated_axis)
 
-        return [self._get_operated_coordinates(operation, coordinates, symbols)]
+        #if self._permutation is None:
+        #    from posym.operations import get_permutation_aprox
+        #    self._permutation = get_permutation_aprox(operation, coordinates, symbols, self._order)
+
+        operated_coor = np.dot(operation, coordinates.T).T
+        return operated_coor[self.permutation]
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
 
@@ -122,6 +110,9 @@ class Reflection(Operation):
     def apply_rotation(self, orientation):
         self._axis = orientation.apply(self._axis)
 
+    def inverse(self):
+        return Reflection(self.label, axis=self._axis)
+
     @property
     def axis(self):
         return self._axis
@@ -130,13 +121,64 @@ class Reflection(Operation):
     def operation_matrix_list(self):
         return [reflection(self._axis)]
 
-    def __mul__(self, other):
-        if not other.__class__.__bases__[0] is Operation:
-            raise Exception('Product only defined between Operation subclasses')
-        else:
-            op_list = []
-            for op_mat in other.operation_matrix_list:
-                new_axis = np.dot(op_mat, self._axis)
-                op_list.append(Reflection(self._label, new_axis))
+    @property
+    def matrix_representation(self):
+        return reflection(self._axis)
 
-            return op_list
+if __name__ == '__main__':
+
+    from posym.operations.rotation import rotation
+    from posym.operations.inversion import inversion
+
+    def d(a):
+        # print('initial', np.array(a)/np.linalg.norm(a))
+        return np.array(a)/np.linalg.norm(a)
+
+    axis = d([0, 0, 1])
+    matrix_1 = reflection(axis)
+    print('m1\n', matrix_1)
+    # exit()
+
+    #matrix_2 = inversion()
+    print('ini_axis: ', -d([0, 0, 1]))
+    matrix_2 = rotation(2*np.pi/6*1, d([0, 0, 1]))
+    print('m2\n', matrix_2)
+
+    m12 = matrix_2 @ matrix_2 @ matrix_1 @ matrix_1
+
+    m12 = m12
+    print('m12')
+    print(m12)
+
+    from posym.operations.products import get_operation_from_matrix
+    op = get_operation_from_matrix(m12)
+    print('op: ', op)
+    print(op.matrix_representation)
+
+    print('check')
+    print(np.round(op.matrix_representation - m12, decimals=3))
+
+    exit()
+
+    print('det', np.linalg.det(m12))
+    eval, evec = np.linalg.eig(m12)
+    print('eval', eval)
+    print(evec.T)
+
+    axis = np.real(evec.T[2])
+
+    angle = np.arccos(np.real(eval[0]))
+    print('angle: ', angle, 2*np.pi/3)
+
+    exit()
+
+    # m12_test = reflection(axis)
+    m12_test = rotation(2*np.pi/3, axis)
+
+    print('test')
+    print(m12_test)
+    print(m12_test - m12)
+
+
+
+

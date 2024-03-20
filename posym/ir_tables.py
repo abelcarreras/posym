@@ -16,7 +16,7 @@ class CharTable(pd.DataFrame):
     Subclass of DataFrame that contains the symmetry table data
 
     """
-    def __init__(self, name, operations, ir, rotations, translations, multiplicities):
+    def __init__(self, name, operations, ir, rotations, translations, multiplicities, generator_indices=()):
 
         labels = [o.label for o in operations]
 
@@ -45,6 +45,15 @@ class CharTable(pd.DataFrame):
 
         self.attrs['operations'] = operations
 
+        # define generators
+        generator_list = []
+        for i in generator_indices:
+            generator = operations[i]
+            generator._gen_rep = [generator]  # set itself as generators representation
+            generator_list.append(generator)
+
+        self.attrs['generators'] = generator_list
+
     def __str__(self):
 
         table = self.copy()
@@ -66,24 +75,73 @@ class CharTable(pd.DataFrame):
         if 'all_operations' in self.attrs:
             return self.attrs['all_operations']
 
-        def do_loop(opt_list, opi, operations):
-            for op in operations:
-                op_p = op * opi
-                op_p = op_p[0]
+        """
+        print('generators: ', self.generators)
+        print('operations: ', self.operations)
+
+        print('\ngenerators')
+        for op in self.generators:
+            try:
+                print('connect: ', op.label, op.axis, op.order, op.exp)
+            except:
+                try:
+                    print('connect: ', op.label, op.axis)
+                except:
+                    print('connect: ', op.label)
+
+        print('\nOperators in table')
+        for op in self.operations:
+            print(op)
+        print('\n')
+        """
+
+        # generate all operations of the group and store its relation in connection
+        def do_loop(opt_list, opi):
+            for gen_op in self.generators:
+                op_p = gen_op * opi
                 if not op_p in opt_list:
                     opt_list.append(op_p)
-                    do_loop(opt_list, op_p, operations)
+                    do_loop(opt_list, op_p)
 
-        opt_list = []
-        for op in self.operations:
-            do_loop(opt_list, op, self.operations)
+        opt_list = [self.operations[0]]
+        do_loop(opt_list, self.operations[0])
 
-        operation_dict = {}
+        """
+        print('n_operations:', len(opt_list))
+
+        print('\nOperators from generators')
         for op in opt_list:
-            if not op.label in operation_dict:
-                operation_dict[op.label] = [op]
-            else:
-                operation_dict[op.label].append(op)
+            try:
+                print('connect: ', op.label, op.axis, op.order, op.exp, op)
+            except:
+                try:
+                    print('connect: ', op.label, op.axis)
+                except:
+                    print('connect: ', op.label)
+        """
+
+        # set label to operations according to classes
+        operation_dict = {}
+        for op_ref in self.operations:
+            # print('ref: ', op_ref.label, '               ', op_ref)
+            operation_dict[op_ref.label] = []
+            for op in opt_list:
+                if op.get_type() == op_ref.get_type():
+                    for op_b in opt_list:
+                        prod = op_b * op * op_b.inverse()
+                        if (op_ref == prod) or (op_ref == prod.inverse()):
+                            #print('   found!', op)
+                            #print('           check:', op_b * op * op_b.inverse())
+                            op._label = op_ref.label
+                            operation_dict[op_ref.label].append(op)
+                            break
+
+        # add gen_rep to operations
+        for op_ref in self.operations:
+            for op in opt_list:
+                if op_ref == op:
+                    op_ref._gen_rep = op._gen_rep
+
 
         self.attrs['all_operations'] = operation_dict
 
@@ -106,6 +164,10 @@ class CharTable(pd.DataFrame):
         return self.attrs['operations']
 
     @property
+    def generators(self):
+        return self.attrs['generators']
+
+    @property
     def ir_degeneracies(self):
         return self.T['E'].values
 
@@ -119,7 +181,8 @@ ir_table_list = [
                },
               rotations=["A'", "A'", "A''"],  # x, y, z
               translations=["A''", "A''", "A'"],  # Rx, Ry, Rz
-              multiplicities=[1, 1]),
+              multiplicities=[1, 1],
+              generator_indices=[1]),
 
     CharTable('Ci',
               [Identity(label='E'), Inversion(label='i')],
@@ -128,7 +191,8 @@ ir_table_list = [
                },
               rotations=['Au', 'Au', 'Au'],  # x, y, z
               translations=['Ag', 'Ag', 'Ag'],  # Rx, Ry, Rz
-              multiplicities=[1, 1]),
+              multiplicities=[1, 1],
+              generator_indices=[1]),
 
     CharTable('T',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
@@ -139,11 +203,12 @@ ir_table_list = [
                },
               rotations=['T'],
               translations=['T'],
-              multiplicities=[1, 8, 3]),
+              multiplicities=[1, 8, 3],
+              generator_indices=[1, 2]),
 
     CharTable('Td',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
-               ImproperRotation(label='C2', axis=[np.sqrt(2/9), 0, 1/3], order=4, exp=2),
+               Rotation(label='C2', axis=[np.sqrt(2/9), 0, 1/3], order=2),
                ImproperRotation(label='S4', axis=[np.sqrt(2/9), 0, 1/3], order=4),
                Reflection(label='sd', axis=[0, 1, 0])],
               {'A1': pd.Series([+1, +1, +1, +1, +1]),
@@ -154,14 +219,15 @@ ir_table_list = [
                },
               rotations=['T1'],
               translations=['T2'],
-              multiplicities=[1, 8, 3, 6, 6]),
+              multiplicities=[1, 8, 3, 6, 6],
+              generator_indices=[1, 3]),
 
     CharTable('Th',
               [Identity(label='E'), Rotation(label='C3', axis=[0, 0, 1], order=3),
                Rotation(label='C2', axis=[np.sqrt(2/9), 0, 1/3], order=2),
                Inversion(label='i'),
                ImproperRotation(label='S6', axis=[0, 0, 1], order=6),
-               Reflection(label='sh', axis=[0, 1, 0])],
+               Reflection(label='sh', axis=[np.sqrt(2/9), 0, 1/3])],
               {'Ag': pd.Series([+1, +1, +1, +1, +1, +1]),
                'Eg': pd.Series([+2, -1, +2, +2, -1, +2]),
                'Tg': pd.Series([+3,  0, -1, +3,  0, -1]),
@@ -171,12 +237,13 @@ ir_table_list = [
                },
               rotations=['Tg'],
               translations=['Tu'],
-              multiplicities=[1, 8, 3, 1, 8, 3]),
+              multiplicities=[1, 8, 3, 1, 8, 3],
+              generator_indices=[2, 4]),
 
     CharTable('O',
               [Identity(label='E'),
                Rotation(label='C3', axis=[1/np.sqrt(3), 1/np.sqrt(3), 1/np.sqrt(3)], order=3),
-               Rotation(label='C2', axis=[0, 0, 1], order=4, exp=2),
+               Rotation(label='C2', axis=[0, 0, 1], order=2, exp=1),
                Rotation(label='C4', axis=[0, 0, 1], order=4),
                Rotation(label="C2'", axis=[1/np.sqrt(2), 1/np.sqrt(2), 0], order=2)],
               {'A1': pd.Series([+1, +1, +1, +1, +1]),
@@ -187,12 +254,13 @@ ir_table_list = [
                },
               rotations=['T1'],
               translations=['T1'],
-              multiplicities=[1, 8, 3, 6, 6]),
+              multiplicities=[1, 8, 3, 6, 6],
+              generator_indices=[1, 3]),
 
     CharTable('Oh',
               [Identity(label='E'),
                Rotation(label='C3', axis=[1/np.sqrt(3), 1/np.sqrt(3), 1/np.sqrt(3)], order=3),
-               Rotation(label='C2', axis=[0, 0, 1], order=4, exp=2),
+               Rotation(label='C2', axis=[0, 0, 1], order=2),
                Rotation(label='C4', axis=[0, 0, 1], order=4),
                Rotation(label="C2'", axis=[1/np.sqrt(2), 1/np.sqrt(2), 0], order=2),
                Inversion(label='i'),
@@ -214,7 +282,8 @@ ir_table_list = [
                },
               rotations=['T1g'],
               translations=['T1u'],
-              multiplicities=[1, 8, 3, 6, 6, 1, 8, 3, 6, 6]),
+              multiplicities=[1, 8, 3, 6, 6, 1, 8, 3, 6, 6],
+              generator_indices=[3, 6]),
 
     CharTable('I',
               [Identity(label='E'),
@@ -230,7 +299,8 @@ ir_table_list = [
                },
               rotations=['T1'],
               translations=['T1'],
-              multiplicities=[1, 12, 12, 20, 15]),
+              multiplicities=[1, 12, 12, 20, 15],
+              generator_indices=[1, 3]),
 
     CharTable('Ih',
               [Identity(label='E'),
@@ -256,7 +326,8 @@ ir_table_list = [
                },
               rotations=['T1g'],
               translations=['T1u'],
-              multiplicities=[1, 12, 12, 20, 15, 1, 12, 12, 20, 15]),
+              multiplicities=[1, 12, 12, 20, 15, 1, 12, 12, 20, 15],
+              generator_indices=[1, 8]),
 ]
 
 if __name__ == '__main__':

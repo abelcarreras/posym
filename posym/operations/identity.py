@@ -6,11 +6,8 @@ class Identity(Operation):
     def __init__(self, label):
         super().__init__(label)
 
-    def __hash__(self):
-        return hash((self._label))
-
-    def __eq__(self, other):
-        return hash(self) == hash(other)
+    def __str__(self):
+        return 'SymOp.Identity {} <{}>'.format(self._label, hex(id(self)))
 
     def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
         self._measure_mode = [1.0] * len(modes)
@@ -26,8 +23,8 @@ class Identity(Operation):
     def get_displacements_projection(self, coordinates, symbols, orientation=None):
         return np.identity(3*len(symbols)).reshape(3*len(symbols), len(symbols), 3)#.tolist()
 
-    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
-        return [np.array(coordinates)]
+    def get_operated_coordinates(self, coordinates, symbols, permutation_set=None, orientation=None):
+        return np.array(coordinates)
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
         return (op_function1*op_function2).integrate
@@ -35,7 +32,7 @@ class Identity(Operation):
     def get_permutation_pos(self, coordinates, symbols, orientation=None):
         return np.array(range(len(symbols)))
 
-    def get_measure_pos(self, coordinates, symbols, orientation=None, normalized=True):
+    def get_measure_pos(self, coordinates, symbols, permutation_set=None, orientation=None, normalized=True):
         if normalized:
             return 1.0
         else:
@@ -48,9 +45,15 @@ class Identity(Operation):
     def operation_matrix_list(self):
         return [np.identity(3)]
 
+    @property
+    def matrix_representation(self):
+        return np.identity(3)
+
     def __mul__(self, other):
         if not other.__class__.__bases__[0] is Operation:
             raise Exception('Product only defined between Operation subclasses')
         else:
-            return [Identity(self._label)]
+            from posym.operations.products import get_operation_from_matrix
+            matrix_product = self.matrix_representation @ other.matrix_representation
+            return get_operation_from_matrix(matrix_product)
 

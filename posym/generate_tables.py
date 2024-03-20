@@ -28,7 +28,7 @@ def get_cn(n):
         down = n
         label = 'C{}'.format(down//j) if up//j == 1 else 'C^{}_{}'.format(up//j, down//j)
 
-        operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
+        operations.append(Rotation(label=label, axis=[0, 0, 1], order=down//j, exp=up//j))
 
     ir_data = {'A': pd.Series([1] * ndim)}
     if r == 1:
@@ -51,19 +51,20 @@ def get_cn(n):
         rotations = ['E1', 'A']
         translations = ['E1', 'A']
 
-    name = 'C{}'.format(n)
-    #return name, operations, ir_data, rotations, translations, multiplicity
+    # name = 'C{}'.format(n)
+    # return name, operations, ir_data, rotations, translations, multiplicity
     return CharTable('C{}'.format(n),
                      operations,
                      ir_data,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicity)
+                     multiplicities=multiplicity,
+                     generator_indices=[1])
 
 
 def get_cnv(n):
 
-    if n<2:
+    if n < 2:
         raise Exception('Group not valid')
 
     ir_data = get_cn(n)
@@ -72,7 +73,7 @@ def get_cnv(n):
     ir_data_new = {}
     ir_data_new['A1'] = pd.Series(list(ir_data['A']) + [ 1])
     ir_data_new['A2'] = pd.Series(list(ir_data['A']) + [-1])
-    operations_new += [Reflection(label='sv_xz', axis=[0, 1, 0])]
+    operations_new += [Reflection(label='sv_xz', axis=[np.cos(np.pi/n), np.sin(np.pi/n), 0])]
 
     if 'B' in ir_data:
         ir_data_new['B1'] = pd.Series(list(ir_data['B']) + [ 1, -1])
@@ -113,7 +114,8 @@ def get_cnv(n):
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicities)
+                     multiplicities=multiplicities,
+                     generator_indices=[1, -1])
 
 
 def get_cnh(n):
@@ -182,6 +184,8 @@ def get_cnh(n):
         else:
             rotations = ['E1u', 'Au']
             translations = ['E1g', 'Ag']
+
+        generators_indices = [1, n//2+1]
     else:
 
         ir_data_new["A'"] = pd.Series(list(ir_data['A']) + [1])
@@ -232,17 +236,20 @@ def get_cnh(n):
             rotations = ["E1'", "A''"]
             translations = ["E1''", "A'"]
 
+        generators_indices = [n//2+2]
+
     return CharTable('C{}h'.format(n),
                      operations_new,
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicities)
+                     multiplicities=multiplicities,
+                     generator_indices=generators_indices)
 
 def get_sn(n):
 
-    if np.mod(n, 2) != 0:
-        raise Exception('Order of Sn group must have even')
+    if np.mod(n, 2) != 0 or n == 2:
+        raise Exception('Order of Sn group must have even and n > 2')
 
     if np.mod(n, 4) == 0:
 
@@ -255,14 +262,14 @@ def get_sn(n):
         operations = [Identity(label='E')]
         for i in range(n//2):
             j = gcd(i+1, n)
-            up = (i+1)
-            down = n
+            up = (i+1)//j
+            down = n//j
             if np.mod(i, 2) == 0:
-                label = 'S{}'.format(down//j) if up//j == 1 else 'S^{}_{}'.format(up//j, down//j)
+                label = 'S{}'.format(down) if up == 1 else 'S^{}_{}'.format(up, down)
                 operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
             else:
-                label = 'C{}'.format(down//j) if up//j == 1 else 'C^{}_{}'.format(up//j, down//j)
-                operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
+                label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
+                operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
         ir_data = {'A': pd.Series([1] * ndim)}
         if r == 1:
@@ -279,6 +286,8 @@ def get_sn(n):
             rotations = ['E1', 'A']
             translations = ['E{}'.format(l//2), 'B']
 
+        generator_indices = [1]
+
     else:
 
         r = np.clip(np.mod(n-1, 2), 0, 1)
@@ -290,17 +299,17 @@ def get_sn(n):
         operations = [Identity(label='E')]
         for i in range(n//2):
             j = gcd(i+1, n)
-            up = (i+1)
-            down = n
+            up = (i+1)//j
+            down = n//j
             if np.mod(i, 2) == 0:
-                if up//j == 1 and down//j == 2:
-                    operations.append(ImproperRotation(label='i', axis=[0, 0, 1], order=down, exp=up))
+                if up == 1 and down == 2:
+                    operations.append(Inversion(label='i'))
                 else:
-                    label = 'S{}'.format(down//j) if up//j == 1 else 'S^{}_{}'.format(up//j, down//j)
+                    label = 'S{}'.format(down) if up == 1 else 'S^{}_{}'.format(up, down)
                     operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
             else:
-                label = 'C{}'.format(down//j) if up//j == 1 else 'C^{}_{}'.format(up//j, down//j)
-                operations.append(ImproperRotation(label=label, axis=[0, 0, 1], order=down, exp=up))
+                label = 'C{}'.format(down) if up == 1 else 'C^{}_{}'.format(up, down)
+                operations.append(Rotation(label=label, axis=[0, 0, 1], order=down, exp=up))
 
         ir_data = {'Ag': pd.Series([1] * ndim)}
         traces = [1]
@@ -343,12 +352,15 @@ def get_sn(n):
             rotations = ['E1g', 'Ag']
             translations = ['E1u', 'Au']
 
+        generator_indices = [n//2//2+2]
+
     return CharTable('S{}'.format(n),
                      operations,
                      ir_data,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicity)
+                     multiplicities=multiplicity,
+                     generator_indices=generator_indices)
 
 
 def get_dn(n):
@@ -369,7 +381,8 @@ def get_dn(n):
                          },
                          rotations=['B3', 'B2', 'B1'],
                          translations=['B3', 'B2', 'B1'],
-                         multiplicities=[1, 1, 1, 1])
+                         multiplicities=[1, 1, 1, 1],
+                         generator_indices=[1, 2])
 
     ir_data = get_cn(n)
     operations_new = ir_data.operations
@@ -418,7 +431,8 @@ def get_dn(n):
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicities)
+                     multiplicities=multiplicities,
+                     generator_indices=[1, -1])
 
 
 def get_dnh(n):
@@ -445,7 +459,8 @@ def get_dnh(n):
                           },
                          rotations=['B3g', 'B2g', 'B1g'],
                          translations=['B3u', 'B2u', 'B1u'],
-                         multiplicities=[1, 1, 1, 1, 1, 1, 1, 1])
+                         multiplicities=[1, 1, 1, 1, 1, 1, 1, 1],
+                         generator_indices=[1, 2, 4])
 
     if np.mod(n, 2) == 0:
         # for even n only
@@ -496,7 +511,7 @@ def get_dnh(n):
             #print('----')
 
         # swap columns for convention
-        l = 2 + n // 2+2
+        l = 2 + n // 2 + 2
         for kk in range(3):
             value = operations_new.pop(l)
             operations_new.append(value)
@@ -507,7 +522,7 @@ def get_dnh(n):
                 ir_data_new[data] = pd.Series(row)
 
         #print(((n-1)//2))
-        multiplicities = [1] + [2]*((n-1)//2) + [1]  + [n//2, n//2] + [1] + [2]*((n-1)//2) + [1, n//2, n//2]
+        multiplicities = [1] + [2]*((n-1)//2) + [1] + [n//2, n//2] + [1] + [2]*((n-1)//2) + [1, n//2, n//2]
 
         # print(multiplicities)
         if n == 2:
@@ -519,6 +534,9 @@ def get_dnh(n):
         else:
             rotations = ['E1g', 'A2g']
             translations = ['E1u', 'A2u']
+
+        generator_indices = [1, n//2+1, n//2+3]
+
     else:
 
         ir_data_new["A1'"] = pd.Series(list(ir_data['A1']) + [1, 1])
@@ -582,12 +600,15 @@ def get_dnh(n):
             rotations = ["E1''", "A2'"]
             translations = ["E1'", "A2''"]
 
+        generator_indices = [n//2+3, n//2+1]
+
     return CharTable('D{}h'.format(n),
                      operations_new,
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicities)
+                     multiplicities=multiplicities,
+                     generator_indices=generator_indices)
 
 def get_dnd(n):
 
@@ -622,6 +643,9 @@ def get_dnd(n):
         else:
             rotations = ['E{}'.format(n-1), 'A2']
             translations = ['E1', 'B2']
+
+        generator_indices = [1, n+1]
+
     else:
         ir_data = get_dn(n)
         operations_new = ir_data.operations
@@ -646,12 +670,12 @@ def get_dnd(n):
 
         for i in range((n-1)//2):
             j = gcd(2*i+1, 2*n)
-            up = (2*i+1)
-            down = 2*n
-            if up//j == 1:
-                operations_new += [ImproperRotation(label='S{}'.format(down//j), axis=[0, 0, 1], order=down, exp=up)]
+            up = (2*i+1)//j
+            down = 2*n//j
+            if up == 1:
+                operations_new += [ImproperRotation(label='S{}'.format(down), axis=[0, 0, 1], order=down, exp=up)]
             else:
-                operations_new += [ImproperRotation(label='S^{}_{}'.format(up//j, down//j), axis=[0, 0, 1], order=down, exp=up)]
+                operations_new += [ImproperRotation(label='S^{}_{}'.format(up, down), axis=[0, 0, 1], order=down, exp=up)]
 
             for data in ir_data_new.keys():
                 sign = np.sign(list(ir_data_new[data])[(n - 1) // 2 + 2])
@@ -687,12 +711,15 @@ def get_dnd(n):
             rotations = ["E1g", "A2g"]
             translations = ["E1u", "A2u"]
 
+        generator_indices = [n//2+1, n//2+3]
+
     return CharTable('D{}d'.format(n),
                      operations_new,
                      ir_data_new,
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
-                     multiplicities=multiplicities)
+                     multiplicities=multiplicities,
+                     generator_indices=generator_indices)
 
 
 def get_table_from_label(label):

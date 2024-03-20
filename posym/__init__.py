@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '1.0'
+__version__ = '1.1'
 
 from posym.tools import list_round, get_principal_axis_angles
 from posym.pointgroup import PointGroup
@@ -140,19 +140,23 @@ class SymmetryMolecule(SymmetryObject):
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         if total_state is None:
+            # m = self.measure_pos
+            self._generate_permutation_set(self._angles)
             rotmol = R.from_euler('zyx', self._angles, degrees=True)
             self._operator_measures = []
             for operation in self._pg.operations:
                 operator_measures = []
                 for op in self._pg.get_sub_operations(operation.label):
+
                     # check if all atoms are collapsed in a point
                     if collapse_limit(self._coordinates):
                         operator_measures.append(1)
                         continue
 
-                    overlap = op.get_measure_pos(self._coordinates, symbols, orientation=rotmol)
+                    overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
                     operator_measures.append(overlap)
 
+                # print('operator measures', operator_measures)
                 self._operator_measures.append(np.array(operator_measures))
 
             total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
@@ -171,6 +175,7 @@ class SymmetryMolecule(SymmetryObject):
         self._coordinates = np.array(coordinates)
         self._symbols = symbols
         self._pg = PointGroup(group)
+        self._permutation_set = {}
 
         if '_center' not in self.__dir__():
             self._center = center
@@ -183,6 +188,8 @@ class SymmetryMolecule(SymmetryObject):
             self._angles = self.get_orientation(fast_optimization=conf.fast_optimization, scan_step=conf.scan_steps)
         else:
             self._angles = orientation_angles
+
+        self._generate_permutation_set(self._angles)
 
     def get_orientation(self, fast_optimization=True, scan_step=20, guess_angles=None):
         """
@@ -204,7 +211,7 @@ class SymmetryMolecule(SymmetryObject):
             This function uses only one operation of each type (described in the IR table).
             This approach works well when the molecule has a symmetry close to the group
             """
-
+            self._generate_permutation_set(angles)
             rotmol = R.from_euler('zyx', angles, degrees=True)
 
             coor_measures = []
@@ -220,6 +227,7 @@ class SymmetryMolecule(SymmetryObject):
             This function uses all operations of the group and averages the overlap of equivalent operations
             """
 
+            self._generate_permutation_set(angles)
             rotmol = R.from_euler('zyx', angles, degrees=True)
 
             operator_measures = []
@@ -270,8 +278,7 @@ class SymmetryMolecule(SymmetryObject):
     def print_operations_info(self):
         from posym.operations.permutation import Permutation
 
-        rotmol = R.from_euler('zyx', self._angles, degrees=True)
-
+        self._generate_permutation_set(self._angles)
         for operation in self._pg.operations:
             for op in self._pg.get_sub_operations(operation.label):
 
@@ -279,27 +286,102 @@ class SymmetryMolecule(SymmetryObject):
                 print('label:', op.label)
                 try:
                     print('Order:', op.order)
+                except AttributeError:
+                    pass
+                try:
                     print('Axis:', op.axis)
                 except AttributeError:
                     pass
 
-                permutation = op.get_permutation_pos(self._coordinates, self._symbols, orientation=rotmol)
-                print('permutation:', permutation)
-                permutation = Permutation(permutation)
+                print('permutation:', op.permutation)
+                permutation = Permutation(op.permutation)
                 print('orbits: ', permutation.get_orbits())
 
-                print('Operation matrices:')
-                for matrix in op.operation_matrix_list:
-                    print(np.round(matrix, decimals=3),'\n')
+                print('Operation matrix:')
+                print(np.round(op.matrix_representation, decimals=6))
+
+    def _generate_permutation_set(self, angles, force_reset=False, use_aprox=True):
+
+        from posym.operations.permutation import generate_permutation_set
+        from posym.operations import get_permutation_aprox
+
+        rotmol = R.from_euler('zyx', angles, degrees=True)
+        dict_key = tuple(angles)
+
+        if collapse_limit(self._coordinates):
+            self._permutation_set[dict_key] = next(generate_permutation_set(self._pg.generators, self._symbols))
+            return
+
+        # approximations
+        if use_aprox:
+            permutation_set = {}
+            for gen in self._pg.generators:
+                rot_coor = rotmol.inv().apply(self._coordinates)
+                permutation_set[gen] = get_permutation_aprox(gen.matrix_representation, rot_coor, self._symbols, gen._order)
+
+            self._permutation_set[dict_key] = permutation_set
+
+            for operation in self._pg.operations:
+                operation.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)
+                for op in self._pg.get_sub_operations(operation.label):
+                    op.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)
+
+            return
+
+        # exact
+        if dict_key not in self._permutation_set or force_reset:
+
+            if collapse_limit(self._coordinates):
+                self._permutation_set[dict_key] = next(generate_permutation_set(self._pg.generators, self._symbols))
+                return
+
+            ir_rep_diff_max = -100
+
+            class NotValidPermutation(Exception): pass
+
+            for permutation_set in generate_permutation_set(self._pg.generators, self._symbols):
+
+                try:
+                    operator_measures = []
+                    for operation in self._pg.operations:
+                        sub_operator_measures = []
+                        for op in self._pg.get_sub_operations(operation.label):
+                            if op.set_permutation_set(permutation_set, self._symbols) is None:
+                                raise NotValidPermutation
+
+                            overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                            sub_operator_measures.append(overlap)
+
+                        operator_measures.append(np.average(sub_operator_measures))
+
+                    ir_rep_diff = np.dot(operator_measures, self._pg.trans_matrix_inv[0])
+
+                    if ir_rep_diff_max < ir_rep_diff:
+                        ir_rep_diff_max = ir_rep_diff
+                        self._permutation_set[dict_key] = permutation_set
+
+                except NotValidPermutation:
+                    continue
+
+        for operation in self._pg.operations:
+            operation.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)
+            for op in self._pg.get_sub_operations(operation.label):
+                op.set_permutation_set(self._permutation_set[dict_key], self._symbols)
 
     @property
     def measure(self):
-        return 100*(1-self.get_ir_representation().values[0])
+        norm = self.get_reduced_op_representation().values[0]
+        return 100*(1-np.array(self.get_ir_representation().values[0])/norm)
 
     @property
     def measure_pos(self):
 
+        if collapse_limit(self._coordinates):
+            return 0.0
+
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+        self._generate_permutation_set(self._angles)
 
         operator_measures = []
         for operation in self._pg.operations:
@@ -307,11 +389,13 @@ class SymmetryMolecule(SymmetryObject):
             for op in self._pg.get_sub_operations(operation.label):
                 overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
                 sub_operator_measures.append(overlap)
+
             operator_measures.append(np.average(sub_operator_measures))
 
         # get most symmetric IR value
         ir_rep_diff = np.dot(operator_measures, self._pg.trans_matrix_inv[0])
 
+        # return csm
         return 100 * (1 - ir_rep_diff)
 
     @property
@@ -331,8 +415,13 @@ class SymmetryMolecule(SymmetryObject):
         for operation in self._pg.operations:
             sub_operator_measures = []
             for op in self._pg.get_sub_operations(operation.label):
+                if collapse_limit(self._coordinates):
+                    sub_operator_measures.append(1)
+                    continue
+
                 overlap = op.get_measure_pos(self.symmetrized_coordinates, self._symbols, orientation=rotmol)
                 sub_operator_measures.append(overlap)
+
             operator_measures.append(np.average(sub_operator_measures))
 
         # get most symmetric IR value
@@ -347,14 +436,16 @@ class SymmetryMolecule(SymmetryObject):
 
     @property
     def symmetrized_coordinates(self):
+
+        self._generate_permutation_set(self._angles)
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
-        operator_measures = []
-        for operation in self._pg.operations:
-            for op in self._pg.get_sub_operations(operation.label):
-                operator_measures += op.get_operated_coordinates(self._coordinates, self._symbols, orientation=rotmol)
+        structure_list = []
+        for op in self._pg.all_operations:
+            structure = op.get_operated_coordinates(self._coordinates, self._symbols, orientation=rotmol)
+            structure_list.append(structure)
 
-        return np.average(operator_measures, axis=0)
+        return np.average(structure_list, axis=0)
 
     @property
     def orientation_angles(self):
@@ -452,7 +543,6 @@ class SymmetryAtomDisplacements(SymmetryMolecule):
             for op in self._pg.get_sub_operations(operation.label):
                 measure_xyz = op.get_measure_xyz(orientation=rotmol)
                 measure_atom = op.get_measure_atom(self._coordinates, self._symbols, orientation=rotmol)
-
                 mode_measures.append(measure_xyz * measure_atom)
 
             mode_measures = np.array(mode_measures)
