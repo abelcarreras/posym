@@ -69,11 +69,6 @@ class Permutation:
         return len(self._permutation)
 
 
-def roll_permutation(permutation, n):
-    p = Permutation(permutation)
-    return p.slide(n-1)
-
-
 def generate_permutation_set(generators, symbols):
 
     from itertools import permutations, product
@@ -81,8 +76,20 @@ def generate_permutation_set(generators, symbols):
     n_atoms = len(symbols)
 
     def gen_perm(n_atoms, gen):
+        order = gen._order
+        determinant = gen._determinant
         for p in permutations(range(n_atoms)):
-            yield p
+            len_orbits = Permutation(p).len_orbits()
+
+            orbit_mod = np.ones_like(len_orbits)
+            orbit_mod = np.multiply(orbit_mod, np.mod(order, len_orbits))
+
+            if determinant < 0:
+                orbit_mod = np.multiply(orbit_mod, np.mod(2, len_orbits))
+                orbit_mod = np.multiply(orbit_mod, np.mod(2 * order, len_orbits))
+
+            if np.sum(orbit_mod) == 0:
+                yield p
 
     # for perm_set in product(*gen_perm_list):
     for perm_set in product(*[gen_perm(n_atoms, gen) for gen in generators]):

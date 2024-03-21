@@ -4,6 +4,20 @@ from posym.tools import standardize_vector
 import numpy as np
 
 
+def cache_rotation(func):
+    cache_dict = {}
+
+    def wrapper_cache(angle, rotation_axis):
+        hash_key = (angle, tuple(rotation_axis))
+        if hash_key in cache_dict:
+            return cache_dict[hash_key]
+
+        cache_dict[hash_key] = func(angle, rotation_axis)
+        return cache_dict[hash_key]
+
+    return wrapper_cache
+
+@cache_rotation
 def rotation(angle, rotation_axis):
 
     rotation_vector = angle * np.array(rotation_axis) / np.linalg.norm(rotation_axis)

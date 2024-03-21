@@ -3,6 +3,21 @@ from posym.operations import Operation
 from posym.tools import standardize_vector
 
 
+def cache_reflection(func):
+    cache_dict = {}
+
+    def wrapper_cache(rotation_axis):
+        hash_key = tuple(rotation_axis)
+        if hash_key in cache_dict:
+            return cache_dict[hash_key]
+
+        cache_dict[hash_key] = func(rotation_axis)
+        return cache_dict[hash_key]
+
+    return wrapper_cache
+
+
+@cache_reflection
 def reflection(reflection_axis):
     uax = np.dot(reflection_axis, reflection_axis)
     return np.identity(3) - 2*np.outer(reflection_axis, reflection_axis)/uax
