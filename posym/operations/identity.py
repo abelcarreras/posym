@@ -9,30 +9,28 @@ class Identity(Operation):
     def __str__(self):
         return 'SymOp.Identity {} <{}>'.format(self._label, hex(id(self)))
 
-    def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
+    def get_measure_modes(self, modes, orientation=None):
         self._measure_mode = [1.0] * len(modes)
 
         return np.array(self._measure_mode)
 
-    def get_measure_atom(self, coordinates, symbols, orientation=None):
-        return len(coordinates)
+    def get_measure_atom(self, orientation=None):
+        return len(self.permutation)
 
     def get_measure_xyz(self, orientation=None):
         return 3
 
-    def get_displacements_projection(self, coordinates, symbols, orientation=None):
-        return np.identity(3*len(symbols)).reshape(3*len(symbols), len(symbols), 3)#.tolist()
+    def get_displacements_projection(self, orientation=None):
+        n_atoms = len(self.permutation)
+        return np.identity(3*n_atoms).reshape(3*n_atoms, n_atoms, 3)#.tolist()
 
-    def get_operated_coordinates(self, coordinates, symbols, permutation_set=None, orientation=None):
+    def get_operated_coordinates(self, coordinates, orientation=None):
         return np.array(coordinates)
 
     def get_overlap_func(self, op_function1, op_function2, orientation=None):
         return (op_function1*op_function2).integrate
 
-    def get_permutation_pos(self, coordinates, symbols, orientation=None):
-        return np.array(range(len(symbols)))
-
-    def get_measure_pos(self, coordinates, symbols, permutation_set=None, orientation=None, normalized=True):
+    def get_measure_pos(self, coordinates, orientation=None, normalized=True):
         if normalized:
             return 1.0
         else:
@@ -40,10 +38,6 @@ class Identity(Operation):
 
     def apply_rotation(self, orientation):
         pass
-
-    @property
-    def operation_matrix_list(self):
-        return [np.identity(3)]
 
     @property
     def matrix_representation(self):

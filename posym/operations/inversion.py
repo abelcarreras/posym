@@ -19,14 +19,13 @@ class Inversion(Operation):
     def __str__(self):
         return 'SymOp.Inversion {} <{}>'.format(self._label, hex(id(self)))
 
-    def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
+    def get_measure_modes(self, modes, orientation=None):
 
         operation = inversion()
-        operated_coor = np.dot(operation, coordinates.T).T
 
         measure_mode = []
         for mode in modes:
-            operated_mode = np.dot(operation, prepare_vector(coordinates, mode).T).T - operated_coor
+            operated_mode = np.dot(operation, np.array(mode).T).T
             norm = np.linalg.norm(mode)
             permu_mode = np.array(operated_mode)[self.permutation]
 
@@ -34,7 +33,7 @@ class Inversion(Operation):
 
         return np.array(measure_mode)
 
-    def get_measure_atom(self, coordinates, symbols, orientation=None):
+    def get_measure_atom(self):
 
         measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(self.permutation)])
 
@@ -51,12 +50,13 @@ class Inversion(Operation):
 
         return np.sum(measure_mode)
 
-    def get_displacements_projection(self, coordinates, symbols, orientation=None):
+    def get_displacements_projection(self, orientation=None):
 
+        n_atoms = len(self.permutation)
         operation = inversion()
 
         projected_modes = []
-        cartesian_modes = np.identity(3 * len(symbols)).reshape(3 * len(symbols), len(symbols), 3)
+        cartesian_modes = np.identity(3 * n_atoms).reshape(3 * n_atoms, n_atoms, 3)
 
         for i, mode in enumerate(cartesian_modes):
             operated_mode = np.dot(operation, np.array(mode).T).T
@@ -64,7 +64,7 @@ class Inversion(Operation):
 
         return np.array(projected_modes)
 
-    def get_measure_pos(self, coordinates, symbols, permutation_set=None, orientation=None, normalized=True):
+    def get_measure_pos(self, coordinates, orientation=None, normalized=True):
 
         operation = inversion()
         operated_coor = np.dot(operation, coordinates.T).T
@@ -75,7 +75,7 @@ class Inversion(Operation):
 
         return mesure_pos
 
-    def get_operated_coordinates(self, coordinates, symbols, permutation_set=None, orientation=None):
+    def get_operated_coordinates(self, coordinates, orientation=None):
 
         operation = inversion()
         operated_coor = np.dot(operation, coordinates.T).T
@@ -93,10 +93,6 @@ class Inversion(Operation):
 
     def apply_rotation(self, orientation):
         pass
-
-    @property
-    def operation_matrix_list(self):
-        return [inversion()]
 
     @property
     def matrix_representation(self):

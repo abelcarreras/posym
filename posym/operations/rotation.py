@@ -37,7 +37,7 @@ class Rotation(Operation):
         axis_txt = '[{:8.3f} {:8.3f} {:8.3f}]'.format(*self._axis)
         return 'SymOp.Rotation {} {} order: {} exp: {} <{}>'.format(self._label, axis_txt, self._order, self._exp, hex(id(self)))
 
-    def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
+    def get_measure_modes(self, modes, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         angle = 2 * np.pi / self._order * self._exp
@@ -52,7 +52,7 @@ class Rotation(Operation):
 
         return measure_mode
 
-    def get_measure_atom(self, coordinates, symbols, orientation=None):
+    def get_measure_atom(self):
 
         measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(self.permutation)])
 
@@ -72,10 +72,11 @@ class Rotation(Operation):
 
         return np.sum(measure_mode)
 
-    def get_displacements_projection(self, coordinates, symbols, orientation=None):
+    def get_displacements_projection(self, orientation=None):
 
+        n_atoms = len(self.permutation)
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
-        cartesian_modes = np.identity(3 * len(symbols)).reshape(3 * len(symbols), len(symbols), 3)
+        cartesian_modes = np.identity(3 * n_atoms).reshape(3 * n_atoms, n_atoms, 3)
         angle = 2 * np.pi / self._order * self._exp
         operation = rotation(angle, rotated_axis)
 
@@ -86,7 +87,7 @@ class Rotation(Operation):
 
         return projected_modes
 
-    def get_measure_pos(self, coordinates, symbols, permutation_set=None, orientation=None, normalized=True):
+    def get_measure_pos(self, coordinates, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         operation = rotation(2 * np.pi / self._order * self._exp, rotated_axis)
@@ -99,7 +100,7 @@ class Rotation(Operation):
 
         return mesure_pos
 
-    def get_operated_coordinates(self, coordinates, symbols, orientation=None):
+    def get_operated_coordinates(self, coordinates, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         operation = rotation(2 * np.pi / self._order * self._exp, rotated_axis)

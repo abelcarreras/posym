@@ -153,7 +153,7 @@ class SymmetryMolecule(SymmetryObject):
                         operator_measures.append(1)
                         continue
 
-                    overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                    overlap = op.get_measure_pos(self._coordinates, orientation=rotmol)
                     operator_measures.append(overlap)
 
                 # print('operator measures', operator_measures)
@@ -216,7 +216,7 @@ class SymmetryMolecule(SymmetryObject):
 
             coor_measures = []
             for operation in self._pg.operations:
-                coor_m = operation.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol, normalized=False)
+                coor_m = operation.get_measure_pos(self._coordinates, orientation=rotmol, normalized=False)
                 coor_measures.append(coor_m)
 
             # get most symmetric IR value
@@ -234,7 +234,7 @@ class SymmetryMolecule(SymmetryObject):
             for operation in self._pg.operations:
                 sub_operator_measures = []
                 for op in self._pg.get_sub_operations(operation.label):
-                    overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                    overlap = op.get_measure_pos(self._coordinates, orientation=rotmol)
                     sub_operator_measures.append(overlap)
                 operator_measures.append(np.average(sub_operator_measures))
 
@@ -349,7 +349,7 @@ class SymmetryMolecule(SymmetryObject):
                             if op.set_permutation_set(permutation_set, self._symbols) is None:
                                 raise NotValidPermutation
 
-                            overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                            overlap = op.get_measure_pos(self._coordinates, orientation=rotmol)
                             sub_operator_measures.append(overlap)
 
                         operator_measures.append(np.average(sub_operator_measures))
@@ -387,7 +387,7 @@ class SymmetryMolecule(SymmetryObject):
         for operation in self._pg.operations:
             sub_operator_measures = []
             for op in self._pg.get_sub_operations(operation.label):
-                overlap = op.get_measure_pos(self._coordinates, self._symbols, orientation=rotmol)
+                overlap = op.get_measure_pos(self._coordinates, orientation=rotmol)
                 sub_operator_measures.append(overlap)
 
             operator_measures.append(np.average(sub_operator_measures))
@@ -419,7 +419,7 @@ class SymmetryMolecule(SymmetryObject):
                     sub_operator_measures.append(1)
                     continue
 
-                overlap = op.get_measure_pos(self.symmetrized_coordinates, self._symbols, orientation=rotmol)
+                overlap = op.get_measure_pos(self.symmetrized_coordinates, orientation=rotmol)
                 sub_operator_measures.append(overlap)
 
             operator_measures.append(np.average(sub_operator_measures))
@@ -442,7 +442,7 @@ class SymmetryMolecule(SymmetryObject):
 
         structure_list = []
         for op in self._pg.all_operations:
-            structure = op.get_operated_coordinates(self._coordinates, self._symbols, orientation=rotmol)
+            structure = op.get_operated_coordinates(self._coordinates, orientation=rotmol)
             structure_list.append(structure)
 
         return np.average(structure_list, axis=0)
@@ -481,7 +481,7 @@ class SymmetryNormalModes(SymmetryMolecule):
         for operation in self._pg.operations:
             mode_measures = []
             for op in self._pg.get_sub_operations(operation.label):
-                mode_m = op.get_measure_modes(self._coordinates, self._modes, self._symbols, orientation=rotmol)
+                mode_m = op.get_measure_modes(self._modes, orientation=rotmol)
                 mode_measures.append(mode_m)
 
             mode_measures = np.array(mode_measures)
@@ -542,7 +542,7 @@ class SymmetryAtomDisplacements(SymmetryMolecule):
             mode_measures = []
             for op in self._pg.get_sub_operations(operation.label):
                 measure_xyz = op.get_measure_xyz(orientation=rotmol)
-                measure_atom = op.get_measure_atom(self._coordinates, self._symbols, orientation=rotmol)
+                measure_atom = op.get_measure_atom()
                 mode_measures.append(measure_xyz * measure_atom)
 
             mode_measures = np.array(mode_measures)
@@ -579,9 +579,7 @@ class SymmetryAdaptedCoordinates(SymmetryMolecule):
         for traces_vector in self._pg.trans_matrix.T:
             projection = np.zeros((3 * len(coordinates), len(coordinates), 3))
             for operation, trace in zip(self._pg.operations, traces_vector):
-                projection += trace * operation.get_displacements_projection(self._coordinates,
-                                                                             self._symbols,
-                                                                             orientation=rotmol)
+                projection += trace * operation.get_displacements_projection(orientation=rotmol)
 
             def linear_indepedent(vect):
                 for m in self._modes:

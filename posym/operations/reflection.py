@@ -20,7 +20,7 @@ class Reflection(Operation):
         axis_txt = '[{:8.3f} {:8.3f} {:8.3f}]'.format(*self._axis)
         return 'SymOp.Reflection {} {} <{}>'.format(self._label, axis_txt, hex(id(self)))
 
-    def get_measure_modes(self, coordinates, modes, symbols, orientation=None):
+    def get_measure_modes(self, modes, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         operation = reflection(rotated_axis)
@@ -36,7 +36,7 @@ class Reflection(Operation):
 
         return np.array(measure_mode)
 
-    def get_measure_atom(self, coordinates, symbols, orientation=None):
+    def get_measure_atom(self):
 
         measure_atoms = np.array([1 if i == p else 0 for i, p in enumerate(self.permutation)])
 
@@ -54,12 +54,13 @@ class Reflection(Operation):
 
         return np.sum(measure_mode)
 
-    def get_displacements_projection(self, coordinates, symbols, orientation=None):
+    def get_displacements_projection(self, orientation=None):
 
+        n_atoms = len(self.permutation)
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         operation = reflection(rotated_axis)
 
-        cartesian_modes = np.identity(3 * len(symbols)).reshape(3 * len(symbols), len(symbols), 3)
+        cartesian_modes = np.identity(3 * n_atoms).reshape(3 * n_atoms, n_atoms, 3)
 
         projected_modes = []
         for i, mode in enumerate(cartesian_modes):
@@ -68,23 +69,20 @@ class Reflection(Operation):
 
         return np.array(projected_modes)
 
-    def get_measure_pos(self, coordinates, symbols, permutation_set=None, orientation=None, normalized=True):
+    def get_measure_pos(self, coordinates, orientation=None, normalized=True):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         operation = reflection(rotated_axis)
 
-        if self._permutation is None:
-            self._permutation = self._get_permutation(operation, coordinates, symbols)
-
         operated_coor = np.dot(operation, coordinates.T).T
-        mesure_coor = np.einsum('ij, ij -> ', coordinates, operated_coor[self._permutation])
+        mesure_coor = np.einsum('ij, ij -> ', coordinates, operated_coor[self.permutation])
 
         if normalized:
             mesure_coor /= np.einsum('ij, ij -> ', coordinates, coordinates)
 
         return mesure_coor
 
-    def get_operated_coordinates(self, coordinates, symbols, permutation_set=None, orientation=None):
+    def get_operated_coordinates(self, coordinates, orientation=None):
 
         rotated_axis = self._axis if orientation is None else orientation.apply(self._axis)
         operation = reflection(rotated_axis)
@@ -116,10 +114,6 @@ class Reflection(Operation):
     @property
     def axis(self):
         return self._axis
-
-    @property
-    def operation_matrix_list(self):
-        return [reflection(self._axis)]
 
     @property
     def matrix_representation(self):
