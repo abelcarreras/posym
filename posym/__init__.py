@@ -302,73 +302,67 @@ class SymmetryMolecule(SymmetryObject):
             print(np.round(op.matrix_representation, decimals=6))
             print()
 
-    def _generate_permutation_set(self, angles, force_reset=False, use_aprox=True):
+    def _generate_permutation_set(self, angles, force_reset=False):
 
         from posym.operations.permutation import generate_permutation_set
         from posym.operations import get_permutation_aprox
 
+        conf = Configuration()
+        use_approx = True
+        if conf.algorithm == 'exact':
+            use_approx = False
+
         rotmol = R.from_euler('zyx', angles, degrees=True)
         dict_key = tuple(angles)
 
-        if collapse_limit(self._coordinates):
-            self._permutation_set[dict_key] = next(generate_permutation_set(self._pg.generators, self._symbols))
-            return
-
-        # approximations
-        if use_aprox:
-            permutation_set = {}
-            for gen in self._pg.generators:
-                rot_coor = rotmol.inv().apply(self._coordinates)
-                permutation_set[gen] = get_permutation_aprox(gen.matrix_representation, rot_coor, self._symbols, gen._order)
-
-            self._permutation_set[dict_key] = permutation_set
-
-            for operation in self._pg.operations:
-                operation.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)
-                for op in self._pg.get_sub_operations(operation.label):
-                    op.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)
-
-            return
-
-        # exact
         if dict_key not in self._permutation_set or force_reset:
 
             if collapse_limit(self._coordinates):
                 self._permutation_set[dict_key] = next(generate_permutation_set(self._pg.generators, self._symbols))
                 return
 
-            ir_rep_diff_max = -100
+            # approximations
+            if use_approx:
+                permutation_set = {}
+                for gen in self._pg.generators:
+                    rot_coor = rotmol.inv().apply(self._coordinates)
+                    permutation_set[gen] = get_permutation_aprox(gen.matrix_representation, rot_coor, self._symbols, gen._order)
+                self._permutation_set[dict_key] = permutation_set
 
-            class NotValidPermutation(Exception): pass
+            else:
+                # exact
+                ir_rep_diff_max = -100
 
-            for permutation_set in generate_permutation_set(self._pg.generators, self._symbols):
+                class NotValidPermutation(Exception): pass
 
-                try:
-                    operator_measures = []
-                    for operation in self._pg.operations:
-                        sub_operator_measures = []
-                        for op in self._pg.get_sub_operations(operation.label):
-                            if op.set_permutation_set(permutation_set, self._symbols) is None:
-                                raise NotValidPermutation
+                for permutation_set in generate_permutation_set(self._pg.generators, self._symbols):
 
-                            overlap = op.get_measure_pos(self._coordinates, orientation=rotmol)
-                            sub_operator_measures.append(overlap)
+                    try:
+                        operator_measures = []
+                        for operation in self._pg.operations:
+                            sub_operator_measures = []
+                            for op in self._pg.get_sub_operations(operation.label):
+                                if op.set_permutation_set(permutation_set, self._symbols) is None:
+                                    raise NotValidPermutation
 
-                        operator_measures.append(np.average(sub_operator_measures))
+                                overlap = op.get_measure_pos(self._coordinates, orientation=rotmol)
+                                sub_operator_measures.append(overlap)
 
-                    ir_rep_diff = np.dot(operator_measures, self._pg.trans_matrix_inv[0])
+                            operator_measures.append(np.average(sub_operator_measures))
 
-                    if ir_rep_diff_max < ir_rep_diff:
-                        ir_rep_diff_max = ir_rep_diff
-                        self._permutation_set[dict_key] = permutation_set
+                        ir_rep_diff = np.dot(operator_measures, self._pg.trans_matrix_inv[0])
 
-                except NotValidPermutation:
-                    continue
+                        if ir_rep_diff_max < ir_rep_diff:
+                            ir_rep_diff_max = ir_rep_diff
+                            self._permutation_set[dict_key] = permutation_set
+
+                    except NotValidPermutation:
+                        continue
 
         for operation in self._pg.operations:
             operation.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)
             for op in self._pg.get_sub_operations(operation.label):
-                op.set_permutation_set(self._permutation_set[dict_key], self._symbols)
+                op.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)
 
     @property
     def measure(self):
