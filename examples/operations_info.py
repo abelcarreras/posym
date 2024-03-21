@@ -29,5 +29,4 @@ print('Group measure: {:.4f}'.format(sm.measure))
 print('Symmetry center: ', sm.center)
 print('Group orientation Euler angles zyx (deg): ', sm.orientation_angles)
 
-print('\nOperations list\n---------------')
 sm.print_operations_info()

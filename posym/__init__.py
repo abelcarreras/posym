@@ -278,29 +278,29 @@ class SymmetryMolecule(SymmetryObject):
     def print_operations_info(self):
         from posym.operations.permutation import Permutation
 
+        print('\nOperations list (molecule orientation)'
+              '\n--------------------------------------')
         self._generate_permutation_set(self._angles)
-        for operation in self._pg.operations:
-            for op in self._pg.get_sub_operations(operation.label):
+        for op in self.get_oriented_operations():
+            # print('Operation object: ', op)
+            print('label:', op.label)
+            try:
+                print('Order:', op.order)
+                print('Exponent:', op.exp)
+            except AttributeError:
+                pass
+            try:
+                print('Axis:', op.axis)
+            except AttributeError:
+                pass
 
-                print('Operation object: ', op)
-                print('label:', op.label)
-                try:
-                    print('Order:', op.order)
-                    print('Exponent:', op.exp)
-                except AttributeError:
-                    pass
-                try:
-                    print('Axis:', op.axis)
-                except AttributeError:
-                    pass
+            print('permutation:', op.permutation)
+            permutation = Permutation(op.permutation)
+            print('orbits: ', permutation.get_orbits())
 
-                print('permutation:', op.permutation)
-                permutation = Permutation(op.permutation)
-                print('orbits: ', permutation.get_orbits())
-
-                print('Matrix representation:')
-                print(np.round(op.matrix_representation, decimals=6))
-                print()
+            print('Matrix representation:')
+            print(np.round(op.matrix_representation, decimals=6))
+            print()
 
     def _generate_permutation_set(self, angles, force_reset=False, use_aprox=True):
 
