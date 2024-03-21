@@ -286,6 +286,7 @@ class SymmetryMolecule(SymmetryObject):
                 print('label:', op.label)
                 try:
                     print('Order:', op.order)
+                    print('Exponent:', op.exp)
                 except AttributeError:
                     pass
                 try:
@@ -297,8 +298,9 @@ class SymmetryMolecule(SymmetryObject):
                 permutation = Permutation(op.permutation)
                 print('orbits: ', permutation.get_orbits())
 
-                print('Operation matrix:')
+                print('Matrix representation:')
                 print(np.round(op.matrix_representation, decimals=6))
+                print()
 
     def _generate_permutation_set(self, angles, force_reset=False, use_aprox=True):
 

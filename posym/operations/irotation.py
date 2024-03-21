@@ -15,7 +15,7 @@ class ImproperRotation(Operation):
 
         self._axis = standardize_vector(axis)
         self._order = order
-        self._exp = exp
+        self._exp = np.mod(exp, order)
         self._determinant = -1
 
     def __str__(self):
