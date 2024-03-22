@@ -1,7 +1,7 @@
 import numpy as np
 from functools import lru_cache
 # from posym.permutations import get_cross_distance_table
-from posym.permutations import get_permutation_annealing, get_permutation_brute, fix_permutation  # noqa
+from posym.permutations import get_permutation_annealing, get_permutation_brute, fix_permutation, validate_permutation  # noqa
 from scipy.optimize import linear_sum_assignment
 from posym.config import Configuration, CustomPerm
 from posym.operations.permutation import Permutation
@@ -131,20 +131,9 @@ class Operation:
             self._permutation = permutation
             return True
 
-        len_orbits = Permutation(permutation).len_orbits()
-        vector = np.ones_like(len_orbits)
-        vector = np.multiply(vector, np.mod(self._order, len_orbits))
-
-        if self._determinant < 0:
-            vector = np.multiply(vector, np.mod(self._order*2, len_orbits))
-            if self._order != 2:
-                vector = np.multiply(vector, np.mod(2, len_orbits))
-
-        if np.sum(vector) == 0:
+        if validate_permutation(permutation, self._order, self._determinant):
             self._permutation = permutation
             return True
-
-        return None
 
     def inverse(self):
         return self

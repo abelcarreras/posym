@@ -21,7 +21,7 @@ static PyObject* getPermutationSimple(PyObject* self, PyObject *arg, PyObject *k
 static PyObject* getPermutationAnnealing(PyObject* self, PyObject *arg, PyObject *keywords);
 static PyObject* getPermutationBruteForce(PyObject* self, PyObject *arg, PyObject *keywords);
 static PyObject* fixPermutationSimple(PyObject* self, PyObject *arg, PyObject *keywords);
-
+static PyObject* validatePermutation(PyObject* self, PyObject *arg, PyObject *keywords);
 
 //  Python Interface
 static char function_docstring_1[] =
@@ -34,6 +34,8 @@ static char function_docstring_4[] =
     "get_permutation_brute(distance_table, symbols)\n\n get permutation";
 static char function_docstring_5[] =
     "fix_permutation(distance_table, permutation, symbols)\n\n get permutation";
+static char function_docstring_6[] =
+    "validate_permutation(permutation, order, determinant)\n\n check is permutation is valid";
 
 
 static PyMethodDef extension_funcs[] = {
@@ -42,7 +44,7 @@ static PyMethodDef extension_funcs[] = {
     {"get_permutation_annealing", (PyCFunction)getPermutationAnnealing, METH_VARARGS|METH_KEYWORDS, function_docstring_3},
     {"get_permutation_brute", (PyCFunction)getPermutationBruteForce, METH_VARARGS|METH_KEYWORDS, function_docstring_4},
     {"fix_permutation", (PyCFunction)fixPermutationSimple, METH_VARARGS|METH_KEYWORDS, function_docstring_5},
-
+    {"validate_permutation", (PyCFunction)validatePermutation, METH_VARARGS|METH_KEYWORDS, function_docstring_6},
     {NULL, NULL, 0, NULL}
 };
 
@@ -1003,5 +1005,90 @@ static PyObject* fixPermutationSimple(PyObject* self, PyObject *arg, PyObject *k
 
     return(PyArray_Return(intialPermutation_obj));
 
+    /*
+    // Create list
+    PyObject* python_val = PyList_New(0);
+
+    int value_len;
+    for (int i=0; i<n; i++) {
+        value_len = orbits.orbitsLen[i];
+        if (value_len > 0) PyList_Append(python_val, Py_BuildValue("i", value_len));
+    }
+
+
+    PyObject* python_val = PyList_New(n);
+    for (int i = 0; i < n; i++)
+    {
+        int r = rand() % 100;
+        PyObject* python_int = Py_BuildValue("i", r);
+        PyObject* python_int_2 = Py_BuildValue("i", r+1);
+
+        PyObject* python_inside = PyList_New(2);
+        PyList_SetItem(python_inside, 0, python_int);
+        PyList_SetItem(python_inside, 1, python_int_2);
+
+        PyList_SetItem(python_val, i, python_inside);
+    }
+    */
+
+    //return python_val;
+    // return(PyArray_Return(permutation_obj));
+
+
+}
+
+static PyObject* validatePermutation(PyObject* self, PyObject *arg, PyObject *keywords) {
+
+    //  Interface with Python
+    PyObject *permutation_obj;
+    int order=1;
+    int determinant=1;
+
+    static char *kwlist[] = {"permutation", "order", "determinant", NULL};
+    if (!PyArg_ParseTupleAndKeywords(arg, keywords, "O|ii", kwlist, &permutation_obj, &order, &determinant))  return NULL;
+
+    PyObject *permutationArray = PyArray_FROM_OTF(permutation_obj, NPY_INT, NPY_IN_ARRAY);
+
+    if (permutationArray == NULL) {
+        Py_XDECREF(permutationArray);
+        return NULL;
+    }
+
+    int *perm = (int*)PyArray_DATA(permutationArray);
+    int  n = (int)PyArray_DIM(permutationArray, 0);
+
+    // initialize orbits
+    OrbitsData orbits;
+    orbits.orbitsMatrix = malloc(sizeof(int)*n*n);
+    orbits.orbitsLen = malloc(sizeof(int)*n);
+    orbits.numRows = n;
+    orbits.numColumns = n;
+
+    perm2orbit(perm, orbits);
+    // printMatrix(orbits);
+
+    int value_len;
+    for (int i=0; i<n; i++) {
+        value_len = orbits.orbitsLen[i];
+        if (value_len > 0){
+            if (value_len == 1) continue;
+            if (value_len == order) continue;
+            if (determinant < 0){
+                if (value_len == 2) continue;
+                if (value_len == 2 * order) continue;
+            }
+
+            // Free memory
+            free(orbits.orbitsMatrix);
+            free(orbits.orbitsLen);
+            Py_RETURN_FALSE;
+        }
+    };
+
+    // Free memory
+    free(orbits.orbitsMatrix);
+    free(orbits.orbitsLen);
+
+    Py_RETURN_TRUE;
 }
 
