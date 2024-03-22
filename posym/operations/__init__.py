@@ -54,22 +54,6 @@ def cache_permutation(func):
     return wrapper_cache
 
 
-def cache_permutation_new(func):
-    cache_dict = {}
-
-    def wrapper_cache(self, permutation_set, symbols):
-        perm_tuple = tuple([tuple(p) for p in permutation_set.values()])
-        symbols_tuple = tuple(symbols)
-
-        hash_key = (perm_tuple, symbols_tuple)
-        if hash_key in cache_dict:
-            return cache_dict[hash_key]
-
-        cache_dict[hash_key] = func(self, permutation_set, symbols)
-        return cache_dict[hash_key]
-
-    return wrapper_cache
-
 @cache_permutation
 def get_permutation_aprox(operation, coordinates, symbols, order):
 
@@ -126,7 +110,6 @@ class Operation:
     def set_permutation(self, permutation):
         self._permutation = permutation
 
-    # @cache_permutation_new
     def set_permutation_set(self, permutation_set, symbols, ignore_compatibility=False):
 
         def apply_op(permut, base):
