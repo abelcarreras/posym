@@ -92,10 +92,14 @@ class Operation:
         self._determinant = 1
         self._gen_rep = []
         self._permutation = None
+        self._hash = None
 
     def __hash__(self):
-        vector = np.round(np.array(self.matrix_representation).flatten(), decimals=6)
-        return hash(np.array(vector * 1e5, dtype=int).tobytes())
+        if self._hash is None:
+            vector = np.round(np.array(self.matrix_representation).flatten(), decimals=6)
+            self._hash = hash(np.array(vector * 1e5, dtype=int).tobytes())
+
+        return self._hash
 
     def __eq__(self, other):
         return hash(self) == hash(other)
