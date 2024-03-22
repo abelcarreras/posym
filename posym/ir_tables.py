@@ -75,36 +75,25 @@ class CharTable(pd.DataFrame):
         if 'all_operations' in self.attrs:
             return self.attrs['all_operations']
 
-        """
-        print('generators: ', self.generators)
-        print('operations: ', self.operations)
-
-        print('\ngenerators')
-        for op in self.generators:
-            try:
-                print('connect: ', op.label, op.axis, op.order, op.exp)
-            except:
-                try:
-                    print('connect: ', op.label, op.axis)
-                except:
-                    print('connect: ', op.label)
-
-        print('\nOperators in table')
-        for op in self.operations:
-            print(op)
-        print('\n')
-        """
-
         # generate all operations of the group and store its relation in connection
-        def do_loop(opt_list, opi):
+        def add_layer(opt_list, opi):
             for gen_op in self.generators:
                 op_p = gen_op * opi
                 if not op_p in opt_list:
                     opt_list.append(op_p)
-                    do_loop(opt_list, op_p)
+
+        def generate_operations(opt_list):
+
+            while True:
+                list_ini = list(opt_list)
+                for op in opt_list:
+                    add_layer(opt_list, op)
+
+                if len(list_ini) == len(opt_list):
+                    break
 
         opt_list = [self.operations[0]]
-        do_loop(opt_list, self.operations[0])
+        generate_operations(opt_list)
 
         """
         print('n_operations:', len(opt_list))
@@ -141,7 +130,6 @@ class CharTable(pd.DataFrame):
             for op in opt_list:
                 if op_ref == op:
                     op_ref._gen_rep = op._gen_rep
-
 
         self.attrs['all_operations'] = operation_dict
 
