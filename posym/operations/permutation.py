@@ -75,22 +75,37 @@ def generate_permutation_set(generators, symbols):
 
     n_atoms = len(symbols)
 
-    def gen_perm(n_atoms, gen):
+    def symbols_compatible(len_orbits):
+        val = 1
+        for lo in len_orbits:
+            val *= len(np.unique(np.array(symbols)[lo]))
+        if val == 1:
+            return True
+        return False
+
+    def gen_perm(gen):
         order = gen._order
         determinant = gen._determinant
         for p in permutations(range(n_atoms)):
-            len_orbits = Permutation(p).len_orbits()
+            p_object = Permutation(p)
+            len_orbits = p_object.len_orbits()
+            orbits = p_object.get_orbits()
+
+            # check symbols restriction
+            if not symbols_compatible(orbits):
+                continue
 
             orbit_mod = np.ones_like(len_orbits)
             orbit_mod = np.multiply(orbit_mod, np.mod(order, len_orbits))
 
             if determinant < 0:
-                orbit_mod = np.multiply(orbit_mod, np.mod(2, len_orbits))
                 orbit_mod = np.multiply(orbit_mod, np.mod(2 * order, len_orbits))
+                if order != 2:
+                    orbit_mod = np.multiply(orbit_mod, np.mod(2, len_orbits))
 
             if np.sum(orbit_mod) == 0:
                 yield p
 
     # for perm_set in product(*gen_perm_list):
-    for perm_set in product(*[gen_perm(n_atoms, gen) for gen in generators]):
+    for perm_set in product(*[gen_perm(gen) for gen in generators]):
         yield {k: pi for k, pi in zip(generators, perm_set)}

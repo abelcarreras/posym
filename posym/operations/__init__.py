@@ -145,20 +145,17 @@ class Operation:
             return True
 
         len_orbits = Permutation(permutation).len_orbits()
-        if sum(np.mod(self._order, len_orbits)) == 0:
-            self._permutation = permutation
-            return True
+        vector = np.ones_like(len_orbits)
+        vector = np.multiply(vector, np.mod(self._order, len_orbits))
 
         if self._determinant < 0:
-            allowed_orbits = [2, self._order, self._order * 2]
+            vector = np.multiply(vector, np.mod(self._order*2, len_orbits))
+            if self._order != 2:
+                vector = np.multiply(vector, np.mod(2, len_orbits))
 
-            vector = np.ones_like(len_orbits)
-            for o in np.unique(allowed_orbits):
-                vector = np.multiply(vector, np.mod(o, len_orbits))
-
-            if np.sum(vector) == 0:
-                self._permutation = permutation
-                return True
+        if np.sum(vector) == 0:
+            self._permutation = permutation
+            return True
 
         return None
 
