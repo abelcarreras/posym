@@ -163,8 +163,7 @@ class SymmetryMolecule(SymmetryObject):
 
         if not self.check_permutation_coherence and not collapse_limit(self.symmetrized_coordinates):
             import warnings
-            warnings.warn('Incoherence found in symmetrized structure.\n'
-                          'Geometric measure and group orientation may be incorrect.\n')
+            warnings.warn('Incoherence found in symmetrized structure. Symmetry measure may be incorrect')
 
         super().__init__(group, total_state)
 
