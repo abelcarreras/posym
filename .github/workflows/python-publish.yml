@@ -62,13 +62,13 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.4.0
         env:
-          CIBW_BEFORE_BUILD: pip install numpy==1.19.5
+          CIBW_BEFORE_BUILD: pip install numpy==1.19.5 setuptools distutils
           CIBW_BUILD: cp38-*
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.4.0
         env:
-          CIBW_BEFORE_BUILD: pip install numpy==1.21.6
+          CIBW_BEFORE_BUILD: pip install numpy==1.21.6 setuptools distutils
           CIBW_BUILD: cp39-* cp310-* cp311-*
           CIBW_ARCHS_MACOS: x86_64 universal2
 
