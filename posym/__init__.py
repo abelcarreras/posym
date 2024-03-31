@@ -6,10 +6,13 @@ from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from posym.config import Configuration
 from posym.tools import uniform_euler_scan, collapse_limit
+from posym.permutation import generate_permutation_set
+from posym.permutation.hungarian import get_permutation_hungarian
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import numpy as np
 import pandas as pd
+import warnings
 
 
 cache_orientation = {}
@@ -126,7 +129,7 @@ class SymmetryMolecule(SymmetryObject):
     """
     Symmetry of molecular geometry
     """
-    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None):
+    def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None, permutation_set=None):
         """
 
         :param group: symmetry point group
@@ -137,7 +140,7 @@ class SymmetryMolecule(SymmetryObject):
         :param center: center of symmetry group [x, y, z]
         """
 
-        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles, permutation_set=permutation_set)
 
         if total_state is None:
             # m = self.measure_pos
@@ -162,12 +165,11 @@ class SymmetryMolecule(SymmetryObject):
             total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
 
         if not self.check_permutation_coherence and not collapse_limit(self.symmetrized_coordinates):
-            import warnings
             warnings.warn('Incoherence found in symmetrized structure. Symmetry measure may be incorrect')
 
         super().__init__(group, total_state)
 
-    def _setup_structure(self, coordinates, symbols, group, center, orientation_angles):
+    def _setup_structure(self, coordinates, symbols, group, center, orientation_angles, permutation_set=None):
 
         conf = Configuration()
 
@@ -187,6 +189,11 @@ class SymmetryMolecule(SymmetryObject):
             self._angles = self.get_orientation(fast_optimization=conf.fast_optimization, scan_step=conf.scan_steps)
         else:
             self._angles = orientation_angles
+
+        # manual permutation
+        if permutation_set is not None:
+            self._permutation_set[tuple(orientation_angles)] = {gen: perm for gen, perm in
+                                                                zip(self._pg.generators,permutation_set)}
 
         self._generate_permutation_set(self._angles)
 
@@ -275,7 +282,7 @@ class SymmetryMolecule(SymmetryObject):
         return operations_list
 
     def print_operations_info(self):
-        from posym.operations.permutation import Permutation
+        from posym.permutation import Permutation
 
         print('\nOperations list (molecule orientation)'
               '\n--------------------------------------')
@@ -303,14 +310,6 @@ class SymmetryMolecule(SymmetryObject):
 
     def _generate_permutation_set(self, angles, force_reset=False):
 
-        from posym.operations.permutation import generate_permutation_set
-        from posym.operations import get_permutation_aprox
-
-        conf = Configuration()
-        use_approx = True
-        if conf.algorithm == 'exact':
-            use_approx = False
-
         rotmol = R.from_euler('zyx', angles, degrees=True)
         dict_key = tuple(angles)
 
@@ -320,16 +319,16 @@ class SymmetryMolecule(SymmetryObject):
                 self._permutation_set[dict_key] = next(generate_permutation_set(self._pg.generators, self._symbols))
                 return
 
-            # approximations
-            if use_approx:
+            # Hungarian algorithm (approximated)
+            if Configuration().algorithm == 'hungarian':
                 permutation_set = {}
                 for gen in self._pg.generators:
                     rot_coor = rotmol.inv().apply(self._coordinates)
-                    permutation_set[gen] = get_permutation_aprox(gen.matrix_representation, rot_coor, self._symbols, gen._order)
+                    permutation_set[gen] = get_permutation_hungarian(gen.matrix_representation, rot_coor, self._symbols)
                 self._permutation_set[dict_key] = permutation_set
 
-            else:
-                # exact
+            # Brute force algorithm (exact)
+            elif Configuration().algorithm == 'exact':
                 ir_rep_diff_max = -100
 
                 class NotValidPermutation(Exception): pass
@@ -357,6 +356,8 @@ class SymmetryMolecule(SymmetryObject):
 
                     except NotValidPermutation:
                         continue
+            else:
+                raise Exception('Permutation algorithm not recognized ')
 
         for operation in self._pg.operations:
             operation.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)

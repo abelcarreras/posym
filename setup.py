@@ -33,7 +33,7 @@ else:
                           include_dirs=include_dirs_numpy,
                           sources=['c/integrals.c'])
 
-permutations = Extension('posym.permutations',
+permutations = Extension('posym.permutation.permutations',
                          extra_compile_args=['-std=c99'],
                          include_dirs=include_dirs_numpy,
                          sources=['c/permutations.c'])

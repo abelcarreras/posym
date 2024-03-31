@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 import math
 import itertools
-from posym.integrals import product_poly_coeff, gaussian_integral, gaussian_integral_2
+from posym.integrals import product_poly_coeff, gaussian_integral, gaussian_integral_2 # noqa
 from scipy.special import comb
 
 

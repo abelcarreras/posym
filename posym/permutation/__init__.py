@@ -26,10 +26,8 @@ class Permutation:
                 if not p in track_pos:
                     track_pos.append(p)
                     orbit = [p]
-                    # print('perm', p)
                     while orbit[0] != self._permutation[p]:
                         p = self._permutation[p]
-                        # print('p', p)
                         track_pos.append(p)
                         orbit.append(p)
                     self._orbits.append(orbit)
