@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.8', '3.11', '3.12' ]
-
+    if: github.ref != 'refs/heads/test_wheels'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -71,7 +71,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_BUILD: pip install numpy==1.21.6 setuptools
+          CIBW_BEFORE_BUILD: pip install numpy==1.21.1 setuptools
           CIBW_BUILD: cp39-* cp310-* cp311-*
           CIBW_ARCHS_MACOS: x86_64 universal2
 
