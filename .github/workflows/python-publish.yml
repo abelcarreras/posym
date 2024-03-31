@@ -82,7 +82,7 @@ jobs:
 
   build_sdist:
     name: Build source distribution
-    needs: [ test_code ]
+    # needs: [ test_code ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/test_wheels'
     steps:
