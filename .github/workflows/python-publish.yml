@@ -104,8 +104,9 @@ jobs:
       - name: Build sdist
         run: |
           python setup.py sdist
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
+          name: cibw-sdist
           path: dist/*.tar.gz
 
   upload_pypi:
@@ -117,10 +118,12 @@ jobs:
       # alternatively, to publish when a GitHub Release is created, use the following rule:
       # if: github.event_name == 'release' && github.event.action == 'published'
       steps:
-        - uses: actions/download-artifact@v2
+        - uses: actions/download-artifact@v4
           with:
-            name: artifact
+            # unpacks all CIBW artifacts into dist/
+            pattern: cibw-*
             path: dist
+            merge-multiple: true
 
         - uses: pypa/gh-action-pypi-publish@v1.4.2
           with:
