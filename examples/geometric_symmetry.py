@@ -14,8 +14,9 @@ warnings.simplefilter("ignore", UserWarning)
 
 # define a large pre-scan step to increase speed in expense of accuracy
 Configuration().scan_steps = 50
+Configuration().algorithm = 'exact' # hungarian
 
-d_range = np.linspace(0, 5.0, 50)
+d_range = np.linspace(0, 5.0, 20)
 
 for group in ['Ci', 'Cs', 'C3h', 'Td']:
 

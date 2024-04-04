@@ -4,8 +4,7 @@ from posym.config import Configuration, CustomPerm
 
 # posim configuration
 Configuration().scan_steps = 10
-Configuration().fast_optimization = False
-Configuration().algorithm = 'brute_force'
+Configuration().algorithm = 'exact' # hungarian
 
 # custom permutation
 CustomPerm().perm_list = [[2, 0, 3, 1],  # used in calculation
