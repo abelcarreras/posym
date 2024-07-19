@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include <numpy/arrayobject.h>
 
 #if defined(ENABLE_OPENMP)
 #include <omp.h>
 #endif
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 // Support functions
 int dim3to1(int n1, int n2, int n3, int dim);
@@ -203,8 +204,8 @@ static PyObject* PolyProduct(PyObject* self, PyObject *arg, PyObject *keywords)
     static char *kwlist[] = {"polyCoeff", "polyCoeff2", "max_lim", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "OO|O", kwlist, &polyCoeff_obj, &polyCoeff2_obj, &maxLim_obj))  return NULL;
 
-    PyObject *polyCoeffArray = PyArray_FROM_OTF(polyCoeff_obj, NPY_DOUBLE, NPY_IN_ARRAY);
-    PyObject *polyCoeff2Array = PyArray_FROM_OTF(polyCoeff2_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *polyCoeffArray = PyArray_FROM_OTF(polyCoeff_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyObject *polyCoeff2Array = PyArray_FROM_OTF(polyCoeff2_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
     if (polyCoeffArray == NULL || polyCoeff2Array == NULL ) {
         Py_XDECREF(polyCoeffArray);
@@ -212,11 +213,11 @@ static PyObject* PolyProduct(PyObject* self, PyObject *arg, PyObject *keywords)
         return NULL;
     }
 
-    double *polyCoeff    = (double*)PyArray_DATA(polyCoeffArray);
-    double *polyCoeff2   = (double*)PyArray_DATA(polyCoeff2Array);
+    double *polyCoeff    = (double*)PyArray_DATA((PyArrayObject *)polyCoeffArray);
+    double *polyCoeff2   = (double*)PyArray_DATA((PyArrayObject *)polyCoeff2Array);
 
-    int  maxLim1 = (int)PyArray_DIM(polyCoeffArray, 0);
-    int  maxLim2 = (int)PyArray_DIM(polyCoeff2Array, 0);
+    npy_intp  maxLim1 = PyArray_DIM((PyArrayObject *)polyCoeffArray, 0);
+    npy_intp  maxLim2 = PyArray_DIM((PyArrayObject *)polyCoeff2Array, 0);
 
     if (maxLim_obj == Py_None){
         maxLim = maxLim1 + maxLim2;
@@ -278,8 +279,8 @@ static PyObject* GaussianIntegral(PyObject* self, PyObject *arg, PyObject *keywo
     static char *kwlist[] = {"alpha", "center", "poly_coeff", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "dOO", kwlist, &alpha, &center_obj, &polyCoeff_obj))  return NULL;
 
-    PyObject *polyCoeffArray = PyArray_FROM_OTF(polyCoeff_obj, NPY_DOUBLE, NPY_IN_ARRAY);
-    PyObject *centerArray = PyArray_FROM_OTF(center_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *polyCoeffArray = PyArray_FROM_OTF(polyCoeff_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyObject *centerArray = PyArray_FROM_OTF(center_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
     if (polyCoeffArray == NULL || centerArray == NULL ) {
         Py_XDECREF(polyCoeffArray);
@@ -287,10 +288,10 @@ static PyObject* GaussianIntegral(PyObject* self, PyObject *arg, PyObject *keywo
         return NULL;
     }
 
-    double *polyCoeff    = (double*)PyArray_DATA(polyCoeffArray);
-    double *center   = (double*)PyArray_DATA(centerArray);
+    double *polyCoeff = (double*)PyArray_DATA((PyArrayObject *)polyCoeffArray);
+    double *center   = (double*)PyArray_DATA((PyArrayObject *)centerArray);
 
-    int maxLim = (int)PyArray_DIM(polyCoeffArray, 0);
+    npy_intp maxLim = PyArray_DIM((PyArrayObject *)polyCoeffArray, 0);
 
     // Dot product center
     double dot_center = 0.0;
@@ -382,8 +383,8 @@ static PyObject* GaussianIntegral2(PyObject* self, PyObject *arg, PyObject *keyw
     static char *kwlist[] = {"alpha", "center", "poly_coeff", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "dOO", kwlist, &alpha, &center_obj, &polyCoeff_obj))  return NULL;
 
-    PyObject *polyCoeffArray = PyArray_FROM_OTF(polyCoeff_obj, NPY_DOUBLE, NPY_IN_ARRAY);
-    PyObject *centerArray = PyArray_FROM_OTF(center_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *polyCoeffArray = PyArray_FROM_OTF(polyCoeff_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyObject *centerArray = PyArray_FROM_OTF(center_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
     if (polyCoeffArray == NULL || centerArray == NULL ) {
         Py_XDECREF(polyCoeffArray);
@@ -391,10 +392,10 @@ static PyObject* GaussianIntegral2(PyObject* self, PyObject *arg, PyObject *keyw
         return NULL;
     }
 
-    double *polyCoeff    = (double*)PyArray_DATA(polyCoeffArray);
-    double *center   = (double*)PyArray_DATA(centerArray);
+    double *polyCoeff    = (double*)PyArray_DATA((PyArrayObject *)polyCoeffArray);
+    double *center   = (double*)PyArray_DATA((PyArrayObject *)centerArray);
 
-    int maxLim = (int)PyArray_DIM(polyCoeffArray, 0);
+    npy_intp maxLim = PyArray_DIM((PyArrayObject *)polyCoeffArray, 0);
     int n;
 
     struct expContainer intX, intY, intZ;
