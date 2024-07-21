@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include <numpy/arrayobject.h>
 #include <time.h>
 
 #if defined(ENABLE_OPENMP)
 #include <omp.h>
 #endif
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 // Support functions
 double evaluationFast(int i, int j, double* row1, double* row2);
@@ -104,8 +106,8 @@ static PyObject* getCrossDistanceTable(PyObject* self, PyObject *arg, PyObject *
     static char *kwlist[] = {"coordinates", "operated_coor", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "OO", kwlist, &coordinates_obj, &operatedCoor_obj))  return NULL;
 
-    PyObject *coordinatesArray = PyArray_FROM_OTF(coordinates_obj, NPY_DOUBLE, NPY_IN_ARRAY);
-    PyObject *operatedCoorArray = PyArray_FROM_OTF(operatedCoor_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *coordinatesArray = PyArray_FROM_OTF(coordinates_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyObject *operatedCoorArray = PyArray_FROM_OTF(operatedCoor_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
     if (coordinatesArray == NULL || operatedCoorArray == NULL ) {
         Py_XDECREF(coordinatesArray);
@@ -113,13 +115,13 @@ static PyObject* getCrossDistanceTable(PyObject* self, PyObject *arg, PyObject *
         return NULL;
     }
 
-    double *coordinates    = (double*)PyArray_DATA(coordinatesArray);
-    double *operatedCoor   = (double*)PyArray_DATA(operatedCoorArray);
+    double *coordinates    = (double*)PyArray_DATA((PyArrayObject *)coordinatesArray);
+    double *operatedCoor   = (double*)PyArray_DATA((PyArrayObject *)operatedCoorArray);
 
-    int  nCoor = (int)PyArray_DIM(coordinatesArray, 0);
-    int  nCoor2 = (int)PyArray_DIM(operatedCoorArray, 0);
-    int  nDim = (int)PyArray_DIM(coordinatesArray, 1);
-    int  nDim2 = (int)PyArray_DIM(operatedCoorArray, 1);
+    npy_intp  nCoor = PyArray_DIM((PyArrayObject *)coordinatesArray, 0);
+    npy_intp  nCoor2 = PyArray_DIM((PyArrayObject *)operatedCoorArray, 0);
+    npy_intp  nDim = PyArray_DIM((PyArrayObject *)coordinatesArray, 1);
+    npy_intp  nDim2 = PyArray_DIM((PyArrayObject *)operatedCoorArray, 1);
 
     if (nDim != nDim2 || nCoor != nCoor2){
         Py_DECREF(coordinatesArray);
@@ -133,7 +135,7 @@ static PyObject* getCrossDistanceTable(PyObject* self, PyObject *arg, PyObject *
 
     npy_intp dims[]={nCoor, nCoor2};
     diffCoor_obj=(PyArrayObject *) PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-    double *diffCoor = (double*)PyArray_DATA(diffCoor_obj);
+    double *diffCoor = (double*)PyArray_DATA((PyArrayObject *)diffCoor_obj);
 
     int ij, ik, jk;
 
@@ -513,7 +515,7 @@ void updatePerm(OrbitsData orbits, int exponent) {
     int sumTot = multiOrbitsNum + multiOrbitsNum + singleOrbitsNum;
     double pMix = (1.0 * multiOrbitsNum)/sumTot;
     double pJoin = (1.0 * singleOrbitsNum)/sumTot;
-    double pBreak = (1.0 * multiOrbitsNum)/sumTot;
+    //double pBreak = (1.0 * multiOrbitsNum)/sumTot;
     // printf("Probabilities: %f %f %f\n", pMix, pJoin, pBreak);
     // printf("pjoin %i | %i\n", singleOrbitsNum, singleOrbitsNum);
 
@@ -591,8 +593,8 @@ static PyObject* getPermutationSimple(PyObject* self, PyObject *arg, PyObject *k
     static char *kwlist[] = {"distance_table", "symbols", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "OO", kwlist, &distanceTable_obj, &symbols_obj))  return NULL;
 
-    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_IN_ARRAY);
-    PyObject *symbolsArray = PyArray_FROM_OTF(symbols_obj, NPY_INT, NPY_IN_ARRAY);
+    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyObject *symbolsArray = PyArray_FROM_OTF(symbols_obj, NPY_INT, NPY_ARRAY_IN_ARRAY);
 
     if (distanceTableArray == NULL ) {
         Py_XDECREF(distanceTableArray);
@@ -600,12 +602,12 @@ static PyObject* getPermutationSimple(PyObject* self, PyObject *arg, PyObject *k
         return NULL;
     }
 
-    double *distanceTable = (double*)PyArray_DATA(distanceTableArray);
-    int* symbols = (int*)PyArray_DATA(symbolsArray);
+    double *distanceTable = (double*)PyArray_DATA((PyArrayObject *)distanceTableArray);
+    int* symbols = (int*)PyArray_DATA((PyArrayObject *)symbolsArray);
 
-    int  nCoor1 = (int)PyArray_DIM(distanceTableArray, 0);
-    int  nCoor2 = (int)PyArray_DIM(distanceTableArray, 1);
-    int  n = (int)PyArray_DIM(symbolsArray, 0);
+    npy_intp  nCoor1 = PyArray_DIM((PyArrayObject *)distanceTableArray, 0);
+    npy_intp  nCoor2 = PyArray_DIM((PyArrayObject *)distanceTableArray, 1);
+    npy_intp  n = PyArray_DIM((PyArrayObject *)symbolsArray, 0);
 
     if (n != nCoor1 || n != nCoor2){
         Py_DECREF(distanceTableArray);
@@ -617,7 +619,7 @@ static PyObject* getPermutationSimple(PyObject* self, PyObject *arg, PyObject *k
     PyArrayObject *perm_obj;
     npy_intp dims[]={n};
     perm_obj=(PyArrayObject *)PyArray_SimpleNew(1, dims, NPY_INT);
-    int *perm = (int*)PyArray_DATA(perm_obj);
+    int *perm = (int*)PyArray_DATA((PyArrayObject *)perm_obj);
 
     for (int i=0; i<n; i++)perm[i] = i;
 
@@ -673,18 +675,18 @@ static PyObject* getPermutationAnnealing(PyObject* self, PyObject *arg, PyObject
     static char *kwlist[] = {"distance_table", "order", "exp", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "Oi|i", kwlist, &distanceTable_obj, &order, &exponent))  return NULL;
 
-    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
     if (distanceTableArray == NULL ) {
         Py_XDECREF(distanceTableArray);
         return NULL;
     }
 
-    double *distanceTable = (double*)PyArray_DATA(distanceTableArray);
+    double *distanceTable = (double*)PyArray_DATA((PyArrayObject *)distanceTableArray);
 
-    int  nCoor1 = (int)PyArray_DIM(distanceTableArray, 0);
-    int  nCoor2 = (int)PyArray_DIM(distanceTableArray, 1);
-    int  n = (int)PyArray_DIM(distanceTableArray, 0);
+    npy_intp  nCoor1 = PyArray_DIM((PyArrayObject *)distanceTableArray, 0);
+    npy_intp  nCoor2 = PyArray_DIM((PyArrayObject *)distanceTableArray, 1);
+    npy_intp  n = PyArray_DIM((PyArrayObject *)distanceTableArray, 0);
 
     if (n != nCoor1 || n != nCoor2){
         Py_DECREF(distanceTableArray);
@@ -695,7 +697,7 @@ static PyObject* getPermutationAnnealing(PyObject* self, PyObject *arg, PyObject
     PyArrayObject *perm_obj;
     npy_intp dims[]={n};
     perm_obj=(PyArrayObject *)PyArray_SimpleNew(1, dims, NPY_INT);
-    int *perm = (int*)PyArray_DATA(perm_obj);
+    int *perm = (int*)PyArray_DATA((PyArrayObject *)perm_obj);
 
     srand(time(NULL));   // Initialization, should only be called once.
 
@@ -849,18 +851,18 @@ static PyObject* getPermutationBruteForce(PyObject* self, PyObject *arg, PyObjec
     static char *kwlist[] = {"distance_table", "order", "exp", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "Oi|i", kwlist, &distanceTable_obj, &order, &exponent))  return NULL;
 
-    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
     if (distanceTableArray == NULL ) {
         Py_XDECREF(distanceTableArray);
         return NULL;
     }
 
-    double *distanceTable = (double*)PyArray_DATA(distanceTableArray);
+    double *distanceTable = (double*)PyArray_DATA((PyArrayObject *)distanceTableArray);
 
-    int  nCoor1 = (int)PyArray_DIM(distanceTableArray, 0);
-    int  nCoor2 = (int)PyArray_DIM(distanceTableArray, 1);
-    int  n = (int)PyArray_DIM(distanceTableArray, 0);
+    npy_intp  nCoor1 = PyArray_DIM((PyArrayObject *)distanceTableArray, 0);
+    npy_intp  nCoor2 = PyArray_DIM((PyArrayObject *)distanceTableArray, 1);
+    npy_intp  n = PyArray_DIM((PyArrayObject *)distanceTableArray, 0);
 
     if (n != nCoor1 || n != nCoor2){
         Py_DECREF(distanceTableArray);
@@ -871,7 +873,7 @@ static PyObject* getPermutationBruteForce(PyObject* self, PyObject *arg, PyObjec
     PyArrayObject *perm_obj;
     npy_intp dims[]={n};
     perm_obj=(PyArrayObject *)PyArray_SimpleNew(1, dims, NPY_INT);
-    int *perm = (int*)PyArray_DATA(perm_obj);
+    int *perm = (int*)PyArray_DATA((PyArrayObject *)perm_obj);
 
     srand(time(NULL));   // Initialization, should only be called once.
 
@@ -942,8 +944,8 @@ static PyObject* fixPermutationSimple(PyObject* self, PyObject *arg, PyObject *k
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "OOi|i", kwlist, &distanceTable_obj, &intialPermutation_obj,
     &order, &exponent))  return NULL;
 
-    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_IN_ARRAY);
-    PyObject *permutationArray = PyArray_FROM_OTF(intialPermutation_obj, NPY_INT, NPY_IN_ARRAY);
+    PyObject *distanceTableArray = PyArray_FROM_OTF(distanceTable_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyObject *permutationArray = PyArray_FROM_OTF(intialPermutation_obj, NPY_INT, NPY_ARRAY_IN_ARRAY);
 
     if (distanceTableArray == NULL || permutationArray == NULL) {
         Py_XDECREF(distanceTableArray);
@@ -951,12 +953,12 @@ static PyObject* fixPermutationSimple(PyObject* self, PyObject *arg, PyObject *k
         return NULL;
     }
 
-    double *distanceTable = (double*)PyArray_DATA(distanceTableArray);
-    int *perm = (double*)PyArray_DATA(permutationArray);
+    //double *distanceTable = (double*)PyArray_DATA((PyArrayObject *)distanceTableArray);
+    int *perm = (int*)PyArray_DATA((PyArrayObject *)permutationArray);
 
-    int  nCoor1 = (int)PyArray_DIM(distanceTableArray, 0);
-    int  nCoor2 = (int)PyArray_DIM(distanceTableArray, 1);
-    int  n = (int)PyArray_DIM(permutationArray, 0);
+    npy_intp  nCoor1 = PyArray_DIM((PyArrayObject *)distanceTableArray, 0);
+    npy_intp  nCoor2 = PyArray_DIM((PyArrayObject *)distanceTableArray, 1);
+    npy_intp  n = PyArray_DIM((PyArrayObject *)permutationArray, 0);
 
     if (n != nCoor1 || n != nCoor2){
         Py_DECREF(distanceTableArray);
@@ -1003,7 +1005,7 @@ static PyObject* fixPermutationSimple(PyObject* self, PyObject *arg, PyObject *k
     // Free python memory
     Py_DECREF(distanceTableArray);
 
-    return(PyArray_Return(intialPermutation_obj));
+    return(PyArray_Return((PyArrayObject *)intialPermutation_obj));
 
     /*
     // Create list
@@ -1047,15 +1049,15 @@ static PyObject* validatePermutation(PyObject* self, PyObject *arg, PyObject *ke
     static char *kwlist[] = {"permutation", "order", "determinant", NULL};
     if (!PyArg_ParseTupleAndKeywords(arg, keywords, "O|ii", kwlist, &permutation_obj, &order, &determinant))  return NULL;
 
-    PyObject *permutationArray = PyArray_FROM_OTF(permutation_obj, NPY_INT, NPY_IN_ARRAY);
+    PyObject *permutationArray = PyArray_FROM_OTF(permutation_obj, NPY_INT, NPY_ARRAY_IN_ARRAY);
 
     if (permutationArray == NULL) {
         Py_XDECREF(permutationArray);
         return NULL;
     }
 
-    int *perm = (int*)PyArray_DATA(permutationArray);
-    int  n = (int)PyArray_DIM(permutationArray, 0);
+    int *perm = (int*)PyArray_DATA((PyArrayObject *)permutationArray);
+    npy_intp  n = PyArray_DIM((PyArrayObject *)permutationArray, 0);
 
     // initialize orbits
     OrbitsData orbits;
