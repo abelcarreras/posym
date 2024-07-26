@@ -6,7 +6,7 @@ from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from posym.config import Configuration
 from posym.tools import uniform_euler_scan, collapse_limit
-from posym.permutation import generate_permutation_set
+from posym.permutation import generate_permutation_set, PermutationSet
 from posym.permutation.hungarian import get_permutation_hungarian
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
@@ -176,7 +176,7 @@ class SymmetryMolecule(SymmetryObject):
         self._coordinates = np.array(coordinates)
         self._symbols = symbols
         self._pg = PointGroup(group)
-        self._permutation_set = {}
+        self._permutation_set = PermutationSet()
 
         if '_center' not in self.__dir__():
             self._center = center
@@ -185,15 +185,15 @@ class SymmetryMolecule(SymmetryObject):
 
             self._coordinates = np.array([c - self._center for c in self._coordinates])
 
+        # manual permutation
+        if permutation_set is not None:
+            self._permutation_set['all'] = {gen: perm for gen, perm in
+                                            zip(self._pg.generators,permutation_set)}
+
         if orientation_angles is None:
             self._angles = self.get_orientation(fast_optimization=conf.fast_optimization, scan_step=conf.scan_steps)
         else:
             self._angles = orientation_angles
-
-        # manual permutation
-        if permutation_set is not None:
-            self._permutation_set[tuple(self._angles)] = {gen: perm for gen, perm in
-                                                          zip(self._pg.generators,permutation_set)}
 
         self._generate_permutation_set(self._angles)
 

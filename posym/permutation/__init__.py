@@ -107,3 +107,55 @@ def generate_permutation_set(generators, symbols):
     # for perm_set in product(*gen_perm_list):
     for perm_set in product(*[gen_perm(gen) for gen in generators]):
         yield {k: pi for k, pi in zip(generators, perm_set)}
+
+
+class PermutationSet():
+    def __init__(self):
+        self._data = {}
+
+    def __getitem__(self, key):
+        if 'all' in self._data:
+            return self._data['all']
+        return self._data[key]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    def __delitem__(self, key):
+        del self._data[key]
+
+    def __contains__(self, key):
+        return 'all' in self._data or key in self._data
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def keys(self):
+        return self._data.keys()
+
+    def values(self):
+        return self._data.values()
+
+    def items(self):
+        return self._data.items()
+
+    def get(self, key, default=None):
+        if 'all' in self._data:
+            return self._data.get('all', default)
+
+        return self._data.get(key, default)
+
+    def clear(self):
+        self._data.clear()
+
+    def update(self, other):
+        if isinstance(other, PermutationSet):
+            self._data.update(other._data)
+        else:
+            self._data.update(other)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self._data})'
