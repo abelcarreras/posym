@@ -192,8 +192,8 @@ class SymmetryMolecule(SymmetryObject):
 
         # manual permutation
         if permutation_set is not None:
-            self._permutation_set[tuple(orientation_angles)] = {gen: perm for gen, perm in
-                                                                zip(self._pg.generators,permutation_set)}
+            self._permutation_set[tuple(self._angles)] = {gen: perm for gen, perm in
+                                                          zip(self._pg.generators,permutation_set)}
 
         self._generate_permutation_set(self._angles)
 
