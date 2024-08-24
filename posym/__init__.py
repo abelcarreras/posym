@@ -270,6 +270,7 @@ class SymmetryMolecule(SymmetryObject):
 
     def get_oriented_operations(self):
         import copy
+        self._generate_permutation_set(self.orientation_angles)
         rotmol = R.from_euler('zyx', self.orientation_angles, degrees=True)
 
         operations_list = []
@@ -286,7 +287,6 @@ class SymmetryMolecule(SymmetryObject):
 
         print('\nOperations list (molecule orientation)'
               '\n--------------------------------------')
-        self._generate_permutation_set(self._angles)
         for op in self.get_oriented_operations():
             # print('Operation object: ', op)
             print('label:', op.label)
