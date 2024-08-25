@@ -386,7 +386,7 @@ def get_principal_axis_angles(cm_vectors, masses=None):
 
 
 # grid generators
-def uniform_euler_scan(val, step):
+def uniform_euler_scan(step, val=90):
     """
     generates a uniform scan of Euler angles from -val to +val in 3d
 
@@ -394,12 +394,19 @@ def uniform_euler_scan(val, step):
     :param step: step of the scan
     :return: list of 3 Euler angles
     """
-    ranges = np.arange(-val, val + step, step)
-    for angles in itertools.product(ranges, ranges, ranges):
+    ranges = np.arange(-val, val + step/2, step)
+    ranges_2 = np.arange(-val*2, val*2 + step/2, step)
+
+    for angles in itertools.product(ranges, ranges, ranges_2):
         yield angles
 
+    for euler_theta in [-90, 0, 90]:
+        for euler_phi in [-90, 0, 90]:
+            for roll in[0, 90, 180]:
+                yield euler_phi, euler_theta, roll
 
-def skewed_euler_scan(val, step):
+
+def skewed_euler_scan(step, val=90):
     """
     generates a skewed scan of Euler angles from -val to +val in 3d.
     This tries to approximate a uniform spherical grid around a point
@@ -415,8 +422,93 @@ def skewed_euler_scan(val, step):
             yield np.array(list(angles_2d) + [angle], dtype=float)
 
 
+def fibonacci_scan(step):
+
+    # Convert angular distance from degrees to radians
+    angular_distance = np.radians(step)
+
+    # Calculate the number of points based on the angular distance
+    # This is an estimate based on the density of points
+    num_points = int(4 * np.pi / (angular_distance ** 2))
+
+    # Ensure num_points is at least 1
+    num_points = max(num_points, 1)
+
+    # Generate points on the sphere using the Fibonacci distribution
+    indices = np.arange(0, num_points, dtype=float) + 0.5
+    phi = np.arccos(1 - 2 * indices / num_points)  # polar angle
+    theta = np.pi * (1 + 5 ** 0.5) * indices  # azimuthal angle
+
+    # Convert spherical coordinates to Cartesian coordinates and then to Euler angles
+    for i in range(num_points):
+
+        x = np.sin(phi[i]) * np.cos(theta[i])
+        y = np.sin(phi[i]) * np.sin(theta[i])
+        z = np.cos(phi[i])
+
+        # Convert Cartesian coordinates to Euler angles (phi, theta) in degrees
+        euler_phi = np.degrees(np.arctan2(y, x))
+        euler_theta = np.degrees(np.arccos(z / np.sqrt(x ** 2 + y ** 2 + z ** 2)))
+
+        for roll in np.arange(0, 180, step):
+            if euler_phi > 0:
+                yield euler_phi, euler_theta, roll
+
+    # extra points
+    for euler_theta in [-90, 0, 90]:
+        for euler_phi in [-90, 0, 90]:
+            for roll in[0, 90, 180]:
+                yield euler_phi, euler_theta, roll
+
+
 def collapse_limit(coordinates, tolerance=1e-5):
     if np.average(np.linalg.norm(coordinates, axis=1)) < tolerance:
         return True
     else:
         return False
+
+
+if __name__ == '__main__':
+    print('len_fib', len(list(fibonacci_scan(10))))
+    print('len_uniform',len(list(uniform_euler_scan(20))))
+    print('len_skewed',len(list(skewed_euler_scan(20))))
+
+
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+
+
+    # Generate the points
+    x = []
+    y = []
+    z = []
+
+    # for phi, theta, roll in uniform_euler_scan(20):
+    for phi, theta, roll in fibonacci_scan(10):
+    # for phi, theta, roll in skewed_euler_scan(20):
+
+        # print(phi, theta)
+        phi = np.deg2rad(phi)
+        theta = np.deg2rad(theta)
+
+        x.append(np.sin(phi) * np.cos(theta))
+        y.append(np.sin(phi) * np.sin(theta))
+        z.append(np.cos(phi))
+
+    # Create a 3D plot
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Scatter plot of the points on the sphere
+    ax.scatter(x, y, z, color='b', s=50)
+
+    # Set plot labels
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+
+    # Set the aspect ratio to be equal, so the sphere is not distorted
+    ax.set_box_aspect([1, 1, 1])
+
+    # Show the plot
+    plt.show()

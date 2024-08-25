@@ -5,7 +5,7 @@ from posym.tools import list_round, get_principal_axis_angles
 from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from posym.config import Configuration
-from posym.tools import uniform_euler_scan, collapse_limit
+from posym.tools import uniform_euler_scan, collapse_limit, fibonacci_scan
 from posym.permutation import generate_permutation_set, PermutationSet
 from posym.permutation.hungarian import get_permutation_hungarian
 from scipy.spatial.transform import Rotation as R
@@ -256,7 +256,7 @@ class SymmetryMolecule(SymmetryObject):
         # preliminary scan
         if guess_angles is None:
             guess_angles = ref_value = None
-            for angles in uniform_euler_scan(90, scan_step):
+            for angles in fibonacci_scan(scan_step):
                 angles -= pai_angles
                 value = optimization_function(angles)
                 if ref_value is None or value < ref_value:

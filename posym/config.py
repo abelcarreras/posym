@@ -13,7 +13,7 @@ class Singleton(type):
 @dataclass(frozen=False)
 class Configuration(metaclass=Singleton):
     fast_optimization: bool = True  # speeds up the optimization by reducing the number of symmetry elements to use
-    scan_steps: int = 20            # number of angle steps to use in the pre-scan in orientation optimization
+    scan_steps: int = 10            # number of angle steps to use in the pre-scan in orientation optimization
     algorithm : str = 'hungarian'   # permutation algorithms: hungarian, exact
 
 
