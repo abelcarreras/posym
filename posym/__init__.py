@@ -189,8 +189,13 @@ class SymmetryMolecule(SymmetryObject):
 
         # manual permutation
         if permutation_set is not None:
+            if len(permutation_set) != len(self._pg.generators):
+                raise Exception('permutation set incorrect')
+            if len(self._symbols) != len(permutation_set[0]):
+                raise Exception('permutation set incorrect')
+
             self._permutation_set['all'] = {gen: perm for gen, perm in
-                                            zip(self._pg.generators,permutation_set)}
+                                            zip(self._pg.generators, permutation_set)}
 
         if orientation_angles is None:
             self._angles = self.get_orientation(fast_optimization=conf.fast_optimization, scan_step=conf.scan_steps)
