@@ -8,6 +8,7 @@ from posym.config import Configuration
 from posym.tools import uniform_euler_scan, collapse_limit, fibonacci_scan
 from posym.permutation import generate_permutation_set, PermutationSet
 from posym.permutation.hungarian import get_permutation_hungarian
+from posym.errors import InvalidRepresentation, IncoherenceWarning
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import numpy as np
@@ -32,7 +33,8 @@ class SymmetryObject:
 
         if isinstance(rep, str):
             if rep not in self._pg.ir_labels:
-                raise Exception('Representation do not match with group\nAvailable: {}'.format(self._pg.ir_labels))
+                raise InvalidRepresentation(rep, self._pg)
+
             self._op_representation = self._pg.ir_table[rep]
             #if normalize:
             #    self._op_representation /= self._pg.ir_table[rep]['E']
@@ -41,7 +43,7 @@ class SymmetryObject:
             if np.all(self._pg.ir_table.sort_index().index == rep.sort_index().index):
                 self._op_representation = rep.reindex(self._pg.ir_table.index)
             else:
-                raise Exception('Representation not in group')
+                raise InvalidRepresentation(rep, self._pg)
 
         if normalize:
             op_rep = np.dot(self._pg.trans_matrix_norm, np.dot(self._pg.trans_matrix_inv, self._op_representation.values))
@@ -165,7 +167,7 @@ class SymmetryMolecule(SymmetryObject):
             total_state = pd.Series(self._operator_measures, index=self._pg.op_labels)
 
         if not self.check_permutation_coherence and not collapse_limit(self.symmetrized_coordinates):
-            warnings.warn('Incoherence found in symmetrized structure. Symmetry measure may be incorrect')
+            warnings.warn('Fail to symmetrize structure. CSM may be incorrect', IncoherenceWarning)
 
         super().__init__(group, total_state)
 
