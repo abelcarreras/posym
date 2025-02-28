@@ -391,8 +391,9 @@ class BasisFunction:
         """
         Get an estimation of the molecular geometry by checking the centers of gaussian functions.
         Different environments (atom types) are distinguished as different gaussian exponents
-        :return: symbols (environments types) and coordinates (gaussian centers)
+        :return: symbols (environments types) and coordinates (gaussian centers) in Angstrom
         """
+        AU_TO_ANGS = 1/1.8897259886
 
         unique_center = np.unique(np.array([p.center for p in self.primitive_gaussians]), axis=0)
         data_dict = {}
@@ -415,7 +416,7 @@ class BasisFunction:
                 symbols_.append('{}'.format(i))
                 coordinates_.append(list(c))
 
-        return symbols_, coordinates_
+        return symbols_, np.array(coordinates_)*AU_TO_ANGS
 
     def global_center(self):
         centers = []
