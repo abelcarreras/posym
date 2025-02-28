@@ -21,6 +21,9 @@ def get_hash(coordinates, symbols, group):
     return hash((np.array2string(coordinates, precision=2), tuple(symbols), group))
 
 
+ANGS_TO_AU = 1.8897259886
+
+
 class SymmetryObject:
     """
     Main symmetry object that abstracts an element in the g-module space
@@ -630,7 +633,7 @@ class SymmetryGaussianLinear(SymmetryMolecule):
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         self._function = function.copy()
-        self._function.apply_translation(-np.array(self._center))
+        self._function.apply_translation(-np.array(self._center)*ANGS_TO_AU)
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
@@ -683,7 +686,7 @@ class SymmetrySingleDeterminant(SymmetryMolecule):
 
         data_set = set(list(alpha_orbitals) + list(beta_orbitals))
         for f in data_set:
-            f.apply_translation(-np.array(self._center))
+            f.apply_translation(-np.array(self._center)*ANGS_TO_AU)
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
@@ -771,7 +774,7 @@ class SymmetryMultiDeterminant(SymmetryMolecule):
         self._setup_structure(coordinates, symbols, group, center, orientation_angles)
 
         for f in orbitals:
-            f.apply_translation(-np.array(self._center))
+            f.apply_translation(-np.array(self._center)*ANGS_TO_AU)
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
