@@ -381,6 +381,10 @@ def get_principal_axis_angles(cm_vectors, masses=None):
     e_values, e_vectors = np.linalg.eigh(inertia_tensor)  # be careful eigenvectors in columns!
     axis_of_inertia = e_vectors.T
 
+    # Ensure right-handed coordinate system (det = +1)
+    if np.linalg.det(axis_of_inertia) < 0:
+        axis_of_inertia[2] *= -1  # Flip one axis to make sure determinant is +1
+
     # return align euler angles
     return R.from_matrix(axis_of_inertia).as_euler('zyx', degrees=True)
 
