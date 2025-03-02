@@ -333,8 +333,8 @@ class PrimitiveGaussian:
 
 class BasisFunction:
     def __init__(self, primitive_gaussians, coefficients, center=None, label=None):
-        primitive_gaussians = deepcopy(primitive_gaussians)
         if center is not None:
+            primitive_gaussians = deepcopy(primitive_gaussians)
             center = np.array(center)
             for primitive in primitive_gaussians:
                 primitive.apply_translation(center - primitive.center)
