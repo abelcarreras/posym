@@ -52,7 +52,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-2019, macos-13]
+        os: [ubuntu-latest, windows-2022, macos-13]
         #os: [macos-10.15, windows-2019]
 
     steps:
@@ -65,13 +65,13 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_BUILD: pip install numpy==1.19.5 setuptools
+          CIBW_BEFORE_BUILD: pip install numpy setuptools
           CIBW_BUILD: cp38-*
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_BUILD: pip install numpy==1.21.6 setuptools
+          CIBW_BEFORE_BUILD: pip install numpy setuptools
           CIBW_BUILD: cp39-* cp310-*
           CIBW_ARCHS_MACOS: x86_64 universal2
 
