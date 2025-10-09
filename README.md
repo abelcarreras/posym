@@ -283,7 +283,7 @@ print('Configuration 2: ', wf_sym)  # A1 + E
 
 ```
 
-Compute the symmetry of multi-reference wave functions
+Compute the symmetry of multi-configurational wave functions
 ------------------------------------------------------
 Use `SymmetryWaveFunctionCI` class to determine the symmetry of multi-reference wave function
 (defined as a liner combination of Slater determinants) from a set of 
