@@ -30,6 +30,12 @@ Requisites
 - pandas
 - yaml
 
+Supported Point Groups
+----------------------
+`'Cs'`, `'Ci'`, `'C{n}'`, `'C{n}v'`, `'C{n}h'`, `'D{n}'`, `'D{n}h'`, `'D{n}d'`, `'I'`, `'Ih'`, `'O'`, `'Oh'`, `'S{n}'`, `'T'`, `'Td'`, `'Th'`
+
+where `'{n}'` is any integer representing a integer number of rotations, e.g., `'C2v'`.
+
 Use as a simple symmetry calculation
 ------------------------------------
 Posym allows to create basic continuous symmetry python objects that can be operated using 
