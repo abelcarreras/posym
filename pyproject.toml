@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "posym"
+description = "posym module"
+dynamic = ["version"]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.6"
+keywords = ["symmetry", "molecular symmetry", "group theory"]
+version = {file = "posym/_version.py"}  # Dynamically fetch version from _version.py
+
+[project.authors]
+name = "Abel Carreras"
+email = "abelcarreras83@gmail.com"
+
+[project.urls]
+"Homepage" = "https://github.com/abelcarreras/posym"
+
+[project.dependencies]
+numpy = "*"
+scipy = "*"
+pandas = "*"
+PyYaml = "*"
+
+[tool.setuptools]
+packages = ["posym", "posym.operations", "posym.permutation"]
+
+[tool.setuptools.extension-modules]
+[[tool.setuptools.extension-modules]]
+name = "posym.integrals"
+sources = ["c/integrals.c"]
+include-dirs = ["numpy.get_include()"]
+extra-compile-args = ["-std=c99"]
+extra-link-args = []
+
+[[tool.setuptools.extension-modules]]
+name = "posym.permutation.permutations"
+sources = ["c/permutations.c"]
+include-dirs = ["numpy.get_include()"]
+extra-compile-args = ["-std=c99"]
+
+[tool.versioningit]
+default-version = "1+unknown"
+
+[tool.versioningit.format]
+distance = "{base_version}+{distance}.{vcs}{rev}"
+dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+
+[tool.versioningit.vcs]
+# The method key:
+method = "git"  # <- The method name
+# Parameters to pass to the method:
+match = ["*"]
+default-tag = "1.2.4"
+
+[tool.versioningit.write]
+file = "tmos/_version.py"
