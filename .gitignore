@@ -1,0 +1,7 @@
+
+# Python cache and installation
+__pycache__
+_version.py
+*.so
+*.egg-info
+
