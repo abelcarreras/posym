@@ -34,7 +34,7 @@ Supported Point Groups
 ----------------------
 `'Cs'`, `'Ci'`, `'C{n}'`, `'C{n}v'`, `'C{n}h'`, `'D{n}'`, `'D{n}h'`, `'D{n}d'`, `'I'`, `'Ih'`, `'O'`, `'Oh'`, `'S{n}'`, `'T'`, `'Td'`, `'Th'`
 
-where `'{n}'` is any integer representing a integer number of rotations, e.g., `'C2v'`.
+where `'{n}'` is any integer representing a number of rotations, e.g., `'C2v'`.
 
 Use as a simple symmetry calculation
 ------------------------------------
@@ -116,6 +116,7 @@ print('Symmetry measure C3v : ', sym_geom.measure)
 sym_geom = SymmetryMolecule(group='C4v', coordinates=coordinates, symbols=symbols)
 print('Symmetry measure C4v : ', sym_geom.measure)
 ```
+where measure is a function quantifies how much the irreducible representation deviates from the reduced operator representation, expressed as a percentage. A higher percentage value indicates a greater deviation, while a lower value suggests that the two representations are more similar.
 
 Define basis set functions in gaussian basis
 --------------------------------------------
