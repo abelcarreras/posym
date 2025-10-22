@@ -4,4 +4,4 @@ __pycache__
 _version.py
 *.so
 *.egg-info
-
+.vscode/
