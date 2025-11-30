@@ -67,6 +67,71 @@ class Permutation:
         return len(self._permutation)
 
 
+def cluster_1d(points, tol):
+    """
+    Cluster 1D points by proximity.
+    Returns a list of lists with the indices of each cluster.
+    Two points belong to the same cluster if the distance between
+    consecutive points in the sorted order is <= tol (transitive closure).
+
+    :param points: list of points
+    :param tol: tolerance
+    :return list of clustered lists containing the indices of atoms
+    """
+
+    points = np.asarray(points)
+    n = len(points)
+    if n == 0:
+        return []
+
+    # sort points but track original indices
+    sorted_idx = np.argsort(points)
+    sorted_points = points[sorted_idx]
+
+    clusters = []
+    current_cluster = [sorted_idx[0]]
+
+    # connect points transitively following sorted order
+    for i in range(1, n):
+        if abs(sorted_points[i] - sorted_points[i - 1]) <= tol:
+            # belongs to same cluster
+            current_cluster.append(sorted_idx[i])
+        else:
+            # start new cluster
+            clusters.append(current_cluster)
+            current_cluster = [sorted_idx[i]]
+
+    clusters.append(current_cluster)
+    return clusters
+
+
+def get_restricted_symbols(symbols, coordinates, tolerance=1.0):
+    from numpy.linalg import eigh
+
+    dot_table = np.dot(coordinates, coordinates.T)
+    eval, evec = eigh(dot_table)
+    # print(eval)
+    # print(np.round(abs(evec), decimals=3))
+
+    symbols = list(symbols)
+    for ival, val in enumerate(eval):
+        rel = abs(val)/sum(eval)
+        if rel < 0.1:
+            continue
+
+        vector_cluster = abs(rel * evec.T[ival])
+        # print(vector_cluster)
+
+        cluster = cluster_1d(vector_cluster, tolerance)
+
+        for i, group in enumerate(cluster):
+            for k in group:
+                symbols[k] = symbols[k] + str(i)
+
+    # print(symbols)
+    return symbols
+
+
 def generate_permutation_set(generators, symbols):
 
     from itertools import permutations, product

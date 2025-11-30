@@ -6,7 +6,7 @@ from posym.pointgroup import PointGroup
 from posym.basis import BasisFunction
 from posym.config import Configuration
 from posym.tools import uniform_euler_scan, collapse_limit, fibonacci_scan
-from posym.permutation import generate_permutation_set, PermutationSet
+from posym.permutation import generate_permutation_set, PermutationSet, get_restricted_symbols
 from posym.permutation.hungarian import get_permutation_hungarian
 from posym.errors import InvalidRepresentation, IncoherenceWarning
 from scipy.spatial.transform import Rotation as R
@@ -329,12 +329,15 @@ class SymmetryMolecule(SymmetryObject):
                 self._permutation_set[dict_key] = next(generate_permutation_set(self._pg.generators, self._symbols))
                 return
 
+            label_tolerance = Configuration().label_tolerance
+            symbols_restricted = get_restricted_symbols(self._symbols, self._coordinates, tolerance=label_tolerance)
+
             # Hungarian algorithm (approximated)
             if Configuration().algorithm == 'hungarian':
                 permutation_set = {}
                 for gen in self._pg.generators:
                     rot_coor = rotmol.inv().apply(self._coordinates)
-                    permutation_set[gen] = get_permutation_hungarian(gen.matrix_representation, rot_coor, self._symbols)
+                    permutation_set[gen] = get_permutation_hungarian(gen.matrix_representation, rot_coor, symbols_restricted)
                 self._permutation_set[dict_key] = permutation_set
 
             # Brute force algorithm (exact)
@@ -343,7 +346,7 @@ class SymmetryMolecule(SymmetryObject):
 
                 class NotValidPermutation(Exception): pass
 
-                for permutation_set in generate_permutation_set(self._pg.generators, self._symbols):
+                for permutation_set in generate_permutation_set(self._pg.generators, symbols_restricted):
 
                     try:
                         operator_measures = []
@@ -847,15 +850,32 @@ class SymmetryMultiDeterminant(SymmetryMolecule):
 if __name__ == '__main__':
 
     from posym.algebra import norm
+    from posym.config import Configuration
 
-    coordinates = [[ 0.000000000+00,  0.000000000+00,  2.40297090e-01],
-                   [-1.43261539e+00, -1.75444785e-16, -9.61188362e-01],
-                   [ 1.43261539e+00,  1.75444785e-16, -9.61188362e-01]]
+    Configuration().algorithm = 'exact'
+    Configuration().label_tolerance = 0.005
 
-    symbols = ['O', 'H', 'H']
+    coordinates = [[-0.7560,    0.0000,    0.0000],
+                   [ 0.7560,    0.0000,    0.0000],
+                   [-1.1404,    0.6586,    0.7845],
+                   [-1.1404,    0.3501,   -0.9626],
+                   [-1.1405,   -1.0087,    0.1781],
+                   [ 1.1404,   -0.3501,    0.9626],
+                   [ 1.1405,    1.0087,   -0.1781],
+                   [ 1.1404,   -0.6586,   -0.7845]]
 
-    sm = SymmetryAtomDisplacements('c2v', coordinates, symbols)
+    symbols = ['C','C','H','H','H','H','H','H']
+
+    #coordinates = [[ 0.000000000+00,  0.000000000+00,  2.40297090e-01],
+    #               [-1.43261539e+00, -1.75444785e-16, -9.61188362e-01],
+    #               [ 1.43261539e+00,  1.75444785e-16, -9.61188362e-01],
+    #               [0, 1, 0]]
+
+    #symbols = ['O', 'H', 'H', 'H']
+
+    sm = SymmetryAtomDisplacements('C2h', coordinates, symbols, orientation_angles=[0, 0, 0])
     print(sm.get_point_group())
     print(sm)
-    mb = SymmetryMolecule('c2v', coordinates, symbols)
+    mb = SymmetryMolecule('C2h', coordinates, symbols, orientation_angles=[-90, 0.0, 109.987640])
+    print('CSM: ', mb.measure)
     print('Coor measure: ', mb, '(', norm(mb), ')')
