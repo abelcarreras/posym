@@ -110,17 +110,33 @@ def get_restricted_symbols(symbols, coordinates, tolerance=1.0):
 
     dot_table = np.dot(coordinates, coordinates.T)
     eval, evec = eigh(dot_table)
-    # print(eval)
-    # print(np.round(abs(evec), decimals=3))
+
+    def get_degeneracy(eigenvalues, tolerance):
+        tolerance *= sum(eigenvalues)
+        arr = np.asarray(eigenvalues)
+        idx = np.argsort(arr)
+        diffs = np.abs(np.diff(arr[idx]))
+        cuts = np.where(diffs > tolerance)[0] + 1
+        groups = np.split(idx, cuts)
+        return [g.tolist() for g in groups]
+
+    degen = get_degeneracy(eval, tolerance)
+
+    vectors = []
+    values = []
+    for deg in degen:
+        if eval[deg[0]] > sum(eval)*tolerance:
+            vectors.append(np.sqrt(np.sum([evec.T[j]**2 for j in deg], axis=0)).tolist())
+            values.append(float(eval[deg[0]]))
+    vectors = np.array(vectors)
+    values = np.array(values)
 
     symbols = list(symbols)
-    for ival, val in enumerate(eval):
-        rel = abs(val)/sum(eval)
-        if rel < 0.1:
-            continue
+    for ival, val in enumerate(values):
+        rel = abs(val)/sum(values)
 
-        vector_cluster = abs(rel * evec.T[ival])
-        # print(vector_cluster)
+        vector_cluster = abs(rel * vectors[ival])
+        # print(np.round(vector_cluster, decimals=3))
 
         cluster = cluster_1d(vector_cluster, tolerance)
 
