@@ -3,8 +3,10 @@
 [![Test and Deploy](https://github.com/abelcarreras/posym/actions/workflows/python-publish.yml/badge.svg?branch=master)](https://github.com/abelcarreras/posym/actions/workflows/python-publish.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7261326.svg)](https://doi.org/10.5281/zenodo.7261326)
 
-PoSym
-=====
+<div style="display: flex; align-items: center; gap: 10px;">
+  <img src="posym_logo.png" alt="Logo" width="100">
+  <h1>PoSym</h1>
+</div>
 
 A point symmetry analysis tool written in python designed for theoretical chemistry.
 This tool makes use of continuous symmetry measures (CSM) to provide a robust implementation
