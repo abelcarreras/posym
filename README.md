@@ -4,8 +4,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7261326.svg)](https://doi.org/10.5281/zenodo.7261326)
 
 <h1>
-  <img src="posym_logo.png" alt="Logo" width="100" style="vertical-align: bottom;">
-  PoSym
+  <img src="posym_logo.png" alt="Logo" width="100" style="vertical-align: bottom;"> PoSym
 </h1>
 
 A point symmetry analysis tool written in python designed for theoretical chemistry.
