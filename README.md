@@ -4,7 +4,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7261326.svg)](https://doi.org/10.5281/zenodo.7261326)
 
 <h1>
-  <img src="posym_logo.png" alt="Logo" width="70" style="vertical-align: middle;">
+  <img src="posym_logo.png" alt="Logo" width="90" style="vertical-align: middle;">
   PoSym
 </h1>
 
