@@ -1,4 +1,4 @@
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 import numpy
 
 include_dirs_numpy = [numpy.get_include()]
@@ -32,4 +32,6 @@ permutations = Extension('posym.permutation.permutations',
                          sources=['c/permutations.c'])
 
 
-setup(ext_modules=[integrals, permutations])
+setup(packages=find_packages(where="."),
+      ext_modules=[integrals, permutations]
+      )

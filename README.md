@@ -3,8 +3,10 @@
 [![Test and Deploy](https://github.com/abelcarreras/posym/actions/workflows/python-publish.yml/badge.svg?branch=master)](https://github.com/abelcarreras/posym/actions/workflows/python-publish.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7261326.svg)](https://doi.org/10.5281/zenodo.7261326)
 
-PoSym
-=====
+<h1>
+  <img src="https://raw.githubusercontent.com/abelcarreras/posym/master/posym_logo.png" alt="Logo" width="50" style="vertical-align: bottom;"> PoSym
+</h1>
+
 
 A point symmetry analysis tool written in python designed for theoretical chemistry.
 This tool makes use of continuous symmetry measures (CSM) to provide a robust implementation
@@ -116,7 +118,6 @@ print('Symmetry measure C3v : ', sym_geom.measure)
 sym_geom = SymmetryMolecule(group='C4v', coordinates=coordinates, symbols=symbols)
 print('Symmetry measure C4v : ', sym_geom.measure)
 ```
-where measure is a function quantifies how much the irreducible representation deviates from the reduced operator representation, expressed as a percentage. A higher percentage value indicates a greater deviation, while a lower value suggests that the two representations are more similar.
 
 Define basis set functions in gaussian basis
 --------------------------------------------

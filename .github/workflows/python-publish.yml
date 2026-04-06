@@ -48,7 +48,7 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     needs: [ test_code ]
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/pr-branch'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-2022, macos-13]
