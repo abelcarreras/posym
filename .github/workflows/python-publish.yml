@@ -51,7 +51,7 @@ jobs:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/pr-branch'
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-2022, macos-13]
+        os: [ubuntu-latest, windows-2022, macos-14]
         #os: [macos-10.15, windows-2019]
 
     steps:
