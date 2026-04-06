@@ -4,8 +4,9 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7261326.svg)](https://doi.org/10.5281/zenodo.7261326)
 
 <h1>
-  <img src="posym_logo.png" alt="Logo" width="100" style="vertical-align: bottom;"> PoSym
+  <img src="https://raw.githubusercontent.com/abelcarreras/posym/master/posym_logo.png" alt="Logo" width="50" style="vertical-align: bottom;"> PoSym
 </h1>
+
 
 A point symmetry analysis tool written in python designed for theoretical chemistry.
 This tool makes use of continuous symmetry measures (CSM) to provide a robust implementation
@@ -30,6 +31,12 @@ Requisites
 - scipy
 - pandas
 - yaml
+
+Supported Point Groups
+----------------------
+`'Cs'`, `'Ci'`, `'C{n}'`, `'C{n}v'`, `'C{n}h'`, `'D{n}'`, `'D{n}h'`, `'D{n}d'`, `'I'`, `'Ih'`, `'O'`, `'Oh'`, `'S{n}'`, `'T'`, `'Td'`, `'Th'`
+
+where `'{n}'` is any integer representing a number of rotations, e.g., `'C2v'`.
 
 Use as a simple symmetry calculation
 ------------------------------------

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64", "numpy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "posym"
+description = "posym module"
+dynamic = ["version"]
+readme = { file = "README.md", content-type = "text/markdown" }
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+keywords = ["symmetry", "molecular symmetry", "group theory"]
+authors = [
+    { name = "Abel Carreras", email = "abelcarreras83@gmail.com" }
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "PyYaml",
+]
+
+[project.urls]
+"Source" = "https://github.com/abelcarreras/posym"
+
+[tool.setuptools]
+packages = ["posym", "posym.operations", "posym.permutation"]
+
+
+[tool.setuptools.dynamic]
+version = { attr = "posym.__version__" }
