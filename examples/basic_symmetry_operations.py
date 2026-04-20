@@ -7,9 +7,9 @@ print('\nTest Point group table')
 print(pg)
 
 # define symmetry objects of particular IR in the C2h group
-bu = SymmetryObject(group='C2h', rep='Bu')
-bg = SymmetryObject('C2h', 'Bg')
-ag = SymmetryObject('C2h', 'Ag')
+bu = SymmetryObject.from_label(group='C2h', rep='Bu')
+bg = SymmetryObject.from_label('C2h', 'Bg')
+ag = SymmetryObject.from_label('C2h', 'Ag')
 
 # symmetry operation using symmetry objects
 print('\nTest symmetry object operation')
@@ -24,11 +24,11 @@ print('\nTest symmetry object representation')
 pg = PointGroup(group='Td')
 print(pg)
 
-bg = SymmetryObject('C2h', 'Bg')
-a1 = SymmetryObject(group='Td', rep='A1')
-a2 = SymmetryObject(group='Td', rep='A2')
-e = SymmetryObject(group='Td', rep='E')
-t1 = SymmetryObject(group='Td', rep='T1')
+bg = SymmetryObject.from_label('C2h', 'Bg')
+a1 = SymmetryObject.from_label(group='Td', rep='A1')
+a2 = SymmetryObject.from_label(group='Td', rep='A2')
+e = SymmetryObject.from_label(group='Td', rep='E')
+t1 = SymmetryObject.from_label(group='Td', rep='T1')
 
 print('e*e + a1:', e * e + 2 * a1)
 print('t1*t1:', t1 * t1)
@@ -37,9 +37,9 @@ pg = PointGroup(group='C2v')
 print('\nTest Point group table')
 print(pg)
 
-a1 = SymmetryObject(group='C2v', rep='A1')
-b1 = SymmetryObject('C2v', 'B1')
-a2 = SymmetryObject('C2v', 'A2')
+a1 = SymmetryObject.from_label(group='C2v', rep='A1')
+b1 = SymmetryObject.from_label('C2v', 'B1')
+a2 = SymmetryObject.from_label('C2v', 'A2')
 
 print(a1 * a2 + b1)
 

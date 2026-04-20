@@ -149,13 +149,13 @@ cis_wf_2 = get_simple_wf_symm(cis_orbitals_sym,
                               beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
 
 # generate symmetry of dipole moment operator for C2v group
-cis_dm = SymmetryObject(group='C2v', rep='B1') + \
-         SymmetryObject(group='C2v', rep='B2') + \
-         SymmetryObject(group='C2v', rep='A1')
+cis_dm = SymmetryObject.from_label(group='C2v', rep='B1') + \
+         SymmetryObject.from_label(group='C2v', rep='B2') + \
+         SymmetryObject.from_label(group='C2v', rep='A1')
 
 
 def check_transition(transtion):
-    if al.dot(transtion, SymmetryObject(group='C2v', rep='A1')) > 0.1:
+    if al.dot(transtion, SymmetryObject.from_label(group='C2v', rep='A1')) > 0.1:
         return 'Allowed'
     else:
         return 'Forbidden'
@@ -185,12 +185,12 @@ trans_wf_2 = get_simple_wf_symm(trans_orbitals_sym,
                                 beta=[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0])
 
 # generate symmetry of dipole moment operator for C2h group
-trans_dm = SymmetryObject(group='C2h', rep='Bu') + \
-           SymmetryObject(group='C2h', rep='Au')
+trans_dm = SymmetryObject.from_label(group='C2h', rep='Bu') + \
+           SymmetryObject.from_label(group='C2h', rep='Au')
 
 
 def check_transition(transition):
-    if al.dot(transition, SymmetryObject(group='C2h', rep='Ag')) > 0.1:
+    if al.dot(transition, SymmetryObject.from_label(group='C2h', rep='Ag')) > 0.1:
         return 'Allowed'
     else:
         return 'Forbidden'

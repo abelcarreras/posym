@@ -29,18 +29,23 @@ class SymmetryObject:
     Main symmetry object that abstracts an element in the g-module space
 
     """
-    def __init__(self, group, rep, normalize=False):
+    def __init__(self, group: str, rep: pd.Series, normalize: bool=False):
+        """
+
+        :param group: point group
+        :param rep: symmetry representation
+        :param normalize: normalize the symmetry representation to 1
+        """
 
         self._pg = PointGroup(group)
         self._group = group.lower()
 
         if isinstance(rep, str):
+            warnings.warn('initialize with SymmetryObject.from_label(irrep) instead', DeprecationWarning)
             if rep not in self._pg.ir_labels:
                 raise InvalidRepresentation(rep, self._pg)
 
             self._op_representation = self._pg.ir_table[rep]
-            #if normalize:
-            #    self._op_representation /= self._pg.ir_table[rep]['E']
 
         elif isinstance(rep, pd.Series):
             if np.all(self._pg.ir_table.sort_index().index == rep.sort_index().index):
@@ -51,6 +56,22 @@ class SymmetryObject:
         if normalize:
             op_rep = np.dot(self._pg.trans_matrix_norm, np.dot(self._pg.trans_matrix_inv, self._op_representation.values))
             self._op_representation = pd.Series(op_rep, index=self._pg.op_labels)
+
+    @classmethod
+    def from_label(cls, group: str, rep: str):
+        """
+
+        :param group: point group
+        :param rep: IR label
+        """
+        pg = PointGroup(group)
+
+        if rep not in pg.ir_labels:
+            raise InvalidRepresentation(rep, pg)
+
+        op_rep = pg.ir_table[rep]
+
+        return cls(group, op_rep, normalize=False)
 
     def get_reduced_op_representation(self):
         red_values = []

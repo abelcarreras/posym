@@ -112,9 +112,9 @@ class OperationsTest(unittest.TestCase):
 
         o1, o2, o3, o4, o5, o6 = self._orbitals
 
-        a1 = SymmetryObject(group='c2v', rep='A1')
-        b1 = SymmetryObject(group='c2v', rep='B1')
-        b2 = SymmetryObject(group='c2v', rep='B2')
+        a1 = SymmetryObject.from_label(group='c2v', rep='A1')
+        b1 = SymmetryObject.from_label(group='c2v', rep='B1')
+        b2 = SymmetryObject.from_label(group='c2v', rep='B2')
 
         sym_o1 = SymmetryGaussianLinear('c2v', o1)
         sym_o2 = SymmetryGaussianLinear('c2v', o2)
