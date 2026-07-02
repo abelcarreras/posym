@@ -318,6 +318,7 @@ static PyObject* GaussianIntegral(PyObject* self, PyObject *arg, PyObject *keywo
 
     // Free python memory
     Py_DECREF(polyCoeffArray);
+    Py_DECREF(centerArray);
 
     return Py_BuildValue("d", integral * pre_exponential);
 }
@@ -439,6 +440,7 @@ static PyObject* GaussianIntegral2(PyObject* self, PyObject *arg, PyObject *keyw
 
     // Free python memory
     Py_DECREF(polyCoeffArray);
+    Py_DECREF(centerArray);
     free(expList);
     free(preExpList);
 
