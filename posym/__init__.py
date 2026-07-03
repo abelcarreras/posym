@@ -1,5 +1,5 @@
 __author__ = 'Abel Carreras'
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 from posym.tools import list_round, get_principal_axis_angles
 from posym.pointgroup import PointGroup
