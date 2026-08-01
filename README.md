@@ -2,6 +2,7 @@
 [![PyPI version](https://badge.fury.io/py/posym.svg)](https://badge.fury.io/py/posym)
 [![Test and Deploy](https://github.com/abelcarreras/posym/actions/workflows/python-publish.yml/badge.svg?branch=master)](https://github.com/abelcarreras/posym/actions/workflows/python-publish.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7261326.svg)](https://doi.org/10.5281/zenodo.7261326)
+[![Documentation Status](https://app.readthedocs.org/projects/posym/badge/)](https://posym.readthedocs.io)
 
 <h1>
   <img src="https://raw.githubusercontent.com/abelcarreras/posym/master/posym_logo.png" alt="Logo" width="50" style="vertical-align: bottom;"> PoSym
@@ -11,6 +12,8 @@
 A point symmetry analysis tool written in python designed for theoretical chemistry.
 This tool makes use of continuous symmetry measures (CSM) to provide a robust implementation
 to compute the symmetry of chemistry objects such as normal modes, wave function and electronic density.
+
+Online manual: https://posym.readthedocs.io/
 
 Features
 --------
@@ -426,5 +429,5 @@ Contact info
 Abel Carreras  
 abelcarreras83@gmail.com
 
-Donostia International Physics Center (DIPC) 
+Donostia International Physics Center (DIPC)   
 Donostia, Euskadi (Spain)
