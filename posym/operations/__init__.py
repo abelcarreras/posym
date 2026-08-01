@@ -3,7 +3,20 @@ from posym.permutation.permutations import validate_permutation  # noqa
 
 
 class Operation:
+    """
+    Base class for all symmetry operations.
+
+    Defines the common interface for symmetry operations: matrix
+    representation, atomic permutation handling, operation composition,
+    and measures (positional overlap, functional overlap, mode overlap).
+
+    Subclasses: :class:`Identity`, :class:`Rotation`, :class:`Reflection`,
+    :class:`Inversion`, :class:`ImproperRotation`.
+    """
     def __init__(self, label):
+        """
+        :param label: operation label (e.g. ``'C3'``, ``'sd'``, ``'i'``)
+        """
         self._label = label
         self._order = 1
         self._exp = 1

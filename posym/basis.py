@@ -195,6 +195,19 @@ def simplify_poly_coeff(poly_coeff):
 
 
 class PrimitiveGaussian:
+    """
+    A single primitive Cartesian Gaussian-type orbital.
+
+    Represents a function of the form:
+
+    .. math::
+
+        g(\\mathbf{r}) = N \\cdot (x - x_0)^{l_x} (y - y_0)^{l_y}
+        (z - z_0)^{l_z} \\exp(-\\alpha |\\mathbf{r} - \\mathbf{r}_0|^2)
+
+    Supports evaluation, products, translations, rotations, and
+    analytical integration.
+    """
     def __init__(self, alpha, prefactor=1.0, center=(0, 0, 0), l=(0, 0, 0), normalize=True, poly_coeff=None):
         self._n_dim = len(center)
         self.alpha = alpha
@@ -332,6 +345,14 @@ class PrimitiveGaussian:
 
 
 class BasisFunction:
+    """
+    A contracted Gaussian basis function.
+
+    Linear combination of :class:`PrimitiveGaussian` objects with
+    given contraction coefficients. Supports evaluation, addition,
+    subtraction, scalar multiplication, translational and rotational
+    transformations, and self-overlap integration.
+    """
     def __init__(self, primitive_gaussians, coefficients, center=None, label=None):
         if center is not None:
             primitive_gaussians = deepcopy(primitive_gaussians)

@@ -12,7 +12,27 @@ class Singleton(type):
 
 @dataclass(frozen=False)
 class Configuration(metaclass=Singleton):
-    fast_optimization: bool = True  # speeds up the optimization by reducing the number of symmetry elements to use
-    scan_steps: int = 10            # number of angle steps to use in the pre-scan in orientation optimization
-    algorithm : str = 'hungarian'   # permutation algorithms: hungarian, exact
-    label_tolerance: float = 1.0    # tolerance for discerning labels as a function of the distance from the center
+    """
+    Global configuration singleton for PoSym.
+
+    Set fields before constructing symmetry objects to control
+    permutation algorithms, orientation optimization, and labeling
+    behavior.
+
+    Example::
+
+        from posym.config import Configuration
+        Configuration().algorithm = 'exact'
+        Configuration().label_tolerance = 0.1
+    """
+    fast_optimization: bool = True
+    """If True, use a reduced set of symmetry elements during orientation
+    optimization for speed."""
+    scan_steps: int = 10
+    """Number of angle steps for the Euler angle pre-scan."""
+    algorithm : str = 'hungarian'
+    """Permutation algorithm: ``'hungarian'`` (approximate, fast) or
+    ``'exact'`` (brute-force, precise)."""
+    label_tolerance: float = 1.0
+    """Tolerance (in Angstrom) for merging chemically equivalent atoms
+    into the same label group based on distance from the molecular center."""

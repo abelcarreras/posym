@@ -10,6 +10,13 @@ def prepare_vector(positions, vector):
 
 
 class ImproperRotation(Operation):
+    """
+    Improper rotation operation (S_n).
+
+    Composed of a rotation by :math:`2\\pi k/n` about an axis followed
+    by reflection perpendicular to the axis. The matrix representation
+    has determinant -1.
+    """
     def __init__(self, label, axis, order=1, exp=1):
         super().__init__(label)
 

@@ -426,5 +426,5 @@ Contact info
 Abel Carreras  
 abelcarreras83@gmail.com
 
-Multiverse Computing SL  
-Donostia-San Sebastian (Spain)
+Donostia International Physics Center (DIPC) 
+Donostia, Euskadi (Spain)

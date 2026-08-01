@@ -4,12 +4,15 @@ from posym.generate_tables import get_table_from_label
 
 class PointGroup:
     """
-    Basic class that contains the point group data
+    Point group container with character tables and symmetry operations.
 
+    Provides access to the group's properties (order, irreps, operations)
+    and transformation matrices for converting between operator and
+    irreducible representation bases.
     """
     def __init__(self, group):
         """
-        :param group: point group label
+        :param group: point group label (case-insensitive, e.g. ``'Td'``, ``'C2v'``)
         """
         self._group = group.lower()
 

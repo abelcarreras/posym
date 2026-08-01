@@ -11,6 +11,12 @@ def inversion():
 
 
 class Inversion(Operation):
+    """
+    Inversion operation (i).
+
+    Maps every point :math:`(x, y, z)` to :math:`(-x, -y, -z)`.
+    The matrix representation is :math:`-I` with determinant -1.
+    """
     def __init__(self, label):
         super().__init__(label)
         self._order = 1

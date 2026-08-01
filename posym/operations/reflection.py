@@ -24,6 +24,13 @@ def reflection(reflection_axis):
 
 
 class Reflection(Operation):
+    """
+    Reflection operation (sigma).
+
+    Reflects points across a plane defined by its normal vector.
+    The matrix representation is :math:`I - 2\\mathbf{n}\\mathbf{n}^T`
+    with determinant -1.
+    """
     def __init__(self, label, axis):
         super().__init__(label)
         self._order = 1

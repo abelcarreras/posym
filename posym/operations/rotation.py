@@ -31,6 +31,13 @@ def prepare_vector(positions, vector):
 
 
 class Rotation(Operation):
+    """
+    Proper rotation operation (C_n).
+
+    Generates a rotation by :math:`2\\pi k/n` about a given axis.
+    The matrix representation is a 3x3 rotation matrix with
+    determinant +1.
+    """
     def __init__(self, label, axis, order=1, exp=1):
         super().__init__(label)
 

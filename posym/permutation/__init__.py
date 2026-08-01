@@ -3,7 +3,16 @@ import copy
 
 
 class Permutation:
+    """
+    Wraps an atomic permutation and provides orbit analysis.
+
+    A permutation is represented as a list where ``perm[i]`` gives the
+    index of the atom that atom ``i`` maps to under the permutation.
+    """
     def __init__(self, permutation):
+        """
+        :param permutation: list of integers representing the permutation
+        """
         self._permutation = copy.deepcopy(list(permutation))
         self._orbits = None
 

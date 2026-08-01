@@ -23,6 +23,15 @@ dependencies = [
 [project.urls]
 "Source" = "https://github.com/abelcarreras/posym"
 
+[project.optional-dependencies]
+docs = [
+    "sphinx>=7",
+    "sphinx-rtd-theme",
+    "sphinx-copybutton",
+    "nbsphinx",
+    "nbconvert<7.17",
+]
+
 [tool.setuptools]
 packages = ["posym", "posym.operations", "posym.permutation"]
 

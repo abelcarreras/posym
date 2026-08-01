@@ -3,6 +3,12 @@ import numpy as np
 
 
 class Identity(Operation):
+    """
+    Identity operation (E).
+
+    Maps every point to itself. Serves as the neutral element of the
+    group and provides the baseline for all overlap measures.
+    """
     def __init__(self, label):
         super().__init__(label)
 

@@ -26,15 +26,21 @@ ANGS_TO_AU = 1.8897259886
 
 class SymmetryObject:
     """
-    Main symmetry object that abstracts an element in the g-module space
+    Main symmetry object that abstracts an element in the g-module space.
 
+    Supports direct sum (``+``) and direct product (``*``) operations,
+    and can be decomposed into irreducible representations of any
+    supported point group.
     """
     def __init__(self, group: str, rep: pd.Series, normalize: bool=False):
         """
 
-        :param group: point group
-        :param rep: symmetry representation
-        :param normalize: normalize the symmetry representation to 1
+        :param group: point group label (case-insensitive, e.g. ``'Td'``)
+        :param rep: symmetry representation as a ``pd.Series`` indexed by
+                    operation labels, or a string IR label (deprecated;
+                    use :meth:`from_label` instead)
+        :param normalize: if True, normalize the representation so the
+                          totally symmetric component equals 1
         """
 
         self._pg = PointGroup(group)
@@ -60,10 +66,14 @@ class SymmetryObject:
     @classmethod
     def from_label(cls, group: str, rep: str):
         """
+        Create a SymmetryObject from an irreducible representation label.
 
-        :param group: point group
-        :param rep: IR label
+        :param group: point group label (case-insensitive)
+        :param rep: IR label string, e.g. ``'A1'``, ``'T2'``, ``'E'``
+        :return: a new SymmetryObject for the given IR
+        :raises InvalidRepresentation: if the label is not valid for the group
         """
+
         pg = PointGroup(group)
 
         if rep not in pg.ir_labels:
@@ -74,19 +84,45 @@ class SymmetryObject:
         return cls(group, op_rep, normalize=False)
 
     def get_reduced_op_representation(self):
+        """
+        Return the reduced operator representation vector.
+
+        For each operation class, averages the overlap values across
+        degenerate sub-operations to produce a single scalar per class.
+
+        :return: ``pd.Series`` indexed by operation class labels
+        """
         red_values = []
         for value in self._op_representation.values:
             red_values.append(np.average(value))
         return pd.Series(red_values, index=self._op_representation.index)
 
     def get_op_representation(self):
+        """
+        Return the raw operator representation vector.
+
+        :return: ``pd.Series`` of operation overlaps indexed by class labels
+        """
         return self._op_representation
 
     def get_ir_representation(self):
+        """
+        Return the irreducible representation vector.
+
+        Converts the operator representation to IR coefficients using
+        the inverse transformation matrix of the point group.
+
+        :return: ``pd.Series`` of IR coefficients indexed by IR labels
+        """
         ir_rep = np.dot(self._pg.trans_matrix_inv, self.get_reduced_op_representation().values)
         return pd.Series(ir_rep, index=self._pg.ir_labels)
 
     def get_point_group(self):
+        """
+        Return the associated point group.
+
+        :return: :class:`PointGroup` object
+        """
         return self._pg
 
     def __str__(self):
@@ -153,17 +189,23 @@ class SymmetryObject:
 
 class SymmetryMolecule(SymmetryObject):
     """
-    Symmetry of molecular geometry
+    Symmetry of molecular geometry.
+
+    Computes the continuous symmetry measure (CSM) and irreducible
+    representation decomposition of a molecular structure with respect
+    to a given point group. Handles orientation optimization and
+    atomic permutation assignment.
     """
     def __init__(self, group, coordinates, symbols, total_state=None, orientation_angles=None, center=None, permutation_set=None):
         """
 
-        :param group: symmetry point group
-        :param coordinates: molecular coordinates
-        :param symbols: atomic symbols
-        :param total_state: symmetry operations overlaps (SOEV's) as a panda Series object
-        :param orientation_angles: orientation angles
-        :param center: center of symmetry group [x, y, z]
+        :param group: symmetry point group label (case-insensitive)
+        :param coordinates: Nx3 array of atomic coordinates
+        :param symbols: list of N atomic symbols
+        :param total_state: pre-computed operator overlaps ``pd.Series``; if None, computed automatically
+        :param orientation_angles: pre-computed Euler angles [pitch, yaw, roll] in degrees; if None, optimized automatically
+        :param center: center of symmetry [x, y, z]; defaults to molecular centroid
+        :param permutation_set: manual permutation mapping for group generators
         """
 
         self._setup_structure(coordinates, symbols, group, center, orientation_angles, permutation_set=permutation_set)
@@ -400,11 +442,31 @@ class SymmetryMolecule(SymmetryObject):
 
     @property
     def measure(self):
+        """
+        Continuous Symmetry Measure (CSM) from IR decomposition.
+
+        :math:`S(G) = 100 \\times \\left(1 - \\frac{c_{\\text{A1}}}{c_{\\text{total}}}\\right)`
+
+        where :math:`c_{\\text{A1}}` is the coefficient of the totally
+        symmetric IR and :math:`c_{\\text{total}}` is the sum of all
+        IR coefficients.
+
+        :return: CSM value as a float (0 = perfect symmetry)
+        """
         norm = self.get_reduced_op_representation().values[0]
         return 100*(1-np.array(self.get_ir_representation().values[0])/norm)
 
     @property
     def measure_pos(self):
+        """
+        CSM of the geometry.
+
+        Uses the same formula as :meth:`measure` but computes overlaps
+        directly from the geometry rather than from the operator
+        representation.
+
+        :return: CSM value as a float
+        """
 
         if collapse_limit(self._coordinates):
             return 0.0
@@ -479,25 +541,39 @@ class SymmetryMolecule(SymmetryObject):
 
     @property
     def orientation_angles(self):
+        """
+        Optimal Euler angles for symmetry alignment.
+
+        :return: list of 3 floats [pitch, yaw, roll] in degrees
+        """
         return self._angles
 
     @property
     def center(self):
+        """
+        Center of the symmetry group.
+
+        :return: [x, y, z] as a ``np.ndarray``
+        """
         return self._center
 
 
 class SymmetryNormalModes(SymmetryMolecule):
     """
-    get symmetry of the normal modes.
+    Get symmetry of the normal modes.
+
+    Determines the symmetry representation of vibrational normal
+    modes for a given molecular geometry. The total representation (sum of
+    all mode symmetries) equals the vibrational component of :math:`\\Gamma_{3N}`.
     """
     def __init__(self, group, coordinates, modes, symbols, orientation_angles=None, center=None):
         """
 
         :param group: symmetry point group
-        :param coordinates: atomic coordinates
-        :param modes: list of normal modes separated by atoms [[[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]], ...]
-        :param symbols: atomic symbols
-        :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
+        :param coordinates: atomic coordinates (Nx3 array)
+        :param modes: list of normal modes, each a list of N 3D displacement vectors
+        :param symbols: list of atomic symbols
+        :param orientation_angles: Euler angles [pitch, yaw, roll] in degrees
         :param center: center of symmetry group [x, y, z]
         """
 
@@ -545,8 +621,11 @@ class SymmetryNormalModes(SymmetryMolecule):
 
 class SymmetryAtomDisplacements(SymmetryMolecule):
     """
-    get symmetry of atom displacements . This is equivalent to the sum of the symmetries of all
-    normal modes (gamma 3N).
+    Symmetry of all atomic displacements (Gamma_3N).
+
+    Computes the total representation of 3N atomic displacements, which
+    equals the sum of symmetries of translation, rotation, and all normal
+    modes: :math:`\\Gamma_{3N} = \\Gamma_{\\text{trans}} + \\Gamma_{\\text{rot}} + \\Gamma_{\\text{vib}}`
     """
     def __init__(self, group, coordinates, symbols, orientation_angles=None):
         """
@@ -585,8 +664,11 @@ class SymmetryAtomDisplacements(SymmetryMolecule):
 
 class SymmetryAdaptedCoordinates(SymmetryMolecule):
     """
-    get symmetry of atom displacements . This is equivalent to the sum of the symmetries of all
-    normal modes (gamma 3N).
+    Symmetry-adapted coordinates (SALCs) from projection operators.
+
+    Generates symmetry-adapted linear combinations of atomic displacements
+    using the projection operator technique. Only supported for Abelian
+    point groups where all irreducible representations are one-dimensional.
     """
     def __init__(self, group, coordinates, symbols, orientation_angles=None):
         """
@@ -640,14 +722,18 @@ class SymmetryAdaptedCoordinates(SymmetryMolecule):
 
 class SymmetryGaussianLinear(SymmetryMolecule):
     """
-    get symmetry from a function defined in the basis of Gaussian functions (BasisFunction object)
+    Symmetry from a function defined in a Gaussian basis.
 
+    Determines the irreducible representation of a molecular orbital
+    or general function expressed as a :class:`BasisFunction`. The symmetry
+    assignment is based on the overlap :math:`\\langle \\psi | \\hat{R} \\psi \\rangle`
+    under each symmetry operation.
     """
     def __init__(self, group, function, orientation_angles=None, center=None):
         """
 
         :param group: symmetry group
-        :param function: the function (BasisFunction object)
+        :param function: the function as a :class:`BasisFunction` object
         :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
         :param center: center of symmetry group [x, y, z]
         """
@@ -682,14 +768,19 @@ class SymmetryGaussianLinear(SymmetryMolecule):
 
 class SymmetrySingleDeterminant(SymmetryMolecule):
     """
-    get symmetry from single determinat wave function
+    Symmetry from a single-determinant wave function.
+
+    Computes the irreducible representation of a Slater determinant
+    from a set of occupied alpha and beta spin-orbitals. Uses the
+    determinant of the orbital overlap matrix under each symmetry
+    operation.
     """
     def __init__(self, group, alpha_orbitals, beta_orbitals, orientation_angles=None, center=None):
         """
 
         :param group: symmetry group
-        :param alpha_orbitals: list of alpha orbitals (BasisFunction objects)
-        :param beta_orbitals: list of beta orbitals (BasisFunction objects)
+        :param alpha_orbitals: list of alpha :class:`BasisFunction` orbitals
+        :param beta_orbitals: list of beta :class:`BasisFunction` orbitals
         :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
         :param center: center of symmetry group [x, y, z]
         """
@@ -776,14 +867,20 @@ class SymmetrySingleDeterminant(SymmetryMolecule):
 
 class SymmetryMultiDeterminant(SymmetryMolecule):
     """
-    Get symmetry from multi determinant wave function
+    Symmetry from a multi-determinant (CI) wave function.
+
+    Computes the irreducible representation of a configuration
+    interaction wave function defined as a linear combination
+    of Slater determinants with given amplitudes and occupation patterns.
     """
     def __init__(self, group, orbitals, configurations, orientation_angles=None, center=None):
         """
 
         :param group: symmetry group
-        :param orbitals: list BasisFunction objects
-        :param configurations: dictionary that contains the electronic configuration (see README for example)
+        :param orbitals: list of :class:`BasisFunction` molecular orbitals
+        :param configurations: list of dicts with ``'amplitude'`` (float) and
+                               ``'occupations'`` (dict with ``'alpha'`` and ``'beta'``
+                               occupation lists of 0s and 1s)
         :param orientation_angles: list of 3 Euler angles [pitch, yaw, roll]
         :param center: center of symmetry group [x, y, z]
         """

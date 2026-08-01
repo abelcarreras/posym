@@ -1,8 +1,26 @@
-# algebra opearation functions for states
+# Algebra operations for symmetry state overlap and norm
+
 import numpy as np
 
 
 def dot(state1, state2, normalize=False):
+    """
+    Inner product in the G-module space.
+
+    Computes the squared overlap between two symmetry states, weighted
+    by irreducible representation degeneracies:
+
+    .. math::
+
+        \\langle c, d \\rangle =
+        \\sum_i \\dim(\\Gamma_i) \\cdot c_i \\cdot d_i
+
+    :param state1: first :class:`SymmetryObject`
+    :param state2: second :class:`SymmetryObject`
+    :param normalize: if True, normalize the result to [0, 1]
+    :return: squared inner product as a float
+    :raises ValueError: if the two states have different point groups
+    """
 
     if state1.get_point_group() != state2.get_point_group():
         raise ValueError("States must have same point group")
@@ -29,6 +47,18 @@ def dot(state1, state2, normalize=False):
 
 
 def norm(state1):
+    """
+    Norm (total dimension) of a symmetry state.
+
+    Computes the weighted sum of IR coefficients:
+
+    .. math::
+
+        \\|c\\| = \\sum_i \\dim(\\Gamma_i) \\cdot c_i
+
+    :param state1: a :class:`SymmetryObject`
+    :return: norm as a float
+    """
 
     v1 = state1.get_ir_representation()
     pg = state1.get_point_group()
