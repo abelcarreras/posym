@@ -20,11 +20,11 @@ class OperationsTest(unittest.TestCase):
 
     def test_algebra(self):
 
-        a1 = SymmetryObject(group='Td', rep='A1')
-        a2 = SymmetryObject(group='Td', rep='A2')
-        e = SymmetryObject(group='Td', rep='E')
-        t1 = SymmetryObject(group='Td', rep='T1')
-        t2 = SymmetryObject(group='Td', rep='T2')
+        a1 = SymmetryObject.from_label(group='Td', rep='A1')
+        a2 = SymmetryObject.from_label(group='Td', rep='A2')
+        e = SymmetryObject.from_label(group='Td', rep='E')
+        t1 = SymmetryObject.from_label(group='Td', rep='T1')
+        t2 = SymmetryObject.from_label(group='Td', rep='T2')
 
         prod_1 = e * e + 2 * a1
         result_1 = 3*a1 + a2 + e
@@ -37,11 +37,11 @@ class OperationsTest(unittest.TestCase):
 
     def test_functions(self):
 
-        a1 = SymmetryObject(group='Td', rep='A1')
-        a2 = SymmetryObject(group='Td', rep='A2')
-        e = SymmetryObject(group='Td', rep='E')
-        t1 = SymmetryObject(group='Td', rep='T1')
-        t2 = SymmetryObject(group='Td', rep='T2')
+        a1 = SymmetryObject.from_label(group='Td', rep='A1')
+        a2 = SymmetryObject.from_label(group='Td', rep='A2')
+        e = SymmetryObject.from_label(group='Td', rep='E')
+        t1 = SymmetryObject.from_label(group='Td', rep='T1')
+        t2 = SymmetryObject.from_label(group='Td', rep='T2')
 
         print('A1 . A1: ', dot(a1, a1))
 
@@ -259,10 +259,10 @@ class H2OTest(unittest.TestCase):
         mo_sym = [SymmetryGaussianLinear('C2v', mo) for mo in self.molecular_orbitals]
         # print(mo_sym)
 
-        a1 = SymmetryObject(group='c2v', rep='A1')
-        a2 = SymmetryObject(group='c2v', rep='A2')
-        b1 = SymmetryObject(group='c2v', rep='B1')
-        b2 = SymmetryObject(group='c2v', rep='B2')
+        a1 = SymmetryObject.from_label(group='c2v', rep='A1')
+        a2 = SymmetryObject.from_label(group='c2v', rep='A2')
+        b1 = SymmetryObject.from_label(group='c2v', rep='B1')
+        b2 = SymmetryObject.from_label(group='c2v', rep='B2')
 
         for mo, ref in zip(mo_sym, [a1, a1, b1, a1, b2, a1, b1]):
             self.assertCountEqual(np.round(mo.get_ir_representation(), decimals=2),

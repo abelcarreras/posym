@@ -1,8 +1,9 @@
 import numpy as np
 from posym.permutation.permutations import validate_permutation  # noqa
+from abc import ABC, abstractmethod
 
 
-class Operation:
+class Operation(ABC):
     """
     Base class for all symmetry operations.
 
@@ -79,7 +80,35 @@ class Operation:
     def label(self):
         return self._label
 
-    @property
+    @abstractmethod
+    def get_measure_modes(self, modes, orientation=None):
+        raise NotImplementedError('Not implemented')
+
+    @abstractmethod
+    def get_measure_atom(self):
+        raise NotImplementedError('Not implemented')
+
+    @abstractmethod
+    def get_measure_xyz(self, orientation=None):
+        raise NotImplementedError('Not implemented')
+
+    @abstractmethod
+    def get_displacements_projection(self, orientation=None):
+        raise NotImplementedError('Not implemented')
+
+    @abstractmethod
+    def get_operated_coordinates(self, coordinates, orientation=None):
+        raise NotImplementedError('Not implemented')
+
+    @abstractmethod
+    def get_overlap_func(self, op_function1, op_function2, orientation=None):
+        raise NotImplementedError('Not implemented')
+
+    @abstractmethod
+    def get_measure_pos(self, coordinates, orientation=None, normalized=True):
+        raise NotImplementedError('Not implemented')
+
+    @abstractmethod
     def matrix_representation(self):
         raise NotImplementedError('Not implemented')
 

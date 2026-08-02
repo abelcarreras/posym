@@ -16,9 +16,7 @@ class Identity(Operation):
         return 'SymOp.Identity {} <{}>'.format(self._label, hex(id(self)))
 
     def get_measure_modes(self, modes, orientation=None):
-        self._measure_mode = [1.0] * len(modes)
-
-        return np.array(self._measure_mode)
+        return np.array([1.0] * len(modes))
 
     def get_measure_atom(self, orientation=None):
         return len(self.permutation)

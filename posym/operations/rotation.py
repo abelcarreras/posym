@@ -1,5 +1,5 @@
 from posym.operations import Operation
-from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Rotation as Rot
 from posym.tools import standardize_vector
 import numpy as np
 
@@ -21,7 +21,7 @@ def cache_rotation(func):
 def rotation(angle, rotation_axis):
 
     rotation_vector = angle * np.array(rotation_axis) / np.linalg.norm(rotation_axis)
-    rotation = R.from_rotvec(rotation_vector)
+    rotation = Rot.from_rotvec(rotation_vector)
 
     return rotation.as_matrix()
 

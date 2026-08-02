@@ -14,15 +14,9 @@ From an IR label:
 
    from posym import SymmetryObject
 
-   a1 = SymmetryObject(group='Td', rep='A1')
-   e = SymmetryObject(group='Td', rep='E')
-   t2 = SymmetryObject(group='Td', rep='T2')
-
-Alternative: Using the ``from_label`` class method:
-
-.. code-block:: python
-
-   b1 = SymmetryObject.from_label(group='C2v', rep='B1')
+   a1 = SymmetryObject.from_label(group='Td', rep='A1')
+   e = SymmetryObject.from_label(group='Td', rep='E')
+   t2 = SymmetryObject.from_label(group='Td', rep='T2')
 
 Direct Sum and Direct Product
 -----------------------------
