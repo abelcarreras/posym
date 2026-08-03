@@ -32,12 +32,49 @@ class Inversion(Operation):
         measure_mode = []
         for mode in modes:
             operated_mode = np.dot(operation, np.array(mode).T).T
-            norm = np.linalg.norm(mode)
+            norm = np.linalg.norm(mode)**2
             permu_mode = np.array(operated_mode)[self.permutation]
 
             measure_mode.append(np.trace(np.dot(mode, permu_mode.T))/norm)
 
         return np.array(measure_mode)
+
+    def get_measure_modes_proj(self, modes, orientation=None):
+
+        operation = inversion()
+
+        measure_mode = []
+        for mode in modes:
+            operated_mode = np.dot(operation, np.array(mode).T).T
+            permu_mode = np.array(operated_mode)[self.permutation]
+
+            P = np.outer(mode, mode)
+            PG = np.outer(permu_mode, permu_mode)
+            sigma = np.trace(P @ PG)
+            measure_mode.append(sigma)
+
+        return np.abs(np.array(measure_mode))
+
+    def get_measure_full_proj(self, modes, orientation=None):
+
+        operation = inversion()
+
+        d = len(modes)
+
+        # Flatten modes into (3N,d)
+        V = np.stack([m.reshape(-1) for m in modes], axis=1)
+
+        # Apply symmetry operation
+        operated = np.array([operation @ m.T for m in modes])  # (d,3,natoms)
+        operated = np.transpose(operated, (0, 2, 1))  # (d,natoms,3)
+        operated = operated[:, self.permutation]
+        GV = np.stack([m.reshape(-1) for m in operated], axis=1)
+
+        # Projectors
+        P = V @ V.T
+        PG = GV @ GV.T
+
+        return np.trace(P @ PG) / d
 
     def get_measure_atom(self):
 

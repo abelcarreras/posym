@@ -125,6 +125,22 @@ class SymmetryObject:
         """
         return self._pg
 
+    @property
+    def measure(self):
+        """
+        Continuous Symmetry Measure (CSM) from IR decomposition.
+
+        :math:`S(G) = 100 \\times \\left(1 - \\frac{c_{\\text{A1}}}{c_{\\text{total}}}\\right)`
+
+        where :math:`c_{\\text{A1}}` is the coefficient of the totally
+        symmetric IR and :math:`c_{\\text{total}}` is the sum of all
+        IR coefficients.
+
+        :return: CSM value as a float (0 = perfect symmetry)
+        """
+        norm = self.get_reduced_op_representation().values[0]
+        return 100*(1-np.array(self.get_ir_representation().values[0])/norm)
+
     def __str__(self):
 
         ir_rep = self.get_ir_representation().values
@@ -441,22 +457,6 @@ class SymmetryMolecule(SymmetryObject):
                 op.set_permutation_set(self._permutation_set[dict_key], self._symbols, ignore_compatibility=True)
 
     @property
-    def measure(self):
-        """
-        Continuous Symmetry Measure (CSM) from IR decomposition.
-
-        :math:`S(G) = 100 \\times \\left(1 - \\frac{c_{\\text{A1}}}{c_{\\text{total}}}\\right)`
-
-        where :math:`c_{\\text{A1}}` is the coefficient of the totally
-        symmetric IR and :math:`c_{\\text{total}}` is the sum of all
-        IR coefficients.
-
-        :return: CSM value as a float (0 = perfect symmetry)
-        """
-        norm = self.get_reduced_op_representation().values[0]
-        return 100*(1-np.array(self.get_ir_representation().values[0])/norm)
-
-    @property
     def measure_pos(self):
         """
         CSM of the geometry.
@@ -583,6 +583,7 @@ class SymmetryNormalModes(SymmetryMolecule):
 
         rotmol = R.from_euler('zyx', self._angles, degrees=True)
 
+        # mode
         self._mode_measures = []
         for operation in self._pg.operations:
             mode_measures = []
@@ -593,6 +594,7 @@ class SymmetryNormalModes(SymmetryMolecule):
             mode_measures = np.array(mode_measures)
             self._mode_measures.append(mode_measures)
 
+        # total
         mode_measures_total = []
         for op in self._mode_measures:
             op_list = []
@@ -617,6 +619,69 @@ class SymmetryNormalModes(SymmetryMolecule):
 
     def get_number_of_modes(self):
         return len(self._mode_measures)
+
+
+class SymmetryNormalModesProjection(SymmetryMolecule):
+    """
+    Get symmetry of the normal modes subspace projection.
+
+    Determines the symmetry representation of the subspace span by the vibrational normal
+    modes for a given molecular geometry.
+    """
+    def __init__(self, group, coordinates, modes, symbols, orientation_angles=None, center=None):
+        """
+
+        :param group: symmetry point group
+        :param coordinates: atomic coordinates (Nx3 array)
+        :param modes: list of normal modes, each a list of N 3D displacement vectors
+        :param symbols: list of atomic symbols
+        :param orientation_angles: Euler angles [pitch, yaw, roll] in degrees
+        :param center: center of symmetry group [x, y, z]
+        """
+
+        self._setup_structure(coordinates, symbols, group, center, orientation_angles)
+
+        self._modes = modes
+
+        rotmol = R.from_euler('zyx', self._angles, degrees=True)
+
+        # mode proj
+        self._mode_proj_measures = []
+        for operation in self._pg.operations:
+            mode_measures = []
+            for op in self._pg.get_sub_operations(operation.label):
+                mode_m = op.get_measure_modes_proj(self._modes, orientation=rotmol)
+                mode_measures.append(mode_m)
+
+            mode_measures = np.array(mode_measures)
+            self._mode_proj_measures.append(mode_measures)
+
+        # reshape mode measures
+        reshaped_mode_proj_measures = []
+        for m in range(len(self._mode_proj_measures[0].T)):
+            reshaped_mode_proj_measures.append([k[:, m] for k in self._mode_proj_measures])
+
+        self._mode_proj_measures = reshaped_mode_proj_measures
+
+        # full projection
+        mode_measures_total = []
+        for operation in self._pg.operations:
+            mode_measures = []
+            for op in self._pg.get_sub_operations(operation.label):
+                mode_m = op.get_measure_full_proj(self._modes, orientation=rotmol)
+                mode_measures.append(mode_m)
+
+            mode_measures_total.append(mode_measures)
+
+        total_state = pd.Series(mode_measures_total, index=self._pg.op_labels)
+
+        super().__init__(group, self._coordinates, self._symbols, total_state, self._angles, [0, 0, 0])
+
+    def get_state_mode_proj(self, n):
+        return SymmetryObject(group=self._group, rep=pd.Series(self._mode_proj_measures[n],
+                                                               index=self._pg.op_labels))
+    def get_number_of_modes(self):
+        return len(self._mode_proj_measures)
 
 
 class SymmetryAtomDisplacements(SymmetryMolecule):

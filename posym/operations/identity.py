@@ -18,6 +18,12 @@ class Identity(Operation):
     def get_measure_modes(self, modes, orientation=None):
         return np.array([1.0] * len(modes))
 
+    def get_measure_modes_proj(self, modes, orientation=None):
+        return np.array([1.0] * len(modes))
+
+    def get_measure_full_proj(self, modes, orientation=None):
+        return 1.0
+
     def get_measure_atom(self, orientation=None):
         return len(self.permutation)
 
