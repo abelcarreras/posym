@@ -62,6 +62,7 @@ class Inversion(Operation):
         d = len(modes)
 
         # Flatten modes into (3N,d)
+        modes = np.array(modes)
         V = np.stack([m.reshape(-1) for m in modes], axis=1)
 
         # Apply symmetry operation

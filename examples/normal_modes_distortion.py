@@ -4,18 +4,35 @@
 
 from pyqchem import get_output_from_qchem, Structure, QchemInput
 from pyqchem.parsers.parser_frequencies import basic_frequencies
-from posym import PointGroup, SymmetryNormalModes
+from pyqchem.tools.duschinsky import NormalModes
+from posym import PointGroup, SymmetryNormalModes, SymmetryNormalModesProjection
 import matplotlib.pyplot as plt
 import numpy as np
 
 
+def get_mass_weighted_modes(modes):
+    m = NormalModes(ee['structure'], modes, freqs, is_mass_weighted=False)
+    modes = m.get_displacements()
+    modes = modes.transpose(1, 0)
+    modes = modes.reshape(len(modes), -1, 3)
+    return modes
+
 measures_m0 = []
 measures_m1 = []
 measures_m2 = []
+
+csm_m0 = []
+csm_m1 = []
+csm_m2 = []
+
 energies = []
 frequencies = []
 
-scan_range = np.arange(-0.2, 0.21, 0.01)
+# scan_range = np.arange(-0.2, 0.21, 0.01)
+scan_range = np.arange(-0.02, 0.021, 0.001)
+
+#scan_range = [-0.1, 0.0, 0.1]
+
 for x_dist in scan_range:
 
     water = [[x_dist,           0.00000000e+00,  2.40297090e-01],
@@ -48,18 +65,28 @@ for x_dist in scan_range:
     print('freqs: ', freqs)
     frequencies.append(freqs)
 
+    modes = get_mass_weighted_modes(modes)
+
     sm = SymmetryNormalModes(group='c2v', coordinates=molecule_coor, modes=modes, symbols=molecule_symbols)
+    sm_proj = SymmetryNormalModesProjection(group='c2v', coordinates=molecule_coor, modes=modes, symbols=molecule_symbols,
+                                            orientation_angles=sm.orientation_angles)
 
-    m = 1  # mode number
-    measures_m0.append(sm.get_state_mode(0).get_ir_representation().values)
-    measures_m1.append(sm.get_state_mode(1).get_ir_representation().values)
-    measures_m2.append(sm.get_state_mode(2).get_ir_representation().values)
+    measures_m0.append(sm_proj.get_state_mode_proj(0).get_ir_representation().values)
+    measures_m1.append(sm_proj.get_state_mode_proj(1).get_ir_representation().values)
+    measures_m2.append(sm_proj.get_state_mode_proj(2).get_ir_representation().values)
 
-    print('sm', sm.get_state_mode(m))
+    csm_m0.append(sm_proj.get_state_mode_proj(0).measure)
+    csm_m1.append(sm_proj.get_state_mode_proj(1).measure)
+    csm_m2.append(sm_proj.get_state_mode_proj(2).measure)
 
-    print(sm.measure_pos)
+    print('Sym: ', sm)
+    print('Sym proj: ', sm_proj)
+    print('CSM pos', sm.measure_pos)
+    print('CSM modes', sm_proj.measure)
+
     for i in range(len(modes)):
         print('m {}:'.format(i + 1), sm.get_state_mode(i))
+        print('   mode CSM:', sm_proj.get_state_mode_proj(i).measure)
     print('----------------------\n')
 
 
@@ -95,6 +122,16 @@ for i, freq in enumerate(np.array(frequencies).T):
 plt.legend()
 plt.xlabel('Distortion (Bohr)')
 plt.ylabel('Frequency (cm-1)')
+
+plt.figure()
+plt.title('CSM')
+plt.plot(scan_range, csm_m0, '-', label='csm_1')
+plt.plot(scan_range, csm_m1, '-', label='csm_2')
+plt.plot(scan_range, csm_m2, '-', label='csm_3')
+
+plt.legend()
+plt.xlabel('Distortion (Bohr)')
+plt.ylim(0, 100)
 
 plt.figure()
 plt.title('energy')

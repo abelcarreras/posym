@@ -100,6 +100,7 @@ class Rotation(Operation):
         d = len(modes)
 
         # Flatten modes into (3N,d)
+        modes = np.array(modes)
         V = np.stack([m.reshape(-1) for m in modes], axis=1)
 
         # Apply symmetry operation
@@ -112,7 +113,8 @@ class Rotation(Operation):
         P = V @ V.T
         PG = GV @ GV.T
 
-        return np.trace(P @ PG) / d
+
+        return float(np.trace(P @ PG) / d)
 
 
     def get_measure_atom(self):
