@@ -1,4 +1,4 @@
-from posym import SymmetryNormalModes, SymmetryAtomDisplacements
+from posym import SymmetryNormalModes, SymmetryAtomDisplacements, SymmetryNormalModesProjection
 from posym import algebra as al
 import unittest
 import numpy as np
@@ -33,6 +33,13 @@ def make_test_function(filename, group):
                                  symbols=molecule_symbols,
                                  )
 
+        sm_proj = SymmetryNormalModesProjection(group=group,
+                                                coordinates=molecule_coor,
+                                                modes=modes,
+                                                symbols=molecule_symbols,
+                                                orientation_angles=sm.orientation_angles,
+                                                )
+
         sm_xyz = SymmetryAtomDisplacements(group=group,
                                            coordinates=molecule_coor,
                                            symbols=molecule_symbols)
@@ -45,18 +52,23 @@ def make_test_function(filename, group):
             return np.sum(prod_list)
 
         pos_measure = sm.measure_pos
-        print('fun: ', pos_measure)
+        print('CSM pos: ', pos_measure)
+        proj_measure = sm.measure_pos
+        print('CSM proj: ', proj_measure)
+
         print(sm.get_point_group())
 
         total_loc = []
         for i in range(len(modes)):
             print('m {:2}: {:8.3f} :'.format(i + 1, freqs[i]), sm.get_state_mode(i))
             total_loc.append(localization(sm.get_state_mode(i).get_ir_representation().values))
+            # print('m_proj:', sm_proj.get_state_mode_proj(i))
 
         max_loc = np.max(np.abs(total_loc))
         norm_diff = np.abs(np.subtract(sm.get_ir_representation().values, sm_xyz.get_ir_representation().values))
 
         print('Total: ', sm)
+        print('Total proj: ', sm_proj)
         print('Total XYZ: ', sm_xyz)
         print('Norm: ', al.norm(sm), len(molecule_symbols) * 3 - 6)
         print('Dot: ', al.dot(sm, sm))
@@ -67,6 +79,7 @@ def make_test_function(filename, group):
         self.assertLess(np.min(norm_diff), 1e-2) # check sm == sm_xyz
         self.assertLess(max_loc, 1e-2)
         self.assertLess(pos_measure, 1e-2)
+        self.assertLess(proj_measure, 1e-2)
 
     return test
 
