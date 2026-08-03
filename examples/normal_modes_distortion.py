@@ -11,6 +11,7 @@ import numpy as np
 
 
 def get_mass_weighted_modes(modes):
+    freqs = np.zeros_like(modes)
     m = NormalModes(ee['structure'], modes, freqs, is_mass_weighted=False)
     modes = m.get_displacements()
     modes = modes.transpose(1, 0)
