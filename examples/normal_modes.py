@@ -1,4 +1,4 @@
-# Example of calculation of the symmetry of normal modes
+# Example of calculation of the symmetry of normal modes projected subspace
 # using PyQchem to automize its calculations
 
 from pyqchem import get_output_from_qchem, Structure, QchemInput
