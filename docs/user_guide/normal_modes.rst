@@ -40,6 +40,41 @@ Basic Usage
 :meth:`~posym.SymmetryNormalModes.get_state_mode` returns the symmetry representation of
 each mode as a :class:`~posym.SymmetryObject`.
 
+Normal modes projection
+-----------------------
+:class:`~posym.SymmetryNormalModesProjection` computes the symmetry of the subspace
+spanned by the normal modes:
+
+.. code-block:: python
+
+   from posym import SymmetryNormalModesProjection
+
+   sm = SymmetryNormalModesProjection(group='c2v', coordinates=coordinates,
+                                      modes=modes, symbols=symbols)
+
+   for i in range(sm.get_number_of_modes_proj()):
+       print(f'Mode {i+1}: {sm.get_state_mode(i)}')
+
+   print('Total:', sm)
+
+:meth:`~posym.SymmetryNormalModesProjection.get_state_mode_proj` returns the symmetry representation of
+each mode projection as a :class:`~posym.SymmetryObject`.
+
+
+This representation can be used to compute the CSM of a normal mode or a subset
+of normal modes. This is particularly useful for analyzing a subspace spanned by
+a set of degenerate modes:
+
+.. code-block:: python
+
+   from posym import SymmetryNormalModesProjection
+
+   sm = SymmetryNormalModesProjection(group='c3v', coordinates=coordinates,
+                                      modes=modes[0:3], symbols=symbols)
+
+   print('CSM:', sm.measure)
+
+
 Atom Displacements
 ------------------
 
