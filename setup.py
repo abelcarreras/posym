@@ -12,7 +12,8 @@ def check_compiler():
         return 'gcc'
 
 
-if check_compiler() == 'clang':
+use_openmp = (check_compiler() == 'clang') or True
+if use_openmp:
     integrals = Extension('posym.integrals',
                           extra_compile_args=['-std=c99'],
                           include_dirs=include_dirs_numpy,
