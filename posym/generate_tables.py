@@ -41,15 +41,19 @@ def get_cn(n):
     if n == 1:
         rotations = ['A', 'A', 'A']
         translations = ['A', 'A', 'A']
+        generator_indices = []
     elif n == 2:
         rotations = ['B', 'B', 'A']
         translations = ['B', 'B', 'A']
+        generator_indices = [1]
     elif n == 3 or n == 4:
         rotations = [ 'E', 'A']
         translations = ['E', 'A']
+        generator_indices = [1]
     else:
         rotations = ['E1', 'A']
         translations = ['E1', 'A']
+        generator_indices = [1]
 
     # name = 'C{}'.format(n)
     # return name, operations, ir_data, rotations, translations, multiplicity
@@ -59,7 +63,7 @@ def get_cn(n):
                      rotations=rotations,  # x, y, z
                      translations=translations,  # Rx, Ry, Rz
                      multiplicities=multiplicity,
-                     generator_indices=[1])
+                     generator_indices=generator_indices)
 
 
 def get_cnv(n):
