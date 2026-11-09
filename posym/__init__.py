@@ -272,9 +272,9 @@ class SymmetryMolecule(SymmetryObject):
         # manual permutation
         if permutation_set is not None:
             if len(permutation_set) != len(self._pg.generators):
-                raise Exception('permutation set incorrect')
-            if len(self._symbols) != len(permutation_set[0]):
-                raise Exception('permutation set incorrect')
+                raise Exception('permutation set incorrect. Number of permutation sets does not match number of generators')
+            if len(permutation_set) > 0 and len(self._symbols) != len(permutation_set[0]):
+                raise Exception('permutation set incorrect. Size of permutation set does not match number of atoms')
 
             self._permutation_set['all'] = {gen: perm for gen, perm in
                                             zip(self._pg.generators, permutation_set)}
